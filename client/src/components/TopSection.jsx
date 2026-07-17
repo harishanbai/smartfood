@@ -35,31 +35,35 @@ const TopSection = () => {
   };
 
   return (
-    <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8 w-full">
       {/* Greeting & Time */}
-      <div>
-        <h2 className="text-3xl font-extrabold tracking-tight text-white mb-1.5">
+      <div className="w-full lg:w-auto">
+        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-1.5">
           {getGreeting()}, Master 👋
         </h2>
-        <p className="text-gray-400 text-sm flex items-center gap-2">
+        <p className="text-gray-400 text-xs sm:text-sm">
           Manage tomorrow's lunch and configure recipes in real-time.
         </p>
       </div>
 
       {/* Date, Time & Scheduler Status Panel */}
-      <div className="flex flex-wrap items-center gap-4">
+      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-4 w-full lg:w-auto">
         {/* Date and Clock Widget */}
-        <div className="glass-panel px-4 py-3 rounded-2xl flex items-center gap-3 bg-white/5 border border-white/10 text-sm">
-          <Calendar className="h-4 w-4 text-accentPurple" />
-          <span className="text-gray-300 font-medium">{formatDate(time)}</span>
-          <span className="h-4 w-px bg-white/10" />
-          <Clock className="h-4 w-4 text-accentOrange" />
-          <span className="text-gray-200 font-mono font-semibold">{formatTime(time)}</span>
+        <div className="glass-panel px-4 py-3 rounded-2xl flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-start gap-2.5 sm:gap-3 bg-white/5 border border-white/10 text-xs sm:text-sm flex-1 sm:flex-initial">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-accentPurple flex-shrink-0" />
+            <span className="text-gray-300 font-medium whitespace-nowrap">{formatDate(time)}</span>
+          </div>
+          <span className="hidden sm:inline h-4 w-px bg-white/10" />
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-accentOrange flex-shrink-0" />
+            <span className="text-gray-200 font-mono font-semibold whitespace-nowrap">{formatTime(time)}</span>
+          </div>
         </div>
 
         {/* Auto Generation status widget */}
-        <div className="glass-panel px-4 py-3 rounded-2xl flex items-center gap-3 bg-accentGreen/10 border border-accentGreen/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-          <CheckCircle2 className="h-5 w-5 text-accentGreen" />
+        <div className="glass-panel px-4 py-3 rounded-2xl flex items-center gap-3 bg-accentGreen/10 border border-accentGreen/30 shadow-[0_0_15px_rgba(34,197,94,0.1)] flex-1 sm:flex-initial">
+          <CheckCircle2 className="h-5 w-5 text-accentGreen flex-shrink-0" />
           <div>
             <div className="text-[10px] uppercase font-bold text-accentGreen tracking-wider">Auto Generation</div>
             <div className="text-xs text-white font-medium flex items-center gap-1.5">

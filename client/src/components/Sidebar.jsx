@@ -21,7 +21,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="fixed left-6 top-6 bottom-6 w-64 glass-panel rounded-[24px] p-6 flex flex-col z-40 transition-all duration-300 hover:shadow-[0_0_30px_rgba(168,85,247,0.15)]">
+    <aside className="hidden lg:flex fixed left-6 top-6 bottom-6 w-64 glass-panel rounded-[24px] p-6 flex-col z-40 transition-all duration-300 hover:shadow-[0_0_30px_rgba(168,85,247,0.15)]">
       {/* Brand Header */}
       <div className="flex items-center gap-3 mb-10 px-2">
         <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-accentPurple to-accentOrange flex items-center justify-center shadow-lg shadow-purple-500/25">

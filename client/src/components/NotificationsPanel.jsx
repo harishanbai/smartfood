@@ -8,7 +8,7 @@ const NotificationsPanel = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="absolute right-0 top-16 w-80 glass-panel rounded-2xl p-4 shadow-2xl z-50 border border-white/10 animate-fade-in">
+    <div className="absolute right-0 top-14 w-[min(20rem,calc(100vw-2rem))] glass-panel rounded-2xl p-4 shadow-2xl z-50 border border-white/10 animate-fade-in">
       <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/5">
         <div className="flex items-center gap-2">
           <Bell className="h-4 w-4 text-accentPurple" />

@@ -91,6 +91,14 @@ const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpi
     };
   }, []);
 
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   if (foods.length === 0) {
     return (
       <div className="glass-panel rounded-[24px] p-8 flex flex-col items-center justify-center text-center h-[350px]">
@@ -120,24 +128,40 @@ const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpi
   ];
 
   return (
-    <div className="relative w-full py-10 flex flex-col items-center justify-center overflow-hidden">
+    <div className="relative w-full py-6 sm:py-10 flex flex-col items-center justify-center overflow-hidden">
       {/* Glow Backdrops */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-accentPurple/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-accentOrange/10 rounded-full blur-[80px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 sm:w-72 h-48 sm:h-72 bg-accentPurple/10 rounded-full blur-[75px] sm:blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 sm:w-60 h-40 sm:h-60 bg-accentOrange/10 rounded-full blur-[60px] sm:blur-[80px] pointer-events-none" />
 
       {/* 3D Container */}
-      <div className="carousel-container relative w-full max-w-4xl h-[360px] flex items-center justify-center">
+      <div className="carousel-container relative w-full max-w-4xl h-[330px] sm:h-[360px] flex items-center justify-center">
         <AnimatePresence initial={false}>
           {visibleCards.map(({ item, position }) => {
             if (!item) return null;
 
-            // Set transformations based on 3D placement
+            // Set transformations based on 3D placement and screen width
             const isCenter = position === 0;
-            const xOffset = position === -1 ? '-75%' : position === 1 ? '75%' : '0%';
+            
+            let xOffset = '0%';
+            let scale = 1;
+            let rotateY = 0;
+
+            if (windowWidth < 480) { // Small mobile
+              xOffset = position === -1 ? '-48%' : position === 1 ? '48%' : '0%';
+              scale = isCenter ? 0.95 : 0.65;
+              rotateY = position === -1 ? 18 : position === 1 ? -18 : 0;
+            } else if (windowWidth < 768) { // Tablet/Medium mobile
+              xOffset = position === -1 ? '-58%' : position === 1 ? '58%' : '0%';
+              scale = isCenter ? 1.02 : 0.72;
+              rotateY = position === -1 ? 22 : position === 1 ? -22 : 0;
+            } else { // Desktop
+              xOffset = position === -1 ? '-75%' : position === 1 ? '75%' : '0%';
+              scale = isCenter ? 1.05 : 0.8;
+              rotateY = position === -1 ? 25 : position === 1 ? -25 : 0;
+            }
+
             const zIndex = isCenter ? 30 : 10;
-            const scale = isCenter ? 1.05 : 0.8;
-            const opacity = isCenter ? 1 : 0.4;
-            const rotateY = position === -1 ? 25 : position === 1 ? -25 : 0;
+            const opacity = isCenter ? 1 : 0.35;
             const blurEffect = isCenter ? 'blur(0px)' : 'blur(4px)';
 
             return (
@@ -160,7 +184,7 @@ const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpi
                   stiffness: 300,
                   damping: 30
                 }}
-                className={`carousel-card w-[280px] sm:w-[320px] h-[340px] rounded-[24px] overflow-hidden glass-panel p-4 flex flex-col justify-between cursor-pointer border
+                className={`carousel-card w-[205px] xs:w-[245px] sm:w-[285px] md:w-[320px] h-[300px] sm:h-[340px] rounded-[24px] overflow-hidden glass-panel p-3.5 sm:p-4 flex flex-col justify-between cursor-pointer border
                   ${isCenter 
                     ? 'border-accentPurple bg-gradient-to-b from-[#1E1B4B]/80 to-[#111827]/90 shadow-[0_0_40px_rgba(168,85,247,0.25)] glow-active-purple' 
                     : 'border-white/5 bg-[#111827]/50'

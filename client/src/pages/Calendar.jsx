@@ -109,7 +109,7 @@ const Calendar = () => {
 
     // Empty cells before start of month
     for (let i = 0; i < startOffset; i++) {
-      gridItems.push(<div key={`empty-${i}`} className="h-20 sm:h-24" />);
+      gridItems.push(<div key={`empty-${i}`} className="h-16 sm:h-20 md:h-24" />);
     }
 
     // Days in month
@@ -141,24 +141,30 @@ const Calendar = () => {
         <div
           key={`day-${day}`}
           onClick={() => handleDayClick(dateStr)}
-          className={`h-20 sm:h-24 p-2 border rounded-xl flex flex-col justify-between cursor-pointer transition-all ${borderClass} ${bgClass}`}
+          className={`h-16 sm:h-20 md:h-24 p-1 sm:p-2 border rounded-xl flex flex-col justify-between cursor-pointer transition-all ${borderClass} ${bgClass}`}
         >
           {/* Day number */}
           <div className="flex justify-between items-center">
-            <span className={`text-xs font-semibold ${isToday ? 'text-accentGreen' : isTomorrow ? 'text-accentOrange' : 'text-gray-400'}`}>
+            <span className={`text-[10px] sm:text-xs font-semibold ${isToday ? 'text-accentGreen' : isTomorrow ? 'text-accentOrange' : 'text-gray-400'}`}>
               {day}
             </span>
             {isToday && (
-              <span className="text-[9px] bg-accentGreen/20 text-accentGreen font-bold px-1.5 py-0.5 rounded uppercase">Today</span>
+              <span className="hidden xs:inline text-[9px] bg-accentGreen/20 text-accentGreen font-bold px-1 sm:px-1.5 py-0.5 rounded uppercase">Today</span>
+            )}
+            {isToday && (
+              <span className="xs:hidden h-2 w-2 rounded-full bg-accentGreen flex-shrink-0" />
             )}
             {isTomorrow && (
-              <span className="text-[9px] bg-accentOrange/20 text-accentOrange font-bold px-1.5 py-0.5 rounded uppercase">Tmrw</span>
+              <span className="hidden xs:inline text-[9px] bg-accentOrange/20 text-accentOrange font-bold px-1 sm:px-1.5 py-0.5 rounded uppercase">Tmrw</span>
+            )}
+            {isTomorrow && (
+              <span className="xs:hidden h-2 w-2 rounded-full bg-accentOrange flex-shrink-0" />
             )}
           </div>
 
-          {/* Dish preview dot or mini text */}
+          {/* Dish preview — visible only on sm+ */}
           {menu ? (
-            <div className="text-left mt-auto">
+            <div className="text-left mt-auto hidden sm:block">
               <p className="text-[9px] font-medium text-white truncate max-w-full">
                 {menu.foodId?.name}
               </p>
@@ -167,8 +173,12 @@ const Calendar = () => {
                 <span className="text-[8px] text-gray-500 truncate">{menu.foodId?.category}</span>
               </div>
             </div>
-          ) : (
-            <div className="h-1.5" />
+          ) : null}
+          {/* Dot indicator on tiny screens */}
+          {menu && (
+            <div className="sm:hidden mt-auto">
+              <span className={`h-1.5 w-1.5 rounded-full block ${isToday ? 'bg-accentGreen' : isTomorrow ? 'bg-accentOrange' : 'bg-accentPurple'}`} />
+            </div>
           )}
         </div>
       );
@@ -178,9 +188,9 @@ const Calendar = () => {
   };
 
   return (
-    <div className="min-h-screen pb-12 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div className="min-h-screen pb-12 w-full overflow-x-hidden grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
       {/* Calendar Grid Container */}
-      <div className="col-span-1 lg:col-span-8 glass-panel rounded-[24px] p-6 border border-white/5">
+      <div className="col-span-1 lg:col-span-8 glass-panel rounded-[24px] p-4 sm:p-6 border border-white/5">
         {/* Header navigation */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-white tracking-tight">{monthLabel()}</h3>
@@ -200,26 +210,26 @@ const Calendar = () => {
           </div>
         </div>
 
-        {/* Days label */}
-        <div className="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-          <div>Sun</div>
-          <div>Mon</div>
-          <div>Tue</div>
-          <div>Wed</div>
-          <div>Thu</div>
-          <div>Fri</div>
-          <div>Sat</div>
+        {/* Days label — abbreviated on tiny screens */}
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2 text-center text-[8px] xs:text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">
+          <div><span className="hidden xs:inline">Sun</span><span className="xs:hidden">S</span></div>
+          <div><span className="hidden xs:inline">Mon</span><span className="xs:hidden">M</span></div>
+          <div><span className="hidden xs:inline">Tue</span><span className="xs:hidden">T</span></div>
+          <div><span className="hidden xs:inline">Wed</span><span className="xs:hidden">W</span></div>
+          <div><span className="hidden xs:inline">Thu</span><span className="xs:hidden">T</span></div>
+          <div><span className="hidden xs:inline">Fri</span><span className="xs:hidden">F</span></div>
+          <div><span className="hidden xs:inline">Sat</span><span className="xs:hidden">S</span></div>
         </div>
 
         {/* Calendar days grid */}
         {loading ? (
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {Array.from({ length: 35 }).map((_, i) => (
-              <div key={i} className="h-20 sm:h-24 glass-panel rounded-xl animate-pulse bg-white/5" />
+              <div key={i} className="h-16 sm:h-20 md:h-24 glass-panel rounded-xl animate-pulse bg-white/5" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {renderDays()}
           </div>
         )}

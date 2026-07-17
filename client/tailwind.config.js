@@ -16,6 +16,9 @@ export default {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
       },
+      screens: {
+        'xs': '480px',
+      },
       boxShadow: {
         glass: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
         glowOrange: '0 0 20px rgba(249, 115, 22, 0.3)',

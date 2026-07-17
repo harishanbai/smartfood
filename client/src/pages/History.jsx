@@ -99,55 +99,105 @@ const History = () => {
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {history.map(menu => {
-            const food = menu.foodId;
-            if (!food) return null;
-            return (
-              <div 
-                key={menu._id}
-                className="glass-panel rounded-2xl p-4 border border-white/5 flex flex-col md:flex-row items-center justify-between gap-4 hover:border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all"
-              >
-                {/* Left section: Food details */}
-                <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
-                  <div className="h-16 w-16 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
-                    {food.image ? (
-                      <img src={food.image} alt={food.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-500">No Image</div>
-                    )}
-                  </div>
-                  <div className="text-center sm:text-left">
-                    <span className="text-[10px] bg-accentOrange/10 border border-accentOrange/30 text-accentOrange px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider">
-                      {food.category}
-                    </span>
-                    <h4 className="text-base font-bold text-white mt-1.5">{food.name}</h4>
-                    <p className="text-xs text-gray-400 line-clamp-1 mt-0.5 max-w-md">{food.description}</p>
-                  </div>
-                </div>
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden md:block glass-panel rounded-[24px] overflow-hidden border border-white/5 shadow-xl">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left border-collapse min-w-[700px]">
+                <thead>
+                  <tr className="border-b border-white/5 bg-white/5 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    <th className="p-4">Dish</th>
+                    <th className="p-4">Category</th>
+                    <th className="p-4">Served On</th>
+                    <th className="p-4 text-right">Generated At</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-sm">
+                  {history.map(menu => {
+                    const food = menu.foodId;
+                    if (!food) return null;
+                    return (
+                      <tr key={menu._id} className="hover:bg-white/5 transition-colors">
+                        <td className="p-4 flex items-center gap-3">
+                          <div className="h-12 w-12 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
+                            {food.image ? (
+                              <img src={food.image} alt={food.name} className="w-full h-full object-cover" loading="lazy" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-500">No Image</div>
+                            )}
+                          </div>
+                          <div>
+                            <span className="font-bold text-white block">{food.name}</span>
+                            <span className="text-xs text-gray-400 max-w-xs truncate block mt-0.5">{food.description}</span>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <span className="text-[10px] bg-accentOrange/10 border border-accentOrange/30 text-accentOrange px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider whitespace-nowrap">
+                            {food.category}
+                          </span>
+                        </td>
+                        <td className="p-4 font-semibold text-gray-200">{formatDateLabel(menu.date)}</td>
+                        <td className="p-4 text-right font-mono text-gray-300">
+                          {new Date(menu.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-                {/* Right section: Generation metadata */}
-                <div className="flex items-center gap-6 text-xs text-gray-400 flex-shrink-0 justify-between w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-white/5">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-accentPurple" />
-                    <div>
-                      <div className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">Served On</div>
-                      <span className="text-gray-200 font-semibold">{formatDateLabel(menu.date)}</span>
+          {/* Mobile Card List View */}
+          <div className="space-y-4 md:hidden">
+            {history.map(menu => {
+              const food = menu.foodId;
+              if (!food) return null;
+              return (
+                <div 
+                  key={menu._id}
+                  className="glass-panel rounded-2xl p-4 border border-white/5 flex flex-col items-stretch gap-4 hover:border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all"
+                >
+                  {/* Left section: Food details */}
+                  <div className="flex flex-row items-center gap-4">
+                    <div className="h-16 w-16 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
+                      {food.image ? (
+                        <img src={food.image} alt={food.name} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-500">No Image</div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="inline-block text-[10px] bg-accentOrange/10 border border-accentOrange/30 text-accentOrange px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">
+                        {food.category}
+                      </span>
+                      <h4 className="text-sm font-bold text-white mt-1 truncate">{food.name}</h4>
+                      <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">{food.description}</p>
                     </div>
                   </div>
-                  
-                  <div className="text-right">
-                    <div className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">Generated At</div>
-                    <span className="text-gray-300 font-mono font-medium">
-                      {new Date(menu.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+
+                  {/* Right section: Generation metadata */}
+                  <div className="flex items-center justify-between text-xs text-gray-400 pt-3 border-t border-white/5">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-accentPurple flex-shrink-0" />
+                      <div>
+                        <div className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">Served On</div>
+                        <span className="text-gray-200 font-semibold">{formatDateLabel(menu.date)}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="text-right">
+                      <div className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">Generated At</div>
+                      <span className="text-gray-300 font-mono font-medium">
+                        {new Date(menu.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
                   </div>
                 </div>
-
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );

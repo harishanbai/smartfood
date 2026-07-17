@@ -173,9 +173,9 @@ const Statistics = () => {
   };
 
   return (
-    <div className="min-h-screen pb-12 space-y-8">
+    <div className="min-h-screen pb-12 space-y-6 sm:space-y-8 w-full overflow-x-hidden">
       {/* 4 Cards Summary Info */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         
         {/* Total Foods */}
         <div className="glass-panel rounded-2xl p-5 border border-white/5 relative overflow-hidden">
@@ -222,13 +222,13 @@ const Statistics = () => {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         
         {/* Left column: Categories & Availability */}
-        <div className="col-span-1 lg:col-span-7 space-y-8">
+        <div className="col-span-1 lg:col-span-7 space-y-6 sm:space-y-8">
           
           {/* Category Pie Chart */}
-          <div className="glass-panel rounded-[24px] p-6 border border-white/5 relative">
+          <div className="glass-panel rounded-[24px] p-4 sm:p-6 border border-white/5 relative">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <PieIcon className="h-5 w-5 text-accentPurple" />
               Category Distribution
@@ -237,7 +237,7 @@ const Statistics = () => {
           </div>
 
           {/* Availability Status Bar */}
-          <div className="glass-panel rounded-[24px] p-6 border border-white/5 relative">
+          <div className="glass-panel rounded-[24px] p-4 sm:p-6 border border-white/5 relative">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <BarChart2 className="h-5 w-5 text-accentGreen" />
               Recipe Availability Status
@@ -248,10 +248,10 @@ const Statistics = () => {
         </div>
 
         {/* Right column: Most Generated Food & Weekly Activity */}
-        <div className="col-span-1 lg:col-span-5 space-y-8">
+        <div className="col-span-1 lg:col-span-5 space-y-6 sm:space-y-8">
           
           {/* Most Generated Food Card */}
-          <div className="glass-panel rounded-[24px] p-6 border border-white/5 relative overflow-hidden group hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all">
+          <div className="glass-panel rounded-[24px] p-4 sm:p-6 border border-white/5 relative overflow-hidden group hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all">
             <div className="absolute -right-20 -top-20 w-48 h-48 bg-accentPurple/10 rounded-full blur-[80px] pointer-events-none" />
             
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -285,7 +285,7 @@ const Statistics = () => {
           </div>
 
           {/* Weekly Generation Log */}
-          <div className="glass-panel rounded-[24px] p-6 border border-white/5 relative">
+          <div className="glass-panel rounded-[24px] p-4 sm:p-6 border border-white/5 relative">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-accentOrange" />
               Recent Generations

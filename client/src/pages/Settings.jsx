@@ -122,7 +122,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen pb-12 max-w-3xl">
+    <div className="min-h-screen pb-12 w-full max-w-3xl mx-auto">
       <div className="space-y-8">
         
         {/* Database Management Card */}

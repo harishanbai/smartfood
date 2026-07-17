@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
+import BottomNav from './components/BottomNav';
 import TopSection from './components/TopSection';
 import Dashboard from './pages/Dashboard';
 import Foods from './pages/Foods';
@@ -14,13 +15,16 @@ function App() {
   return (
     <NotificationProvider>
       <Router>
-        <div className="flex min-h-screen bg-bgMain text-gray-200 antialiased font-sans">
+        <div className="flex min-h-screen bg-bgMain text-gray-200 antialiased font-sans overflow-x-hidden w-full">
           
           {/* Floating premium sidebar */}
           <Sidebar />
+          
+          {/* Floating mobile bottom navigation */}
+          <BottomNav />
 
           {/* Main Content Area */}
-          <main className="flex-1 ml-72 p-8 transition-all duration-300">
+          <main className="flex-1 ml-0 lg:ml-72 p-4 sm:p-6 md:p-8 pb-24 lg:pb-8 transition-all duration-300 w-full overflow-x-hidden">
             {/* Top digital date/clock, and greet bar */}
             <TopSection />
 
