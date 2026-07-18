@@ -10,11 +10,13 @@ import Calendar from './pages/Calendar';
 import Statistics from './pages/Statistics';
 import Settings from './pages/Settings';
 import { NotificationProvider } from './context/NotificationContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 function App() {
   return (
-    <NotificationProvider>
-      <Router>
+    <ThemeProvider>
+      <NotificationProvider>
+        <Router>
         <div className="flex min-h-screen bg-bgMain text-gray-200 antialiased font-sans overflow-x-hidden w-full">
           
           {/* Floating premium sidebar */}
@@ -43,6 +45,7 @@ function App() {
         </div>
       </Router>
     </NotificationProvider>
+  </ThemeProvider>
   );
 }
 

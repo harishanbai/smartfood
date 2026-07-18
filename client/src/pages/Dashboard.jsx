@@ -49,7 +49,7 @@ const Dashboard = () => {
         spinBtn.dataset.foodId = generatedFood._id;
         spinBtn.click();
       }
-      
+
       addNotification("Tomorrow's Lunch menu generation initiated...", 'info');
     } catch (err) {
       addNotification(err.response?.data?.message || "Failed to generate lunch", 'warning');
@@ -87,7 +87,7 @@ const Dashboard = () => {
     <div className="relative min-h-screen pb-12 w-full overflow-x-hidden">
       {/* Notification bell row */}
       <div className="flex justify-end mb-6 relative">
-        <button 
+        <button
           onClick={() => setNotifOpen(!notifOpen)}
           className="relative glass-panel p-3 rounded-xl hover:bg-white/10 transition-all border border-white/10 text-gray-300 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
         >
@@ -99,14 +99,14 @@ const Dashboard = () => {
 
       {/* Main Dashboard Layout — stacks on mobile, two-column on large screens */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 xl:gap-8">
-        
+
         {/* Left Side: Today & Tomorrow Cards */}
         <div className="col-span-1 xl:col-span-7 flex flex-col gap-6">
-          
+
           {/* ── Today's Lunch Card ── */}
           <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-white/5 relative overflow-hidden group hover:shadow-[0_0_30px_rgba(34,197,94,0.1)] transition-all duration-500">
             <div className="absolute -right-20 -top-20 w-48 h-48 bg-accentGreen/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-accentGreen/20 transition-colors duration-500" />
-            
+
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs uppercase font-bold tracking-wider text-accentGreen flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-full bg-accentGreen animate-pulse shadow-[0_0_8px_#22C55E]" />
@@ -192,7 +192,7 @@ const Dashboard = () => {
                     <h3 className="text-xl sm:text-2xl font-bold text-white mt-2 mb-2 tracking-tight">{tomorrowMenu.foodId?.name}</h3>
                     <p className="text-gray-400 text-sm leading-relaxed mb-4">{tomorrowMenu.foodId?.description}</p>
                   </div>
-                  
+
                   {/* Action Buttons */}
                   <div className="flex flex-col xs:flex-row flex-wrap gap-3 justify-center sm:justify-start">
                     <button
@@ -249,7 +249,7 @@ const Dashboard = () => {
 
             {/* Carousel Container */}
             <div className="my-auto">
-              <PremiumCarousel 
+              <PremiumCarousel
                 foods={availableFoods}
                 onSelectionComplete={onCarouselFinished}
                 isSpinning={isSpinning}

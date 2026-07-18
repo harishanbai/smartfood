@@ -7,11 +7,22 @@ export default {
   theme: {
     extend: {
       colors: {
-        bgMain: '#070B14',
-        bgCard: '#111827',
+        bgMain: 'var(--bg-main)',
+        bgCard: 'var(--bg-card)',
         accentOrange: '#F97316',
         accentPurple: '#A855F7',
         accentGreen: '#22C55E',
+      },
+      textColor: {
+        white: 'var(--text-title)',
+        gray: {
+          50: '#F9FAFB',
+          100: '#F3F4F6',
+          200: 'var(--text-body)',
+          300: 'var(--text-body-muted)',
+          400: 'var(--text-muted)',
+          500: 'var(--text-muted-dark)',
+        }
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Calendar, CheckCircle2 } from 'lucide-react';
+import { Clock, Calendar, CheckCircle2, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 const TopSection = () => {
   const [time, setTime] = useState(new Date());
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -48,6 +50,22 @@ const TopSection = () => {
 
       {/* Date, Time & Scheduler Status Panel */}
       <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-4 w-full lg:w-auto">
+        {/* Light/Dark Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          aria-label="Toggle Theme"
+          className="glass-panel p-3 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-gray-300 hover:text-white cursor-pointer min-h-[44px] min-w-[44px] relative overflow-hidden"
+        >
+          <div className="relative h-5 w-5 flex items-center justify-center">
+            {/* Sun Icon */}
+            <Sun className={`h-5 w-5 text-accentOrange absolute transition-all duration-500 transform ${theme === 'light' ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'
+              }`} />
+            {/* Moon Icon */}
+            <Moon className={`h-5 w-5 text-accentPurple absolute transition-all duration-500 transform ${theme === 'dark' ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'
+              }`} />
+          </div>
+        </button>
+
         {/* Date and Clock Widget */}
         <div className="glass-panel px-4 py-3 rounded-2xl flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-start gap-2.5 sm:gap-3 bg-white/5 border border-white/10 text-xs sm:text-sm flex-1 sm:flex-initial">
           <div className="flex items-center gap-2">
