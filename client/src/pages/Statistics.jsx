@@ -73,7 +73,7 @@ const Statistics = () => {
     };
 
     const segments = categoryStats.map((item, idx) => {
-      const percent = item.value / totalFoods;
+      const percent = totalFoods > 0 ? item.value / totalFoods : 0;
       const [startX, startY] = getCoordinatesForPercent(cumulativePercent);
       cumulativePercent += percent;
       const [endX, endY] = getCoordinatesForPercent(cumulativePercent);
@@ -108,7 +108,7 @@ const Statistics = () => {
                 <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: seg.color }} />
                 <span>{seg.name}</span>
               </div>
-              <span className="font-semibold text-white">{seg.count} ({Math.round((seg.count/totalFoods)*100)}%)</span>
+              <span className="font-semibold text-white">{seg.count} ({totalFoods > 0 ? Math.round((seg.count / totalFoods) * 100) : 0}%)</span>
             </div>
           ))}
         </div>

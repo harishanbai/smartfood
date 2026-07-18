@@ -32,9 +32,10 @@ const History = () => {
     setLoading(true);
     try {
       const res = await menuApi.getHistory(month, search);
-      setHistory(res.data);
+      setHistory(Array.isArray(res?.data) ? res.data : []);
     } catch (err) {
       console.error(err);
+      setHistory([]);
       addNotification('Failed to fetch history logs', 'warning');
     } finally {
       setLoading(false);

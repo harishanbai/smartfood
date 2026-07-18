@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChefHat, Database, AlertTriangle, ShieldCheck, RefreshCw } from 'lucide-react';
-import axios from 'axios';
+import api from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 
 const Settings = () => {
@@ -107,7 +107,7 @@ const Settings = () => {
       // Let's modify our backend route to support either json or multer. Standard Express app.use(express.json()) handles JSON!
       // So if we send content-type application/json, we can seed foods directly.
       for (const dish of seedDishes) {
-        await axios.post('http://localhost:5000/api/foods', dish, {
+        await api.post('/foods', dish, {
           headers: { 'Content-Type': 'application/json' }
         });
       }

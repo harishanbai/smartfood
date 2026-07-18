@@ -26,11 +26,14 @@ const Dashboard = () => {
         menuApi.getTomorrow(),
         foodApi.getFoods()
       ]);
-      setTodayMenu(todayRes.data);
-      setTomorrowMenu(tomorrowRes.data);
-      setAvailableFoods(foodsRes.data.filter(f => f.available));
+      setTodayMenu(todayRes?.data || null);
+      setTomorrowMenu(tomorrowRes?.data || null);
+      setAvailableFoods(Array.isArray(foodsRes?.data) ? foodsRes.data.filter(f => f && f.available) : []);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
+      setTodayMenu(null);
+      setTomorrowMenu(null);
+      setAvailableFoods([]);
     }
   };
 
@@ -118,8 +121,8 @@ const Dashboard = () => {
                 <div className="w-full sm:w-36 lg:w-40 h-40 rounded-2xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
                   {todayMenu.foodId?.image ? (
                     <img
-                      src={todayMenu.foodId.image}
-                      alt={todayMenu.foodId.name}
+                      src={todayMenu.foodId?.image}
+                      alt={todayMenu.foodId?.name || 'Food'}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"
                     />
@@ -171,8 +174,8 @@ const Dashboard = () => {
                 <div className="w-full sm:w-36 lg:w-40 h-40 rounded-2xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
                   {tomorrowMenu.foodId?.image ? (
                     <img
-                      src={tomorrowMenu.foodId.image}
-                      alt={tomorrowMenu.foodId.name}
+                      src={tomorrowMenu.foodId?.image}
+                      alt={tomorrowMenu.foodId?.name || 'Food'}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"
                     />

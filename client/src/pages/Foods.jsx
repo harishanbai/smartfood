@@ -50,9 +50,10 @@ const Foods = () => {
     setLoading(true);
     try {
       const res = await foodApi.getFoods(search);
-      setFoods(res.data);
+      setFoods(Array.isArray(res?.data) ? res.data : []);
     } catch (err) {
       console.error(err);
+      setFoods([]);
       addNotification('Failed to fetch food items', 'warning');
     } finally {
       setLoading(false);

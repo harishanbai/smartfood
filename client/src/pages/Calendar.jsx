@@ -35,8 +35,11 @@ const Calendar = () => {
       
       // Store in object keyed by YYYY-MM-DD
       const menuMap = {};
-      res.data.forEach(menu => {
-        menuMap[menu.date] = menu;
+      const historyData = Array.isArray(res?.data) ? res.data : [];
+      historyData.forEach(menu => {
+        if (menu && menu.date) {
+          menuMap[menu.date] = menu;
+        }
       });
 
       // Also try fetching tomorrow's menu if current month matches tomorrow
@@ -249,7 +252,7 @@ const Calendar = () => {
               <div className="space-y-4">
                 <div className="w-full h-44 rounded-2xl overflow-hidden bg-black/20 border border-white/10">
                   {selectedDayMenu.foodId?.image ? (
-                    <img src={selectedDayMenu.foodId.image} alt={selectedDayMenu.foodId.name} className="w-full h-full object-cover" />
+                    <img src={selectedDayMenu.foodId?.image} alt={selectedDayMenu.foodId?.name || 'Food'} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
                   )}
