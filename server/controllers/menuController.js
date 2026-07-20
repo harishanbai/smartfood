@@ -1,5 +1,6 @@
 import Menu from '../models/Menu.js';
 import { generateLunchForDate } from '../services/generatorService.js';
+import { mockDb } from '../services/mockDbService.js';
 
 // Date utility functions
 const getTodayStr = () => {
@@ -84,9 +85,10 @@ export const generateTomorrowMenu = async (req, res) => {
 export const skipTomorrowMenu = async (req, res) => {
   try {
     const tomorrowStr = getTomorrowStr();
-
-
-    
+    if (process.env.USE_MOCK_DB === 'true') {
+      const newMenu = mockDb.skipTomorrow();
+      return res.json(newMenu);
+    }
     // Find active menu for tomorrow
     const activeMenu = await Menu.findOne({ date: tomorrowStr, status: 'active' });
     if (!activeMenu) {
@@ -168,10 +170,32 @@ export const assignMenu = async (req, res) => {
       status: 'active'
     });
     await menu.save();
-    
+
     const populated = await Menu.findById(menu._id).populate('foodId');
     res.status(201).json(populated);
   } catch (error) {
     res.status(500).json({ message: "Error assigning menu item", error: error.message });
+  }
+};
+
+export const deleteMenuRecord = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (process.env.USE_MOCK_DB === 'true') {
+      const success = mockDb.deleteMenuRecord(id);
+      if (!success) {
+        return res.status(404).json({ message: "Menu record not found" });
+      }
+      return res.json({ message: "Menu record deleted successfully" });
+    }
+
+    const menu = await Menu.findByIdAndDelete(id);
+    if (!menu) {
+      return res.status(404).json({ message: "Menu record not found" });
+    }
+    res.json({ message: "Menu record deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting menu record", error: error.message });
   }
 };

@@ -5,7 +5,8 @@ import {
   generateTomorrowMenu,
   skipTomorrowMenu,
   getMenuHistory,
-  assignMenu
+  assignMenu,
+  deleteMenuRecord
 } from '../controllers/menuController.js';
 
 const router = express.Router();
@@ -16,5 +17,6 @@ router.post('/generate', generateTomorrowMenu);
 router.post('/skip', skipTomorrowMenu);
 router.get('/history', getMenuHistory);
 router.post('/', assignMenu);
+router.delete('/:id', deleteMenuRecord);
 
 export default router;

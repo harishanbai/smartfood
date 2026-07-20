@@ -24,7 +24,8 @@ export const menuApi = {
   generateTomorrow: () => api.post('/menu/generate'),
   skipTomorrow: () => api.post('/menu/skip'),
   getHistory: (month = '', search = '') => api.get(`/menu/history?month=${month}&search=${encodeURIComponent(search)}`),
-  assignMenu: (date, foodId) => api.post('/menu', { date, foodId })
+  assignMenu: (date, foodId) => api.post('/menu', { date, foodId }),
+  deleteHistory: (id) => api.delete(`/menu/${id}`)
 };
 
 export const statsApi = {

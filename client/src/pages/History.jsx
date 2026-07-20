@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Calendar, ChefHat, Filter } from 'lucide-react';
+import { Search, Calendar, ChefHat, Filter, Trash2 } from 'lucide-react';
 import { menuApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { getImageUrl } from '../utils/imageUtils';
@@ -47,6 +47,18 @@ const History = () => {
       addNotification(t('history.failedFetchHistory'), 'warning');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteHistory = async (id) => {
+    if (!window.confirm(t('foods.confirmDelete'))) return;
+    try {
+      await menuApi.deleteHistory(id);
+      addNotification('History log deleted successfully!', 'success');
+      fetchHistory();
+    } catch (err) {
+      console.error(err);
+      addNotification('Failed to delete history log', 'warning');
     }
   };
 
@@ -118,7 +130,8 @@ const History = () => {
                     <th className="p-4">{t('history.dish')}</th>
                     <th className="p-4">{t('foods.category')}</th>
                     <th className="p-4">{t('history.servedOn')}</th>
-                    <th className="p-4 text-right">{t('history.generatedAt')}</th>
+                    <th className="p-4">{t('history.generatedAt')}</th>
+                    <th className="p-4 text-right">{t('foods.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 text-sm">
@@ -146,8 +159,17 @@ const History = () => {
                           </span>
                         </td>
                         <td className="p-4 font-semibold text-gray-200">{formatDateLabel(menu.date)}</td>
-                        <td className="p-4 text-right font-mono text-gray-300">
+                        <td className="p-4 font-mono text-gray-300">
                           {new Date(menu.generatedAt).toLocaleTimeString(locales[language] || 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                        </td>
+                        <td className="p-4 text-right">
+                          <button
+                            onClick={() => handleDeleteHistory(menu._id)}
+                            className="p-2 text-red-500 hover:text-red-400 hover:bg-white/5 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center"
+                            title={t('common.delete')}
+                          >
+                            <Trash2 className="h-4.5 w-4.5" />
+                          </button>
                         </td>
                       </tr>
                     );
@@ -183,6 +205,13 @@ const History = () => {
                       <h4 className="text-sm font-bold text-white mt-1 truncate">{food.name}</h4>
                       <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">{food.description}</p>
                     </div>
+                    <button
+                      onClick={() => handleDeleteHistory(menu._id)}
+                      className="p-2 text-red-500 hover:text-red-400 hover:bg-white/5 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center self-start"
+                      title={t('common.delete')}
+                    >
+                      <Trash2 className="h-4.5 w-4.5" />
+                    </button>
                   </div>
 
                   {/* Right section: Generation metadata */}
