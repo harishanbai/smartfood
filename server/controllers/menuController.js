@@ -16,15 +16,27 @@ const getTomorrowStr = () => {
 
 export const getTodayMenu = async (req, res) => {
   try {
+    const todayStr = getTodayStr();
+
     if (process.env.USE_MOCK_DB === 'true') {
-      const menu = mockDb.getToday();
+      let menu = mockDb.getToday();
+      if (!menu) {
+        try {
+          menu = mockDb.generateLunchForDate(todayStr);
+        } catch (err) {
+          return res.status(200).json(null);
+        }
+      }
       return res.json(menu);
     }
 
-    const todayStr = getTodayStr();
-    const menu = await Menu.findOne({ date: todayStr, status: 'active' }).populate('foodId');
+    let menu = await Menu.findOne({ date: todayStr, status: 'active' }).populate('foodId');
     if (!menu) {
-      return res.status(200).json(null);
+      try {
+        menu = await generateLunchForDate(todayStr);
+      } catch (err) {
+        return res.status(200).json(null);
+      }
     }
     res.json(menu);
   } catch (error) {
