@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL
@@ -28,6 +28,11 @@ export const menuApi = {
 
 export const statsApi = {
   getStats: () => api.get('/stats')
+};
+
+export const tamilCalendarApi = {
+  getToday: () => api.get('/tamil-calendar/today'),
+  getTomorrow: () => api.get('/tamil-calendar/tomorrow'),
 };
 
 export default api;

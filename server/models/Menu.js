@@ -18,6 +18,20 @@ const menuSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'skipped'],
     default: 'active'
+  },
+  // Smart Rule Engine fields (optional, backwards-compatible)
+  ruleApplied: {
+    type: String,
+    default: 'Normal Random'
+  },
+  ruleCode: {
+    type: String,
+    enum: ['festival', 'amavasai', 'wednesday', 'normal'],
+    default: 'normal'
+  },
+  tamilCalendarSnapshot: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
   }
 });
 

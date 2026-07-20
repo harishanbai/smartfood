@@ -1,9 +1,14 @@
 import mongoose from 'mongoose';
 import dns from 'dns';
 
+// Handle connection errors to prevent process crash
+mongoose.connection.on('error', err => {
+  console.error('MongoDB Connection Error Event:', err.message);
+});
+
 const connectDB = async () => {
   try {
-    const uri = process.env.MONGODB_URI;
+    const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/smart_lunch';
     if (uri && uri.startsWith('mongodb+srv://')) {
       try {
         const parts = uri.split('@');
@@ -19,12 +24,12 @@ const connectDB = async () => {
       }
     }
 
-    const conn = await mongoose.connect(uri || 'mongodb://127.0.0.1:27017/smart_lunch');
+    const conn = await mongoose.connect(uri);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
+    process.env.USE_MOCK_DB = 'false';
   } catch (error) {
     console.error(`Database Connection Error: ${error.message}`);
-    console.warn("WARNING: Running in In-Memory Mock Database Mode. Changes will not persist across restarts.");
-    process.env.USE_MOCK_DB = 'true';
+    throw error;
   }
 };
 

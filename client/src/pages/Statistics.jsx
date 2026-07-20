@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getImageUrl } from '../utils/imageUtils';
 import { ChefHat, TrendingUp, Sparkles, PieChart as PieIcon, BarChart2, LineChart as LineIcon } from 'lucide-react';
 import { statsApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
@@ -263,7 +264,7 @@ const Statistics = () => {
               <div className="flex items-center gap-4">
                 <div className="h-20 w-20 rounded-2xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
                   {mostGeneratedFood.image ? (
-                    <img src={mostGeneratedFood.image} alt={mostGeneratedFood.name} className="w-full h-full object-cover" />
+                    <img src={getImageUrl(mostGeneratedFood.image)} alt={mostGeneratedFood.name} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
                   )}

@@ -1,10 +1,149 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, RefreshCw, AlertCircle, CalendarRange, Bell, CheckCircle } from 'lucide-react';
-import { menuApi, foodApi } from '../services/api';
+import {
+  Sparkles, RefreshCw, AlertCircle, CalendarRange, Bell, CheckCircle,
+  Sun, Moon, Star, Flame, Info, Calendar
+} from 'lucide-react';
+import { menuApi, foodApi, tamilCalendarApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
+import { getImageUrl } from '../utils/imageUtils';
 import PremiumCarousel from '../components/PremiumCarousel';
 import NotificationsPanel from '../components/NotificationsPanel';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Rule Badge — displays which rule was applied for menu generation
+// ─────────────────────────────────────────────────────────────────────────────
+const RuleBadge = ({ ruleCode, ruleApplied }) => {
+  if (!ruleCode) return null;
+
+  const config = {
+    festival:  { bg: 'bg-purple-500/15', border: 'border-purple-500/40', text: 'text-purple-300', icon: '🪔', label: ruleApplied || 'Festival – Veg Only' },
+    amavasai:  { bg: 'bg-indigo-500/15', border: 'border-indigo-500/40', text: 'text-indigo-300', icon: '🌑', label: ruleApplied || 'Amavasai – Veg Only' },
+    wednesday: { bg: 'bg-orange-500/15', border: 'border-orange-500/40', text: 'text-orange-300', icon: '🍗', label: ruleApplied || 'Company Rule – Wednesday Non-Veg' },
+    normal:    { bg: 'bg-emerald-500/15', border: 'border-emerald-500/40', text: 'text-emerald-300', icon: '🎲', label: ruleApplied || 'Normal Random' },
+  };
+
+  const c = config[ruleCode] || config.normal;
+
+  return (
+    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-semibold tracking-wide ${c.bg} ${c.border} ${c.text}`}>
+      <span>{c.icon}</span>
+      <span>Rule Applied: {c.label}</span>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tamil Calendar Card — shows today's Tamil panchang details
+// ─────────────────────────────────────────────────────────────────────────────
+const TamilCalendarCard = ({ data, loading }) => {
+  if (loading) {
+    return (
+      <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-white/5 relative overflow-hidden animate-pulse">
+        <div className="h-4 w-36 bg-white/10 rounded mb-4" />
+        <div className="grid grid-cols-2 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-12 bg-white/5 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const tc = data?.tamilCalendar;
+  const rule = data?.rule;
+  const apiAvailable = data?.apiAvailable;
+
+  const fields = [
+    { label: 'Tamil Date',   value: tc?.tamilDate,   icon: <Calendar className="h-3.5 w-3.5" /> },
+    { label: 'Tamil Month',  value: tc?.tamilMonth,  icon: <Sun className="h-3.5 w-3.5" /> },
+    { label: 'Tithi',        value: tc?.tithi,        icon: <Moon className="h-3.5 w-3.5" /> },
+    { label: 'Nakshatra',    value: tc?.nakshatra,    icon: <Star className="h-3.5 w-3.5" /> },
+    { label: 'Sunrise',      value: tc?.sunrise,      icon: <Sun className="h-3.5 w-3.5 text-yellow-400" /> },
+    { label: 'Sunset',       value: tc?.sunset,       icon: <Moon className="h-3.5 w-3.5 text-orange-400" /> },
+  ];
+
+  return (
+    <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-white/5 relative overflow-hidden group hover:shadow-[0_0_30px_rgba(168,85,247,0.08)] transition-all duration-500">
+      {/* Background glow */}
+      <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-purple-500/8 rounded-full blur-[80px] pointer-events-none" />
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-xs uppercase font-bold tracking-wider text-purple-400 flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-purple-400 animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
+          Tamil Calendar
+        </span>
+        {!apiAvailable && (
+          <span className="text-[9px] bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 px-2 py-0.5 rounded-full">
+            API Offline
+          </span>
+        )}
+      </div>
+
+      {apiAvailable && tc ? (
+        <>
+          {/* Festival / Amavasai / Pournami banners */}
+          {tc.isFestival && (
+            <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-500/15 border border-purple-500/30">
+              <span className="text-base">🪔</span>
+              <div>
+                <p className="text-[10px] font-bold text-purple-300 uppercase tracking-wider">Festival Today</p>
+                <p className="text-xs text-white font-semibold">{tc.festivalName}</p>
+              </div>
+            </div>
+          )}
+          {tc.isAmavasai && (
+            <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-500/15 border border-indigo-500/30">
+              <span className="text-base">🌑</span>
+              <p className="text-xs font-bold text-indigo-300">Amavasai (No Moon Day)</p>
+            </div>
+          )}
+          {tc.isPournami && !tc.isAmavasai && (
+            <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-yellow-500/10 border border-yellow-500/25">
+              <span className="text-base">🌕</span>
+              <p className="text-xs font-bold text-yellow-300">Pournami (Full Moon Day)</p>
+            </div>
+          )}
+
+          {/* Data grid */}
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {fields.map((f) => (
+              <div key={f.label} className="bg-white/3 border border-white/5 rounded-xl p-2.5 hover:bg-white/5 transition-colors">
+                <div className="flex items-center gap-1.5 text-gray-500 mb-0.5">
+                  {f.icon}
+                  <span className="text-[9px] uppercase tracking-wider font-semibold">{f.label}</span>
+                </div>
+                <p className="text-xs font-semibold text-white truncate">{f.value || '—'}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Rule Applied for Tomorrow */}
+          {rule && (
+            <div className="pt-3 border-t border-white/5">
+              <p className="text-[9px] text-gray-500 uppercase tracking-wider mb-1.5 font-semibold">Tomorrow's Rule</p>
+              <RuleBadge ruleCode={rule.ruleCode} ruleApplied={rule.ruleApplied} />
+              {rule.festivalName && (
+                <p className="text-[10px] text-gray-400 mt-1.5">Festival: <span className="text-white font-medium">{rule.festivalName}</span></p>
+              )}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <Info className="h-8 w-8 text-gray-600 mb-2" />
+          <p className="text-xs text-gray-500 max-w-[200px]">
+            Tamil Calendar data unavailable. Menu generation will use Normal Random mode.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Dashboard Component
+// ─────────────────────────────────────────────────────────────────────────────
 const Dashboard = () => {
   const [todayMenu, setTodayMenu] = useState(null);
   const [tomorrowMenu, setTomorrowMenu] = useState(null);
@@ -12,11 +151,15 @@ const Dashboard = () => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [carouselMode, setCarouselMode] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [tamilToday, setTamilToday] = useState(null);
+  const [tamilTomorrow, setTamilTomorrow] = useState(null);
+  const [calendarLoading, setCalendarLoading] = useState(true);
   const { addNotification } = useNotifications();
   const carouselTriggerRef = useRef(null);
 
   useEffect(() => {
     fetchData();
+    fetchTamilCalendar();
   }, []);
 
   const fetchData = async () => {
@@ -37,22 +180,63 @@ const Dashboard = () => {
     }
   };
 
+  const fetchTamilCalendar = async () => {
+    setCalendarLoading(true);
+    try {
+      const [todayRes, tomorrowRes] = await Promise.allSettled([
+        tamilCalendarApi.getToday(),
+        tamilCalendarApi.getTomorrow(),
+      ]);
+      setTamilToday(todayRes.status === 'fulfilled' ? todayRes.value?.data : null);
+      setTamilTomorrow(tomorrowRes.status === 'fulfilled' ? tomorrowRes.value?.data : null);
+    } catch (err) {
+      console.error('Error fetching Tamil calendar:', err);
+    } finally {
+      setCalendarLoading(false);
+    }
+  };
+
+  /**
+   * Fires the appropriate smart notification based on the rule that was applied.
+   */
+  const fireRuleNotification = (ruleCode, reason) => {
+    if (!ruleCode) return;
+    const typeMap = {
+      festival:  'info',
+      amavasai:  'info',
+      wednesday: 'warning',
+      normal:    'success',
+    };
+    addNotification(reason || `Menu generated using rule: ${ruleCode}`, typeMap[ruleCode] || 'info');
+  };
+
   const handleGenerateClick = async () => {
     if (isSpinning) return;
     try {
       setCarouselMode(true);
       const res = await menuApi.generateTomorrow();
-      const generatedFood = res.data.foodId;
+      const generatedMenu = res.data;
+      const generatedFood = generatedMenu.foodId;
 
       const spinBtn = document.getElementById('carousel-spin-trigger');
       if (spinBtn) {
         spinBtn.dataset.foodId = generatedFood._id;
         spinBtn.click();
       }
-      
-      addNotification("Tomorrow's Lunch menu generation initiated...", 'info');
+
+      // Smart notification based on rule applied
+      const ruleCode = generatedMenu.ruleCode || tamilTomorrow?.rule?.ruleCode || 'normal';
+      const reason   = tamilTomorrow?.rule?.reason || "Tomorrow's Lunch menu generation initiated...";
+      fireRuleNotification(ruleCode, reason);
+
     } catch (err) {
-      addNotification(err.response?.data?.message || "Failed to generate lunch", 'warning');
+      const errData = err.response?.data;
+      // Category-specific error: e.g. "No Non-Veg foods are currently available."
+      if (errData?.code === 'NO_CATEGORY_FOODS') {
+        addNotification(errData.message, 'warning');
+      } else {
+        addNotification(errData?.message || 'Failed to generate lunch', 'warning');
+      }
       setCarouselMode(false);
     }
   };
@@ -62,7 +246,8 @@ const Dashboard = () => {
     try {
       setCarouselMode(true);
       const res = await menuApi.skipTomorrow();
-      const newFood = res.data.foodId;
+      const newMenu = res.data;
+      const newFood = newMenu.foodId;
 
       const spinBtn = document.getElementById('carousel-spin-trigger');
       if (spinBtn) {
@@ -70,9 +255,18 @@ const Dashboard = () => {
         spinBtn.click();
       }
 
-      addNotification("Lunch skipped. Selecting next available menu item...", 'warning');
+      // Smart skip notification — preserve rule context
+      const ruleCode = newMenu.ruleCode || tamilTomorrow?.rule?.ruleCode || 'normal';
+      const ruleLabel = newMenu.ruleApplied || tamilTomorrow?.rule?.ruleApplied || 'Normal Random';
+      addNotification(`Dish skipped. Next selection follows: ${ruleLabel}`, 'warning');
+
     } catch (err) {
-      addNotification(err.response?.data?.message || "Failed to skip menu item", 'warning');
+      const errData = err.response?.data;
+      if (errData?.code === 'NO_CATEGORY_FOODS') {
+        addNotification(errData.message, 'warning');
+      } else {
+        addNotification(errData?.message || 'Failed to skip menu item', 'warning');
+      }
       setCarouselMode(false);
     }
   };
@@ -83,11 +277,15 @@ const Dashboard = () => {
     addNotification(`Tomorrow's Lunch set to: ${selectedFood.name} 🎉`, 'success');
   };
 
+  // Resolve rule badge data: prefer live menu data, fall back to Tamil API prediction
+  const tomorrowRuleCode    = tomorrowMenu?.ruleCode    || tamilTomorrow?.rule?.ruleCode    || null;
+  const tomorrowRuleApplied = tomorrowMenu?.ruleApplied || tamilTomorrow?.rule?.ruleApplied || null;
+
   return (
     <div className="relative min-h-screen pb-12 w-full overflow-x-hidden">
       {/* Notification bell row */}
       <div className="flex justify-end mb-6 relative">
-        <button 
+        <button
           onClick={() => setNotifOpen(!notifOpen)}
           className="relative glass-panel p-3 rounded-xl hover:bg-white/10 transition-all border border-white/10 text-gray-300 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
         >
@@ -97,16 +295,16 @@ const Dashboard = () => {
         <NotificationsPanel isOpen={notifOpen} onClose={() => setNotifOpen(false)} />
       </div>
 
-      {/* Main Dashboard Layout — stacks on mobile, two-column on large screens */}
+      {/* Main Dashboard Layout */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 xl:gap-8">
-        
-        {/* Left Side: Today & Tomorrow Cards */}
+
+        {/* Left Side: Today, Tomorrow Cards + Tamil Calendar Card */}
         <div className="col-span-1 xl:col-span-7 flex flex-col gap-6">
-          
+
           {/* ── Today's Lunch Card ── */}
           <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-white/5 relative overflow-hidden group hover:shadow-[0_0_30px_rgba(34,197,94,0.1)] transition-all duration-500">
             <div className="absolute -right-20 -top-20 w-48 h-48 bg-accentGreen/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-accentGreen/20 transition-colors duration-500" />
-            
+
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs uppercase font-bold tracking-wider text-accentGreen flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-full bg-accentGreen animate-pulse shadow-[0_0_8px_#22C55E]" />
@@ -117,11 +315,10 @@ const Dashboard = () => {
 
             {todayMenu ? (
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start">
-                {/* Food image */}
                 <div className="w-full sm:w-36 lg:w-40 h-40 rounded-2xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
                   {todayMenu.foodId?.image ? (
                     <img
-                      src={todayMenu.foodId?.image}
+                      src={getImageUrl(todayMenu.foodId?.image)}
                       alt={todayMenu.foodId?.name || 'Food'}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"
@@ -130,16 +327,21 @@ const Dashboard = () => {
                     <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
                   )}
                 </div>
-                {/* Details */}
                 <div className="flex-1 text-center sm:text-left">
                   <span className="text-[10px] bg-accentGreen/10 border border-accentGreen/30 text-accentGreen px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider">
                     {todayMenu.foodId?.category}
                   </span>
                   <h3 className="text-xl sm:text-2xl font-bold text-white mt-2 mb-2 tracking-tight">{todayMenu.foodId?.name}</h3>
-                  <p className="text-gray-400 text-sm leading-relaxed mb-4">{todayMenu.foodId?.description}</p>
-                  <div className="inline-flex items-center gap-2 text-xs text-gray-400 glass-panel px-3 py-1.5 rounded-lg bg-black/20">
-                    <CheckCircle className="h-3.5 w-3.5 text-accentGreen" />
-                    <span>Prepared &amp; Served</span>
+                  <p className="text-gray-400 text-sm leading-relaxed mb-3">{todayMenu.foodId?.description}</p>
+                  <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+                    <div className="inline-flex items-center gap-2 text-xs text-gray-400 glass-panel px-3 py-1.5 rounded-lg bg-black/20">
+                      <CheckCircle className="h-3.5 w-3.5 text-accentGreen" />
+                      <span>Prepared &amp; Served</span>
+                    </div>
+                    {/* Rule badge for today's menu */}
+                    {todayMenu.ruleCode && (
+                      <RuleBadge ruleCode={todayMenu.ruleCode} ruleApplied={todayMenu.ruleApplied} />
+                    )}
                   </div>
                 </div>
               </div>
@@ -170,11 +372,10 @@ const Dashboard = () => {
 
             {tomorrowMenu && !carouselMode ? (
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start">
-                {/* Food image */}
                 <div className="w-full sm:w-36 lg:w-40 h-40 rounded-2xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
                   {tomorrowMenu.foodId?.image ? (
                     <img
-                      src={tomorrowMenu.foodId?.image}
+                      src={getImageUrl(tomorrowMenu.foodId?.image)}
                       alt={tomorrowMenu.foodId?.name || 'Food'}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"
@@ -183,16 +384,22 @@ const Dashboard = () => {
                     <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
                   )}
                 </div>
-                {/* Details */}
                 <div className="flex-1 text-center sm:text-left flex flex-col justify-between">
                   <div>
                     <span className="text-[10px] bg-accentOrange/10 border border-accentOrange/30 text-accentOrange px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider">
                       {tomorrowMenu.foodId?.category}
                     </span>
                     <h3 className="text-xl sm:text-2xl font-bold text-white mt-2 mb-2 tracking-tight">{tomorrowMenu.foodId?.name}</h3>
-                    <p className="text-gray-400 text-sm leading-relaxed mb-4">{tomorrowMenu.foodId?.description}</p>
+                    <p className="text-gray-400 text-sm leading-relaxed mb-3">{tomorrowMenu.foodId?.description}</p>
+
+                    {/* ── Rule Applied Badge ── */}
+                    {tomorrowRuleCode && (
+                      <div className="mb-4">
+                        <RuleBadge ruleCode={tomorrowRuleCode} ruleApplied={tomorrowRuleApplied} />
+                      </div>
+                    )}
                   </div>
-                  
+
                   {/* Action Buttons */}
                   <div className="flex flex-col xs:flex-row flex-wrap gap-3 justify-center sm:justify-start">
                     <button
@@ -221,6 +428,12 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-10 text-center">
+                {/* Pre-generation rule preview */}
+                {tomorrowRuleCode && (
+                  <div className="mb-4">
+                    <RuleBadge ruleCode={tomorrowRuleCode} ruleApplied={tomorrowRuleApplied} />
+                  </div>
+                )}
                 <Sparkles className="h-10 w-10 text-accentPurple mb-2 animate-pulse" />
                 <h4 className="font-bold text-white mb-1">Plan Tomorrow's Recipe</h4>
                 <p className="text-xs text-gray-400 max-w-sm mb-5">Start by generating a random available dish from your database list.</p>
@@ -234,10 +447,14 @@ const Dashboard = () => {
               </div>
             )}
           </div>
+
+          {/* ── Tamil Calendar Card ── */}
+          <TamilCalendarCard data={tamilToday} loading={calendarLoading} />
+
         </div>
 
         {/* Right Side: Premium 3D Carousel Panel */}
-        <div className="col-span-1 xl:col-span-5 flex flex-col">
+        <div className="col-span-1 xl:col-span-5 flex flex-col gap-6">
           <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-white/5 flex flex-col justify-between relative overflow-hidden">
             <div className="mb-4">
               <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
@@ -249,7 +466,7 @@ const Dashboard = () => {
 
             {/* Carousel Container */}
             <div className="my-auto">
-              <PremiumCarousel 
+              <PremiumCarousel
                 foods={availableFoods}
                 onSelectionComplete={onCarouselFinished}
                 isSpinning={isSpinning}
@@ -261,6 +478,58 @@ const Dashboard = () => {
               Spinning uses Cover Flow 3D effects to highlight selections.
             </div>
           </div>
+
+          {/* ── Tomorrow's Tamil Calendar Info ── */}
+          {!calendarLoading && tamilTomorrow?.tamilCalendar && (
+            <div className="glass-panel rounded-[24px] p-5 border border-white/5 relative overflow-hidden">
+              <div className="absolute -right-10 -top-10 w-32 h-32 bg-indigo-500/8 rounded-full blur-[60px] pointer-events-none" />
+
+              <div className="flex items-center gap-1.5 mb-3">
+                <Flame className="h-4 w-4 text-orange-400" />
+                <span className="text-xs uppercase font-bold tracking-wider text-orange-300">Tomorrow's Panchang</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                {[
+                  { label: 'Tamil Date',  value: tamilTomorrow.tamilCalendar.tamilDate },
+                  { label: 'Tamil Month', value: tamilTomorrow.tamilCalendar.tamilMonth },
+                  { label: 'Tithi',       value: tamilTomorrow.tamilCalendar.tithi },
+                  { label: 'Nakshatra',   value: tamilTomorrow.tamilCalendar.nakshatra },
+                ].map((f) => (
+                  <div key={f.label} className="bg-white/3 border border-white/5 rounded-xl p-2.5">
+                    <p className="text-[9px] text-gray-500 uppercase tracking-wider font-semibold mb-0.5">{f.label}</p>
+                    <p className="text-xs font-semibold text-white truncate">{f.value || '—'}</p>
+                  </div>
+                ))}
+              </div>
+
+              {tamilTomorrow.tamilCalendar.isFestival && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-500/15 border border-purple-500/30 mb-3">
+                  <span>🪔</span>
+                  <div>
+                    <p className="text-[9px] font-bold text-purple-300 uppercase tracking-wider">Festival Tomorrow</p>
+                    <p className="text-xs text-white font-semibold">{tamilTomorrow.tamilCalendar.festivalName}</p>
+                  </div>
+                </div>
+              )}
+              {tamilTomorrow.tamilCalendar.isAmavasai && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-500/15 border border-indigo-500/30 mb-3">
+                  <span>🌑</span>
+                  <p className="text-xs font-bold text-indigo-300">Amavasai Tomorrow</p>
+                </div>
+              )}
+
+              {/* Rule Applied for Tomorrow */}
+              {tamilTomorrow.rule && (
+                <div className="pt-3 border-t border-white/5">
+                  <RuleBadge ruleCode={tamilTomorrow.rule.ruleCode} ruleApplied={tamilTomorrow.rule.ruleApplied} />
+                  {tamilTomorrow.rule.reason && (
+                    <p className="text-[10px] text-gray-400 mt-2 leading-relaxed">{tamilTomorrow.rule.reason}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
       </div>

@@ -1,6 +1,5 @@
 import Menu from '../models/Menu.js';
 import { generateLunchForDate } from '../services/generatorService.js';
-import { mockDb } from '../services/mockDbService.js';
 
 // Date utility functions
 const getTodayStr = () => {
@@ -16,10 +15,7 @@ const getTomorrowStr = () => {
 
 export const getTodayMenu = async (req, res) => {
   try {
-    if (process.env.USE_MOCK_DB === 'true') {
-      const menu = mockDb.getToday();
-      return res.json(menu);
-    }
+
 
     const todayStr = getTodayStr();
     const menu = await Menu.findOne({ date: todayStr, status: 'active' }).populate('foodId');
@@ -34,10 +30,7 @@ export const getTodayMenu = async (req, res) => {
 
 export const getTomorrowMenu = async (req, res) => {
   try {
-    if (process.env.USE_MOCK_DB === 'true') {
-      const menu = mockDb.getTomorrow();
-      return res.json(menu);
-    }
+
 
     const tomorrowStr = getTomorrowStr();
     const menu = await Menu.findOne({ date: tomorrowStr, status: 'active' }).populate('foodId');
@@ -54,14 +47,20 @@ export const generateTomorrowMenu = async (req, res) => {
   try {
     const tomorrowStr = getTomorrowStr();
 
-    if (process.env.USE_MOCK_DB === 'true') {
-      const menu = mockDb.generateLunchForDate(tomorrowStr);
-      return res.status(201).json(menu);
-    }
+
 
     const menu = await generateLunchForDate(tomorrowStr);
     res.status(201).json(menu);
   } catch (error) {
+    // Typed error: no foods available for the required category (e.g. No Non-Veg on Wednesday)
+    if (error.code === 'NO_CATEGORY_FOODS') {
+      return res.status(409).json({
+        message: error.message,
+        ruleCode: error.ruleCode,
+        allowedCategory: error.allowedCategory,
+        code: 'NO_CATEGORY_FOODS',
+      });
+    }
     res.status(500).json({ message: "Error generating tomorrow's menu", error: error.message });
   }
 };
@@ -70,10 +69,7 @@ export const skipTomorrowMenu = async (req, res) => {
   try {
     const tomorrowStr = getTomorrowStr();
 
-    if (process.env.USE_MOCK_DB === 'true') {
-      const newMenu = mockDb.skipTomorrow();
-      return res.json(newMenu);
-    }
+
     
     // Find active menu for tomorrow
     const activeMenu = await Menu.findOne({ date: tomorrowStr, status: 'active' });
@@ -85,10 +81,19 @@ export const skipTomorrowMenu = async (req, res) => {
     activeMenu.status = 'skipped';
     await activeMenu.save();
 
-    // Generate another random food for tomorrow (which automatically avoids current skips and recent history)
+    // Generate another food for tomorrow — inherits the same Rule Engine category constraint
     const newMenu = await generateLunchForDate(tomorrowStr);
     res.json(newMenu);
   } catch (error) {
+    // Typed error: no more foods available for the required category after skipping
+    if (error.code === 'NO_CATEGORY_FOODS') {
+      return res.status(409).json({
+        message: error.message,
+        ruleCode: error.ruleCode,
+        allowedCategory: error.allowedCategory,
+        code: 'NO_CATEGORY_FOODS',
+      });
+    }
     res.status(500).json({ message: "Error skipping menu item", error: error.message });
   }
 };
@@ -97,10 +102,7 @@ export const getMenuHistory = async (req, res) => {
   try {
     const { month, search } = req.query; // YYYY-MM
 
-    if (process.env.USE_MOCK_DB === 'true') {
-      const menus = mockDb.getHistory(month, search);
-      return res.json(menus);
-    }
+
 
     let query = { status: 'active' };
 

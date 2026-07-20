@@ -1,85 +1,71 @@
-import Food from '../models/Food.js';
+/**
+ * generatorService.js
+ *
+ * Orchestrates the Smart Lunch Generator pipeline:
+ *   1. Fetch Tamil Calendar data for the target date
+ *   2. Evaluate business rules (Rule Engine)
+ *   3. Select an appropriate food item (Menu Generator)
+ *   4. Persist the menu to MongoDB with rule metadata
+ *
+ * This service is the single entry point for menu generation.
+ * All business logic lives in the dedicated sub-services.
+ */
+
 import Menu from '../models/Menu.js';
+import { getCalendarData } from './tamilCalendarService.js';
+import { evaluateRule } from './ruleEngine.js';
+import { selectFood } from './menuGenerator.js';
 
 /**
- * Generates tomorrow's lunch or any date's lunch following rules:
- * - Pick only available foods.
- * - Never repeat foods served in the previous 5 days.
- * - Never pick the same food twice during one generation (skipped foods for that date are excluded).
- * 
- * @param {string} dateStr - The target date in YYYY-MM-DD format
- * @returns {Promise<Object>} The generated Menu document populated with Food details
+ * Generates a lunch menu for the given date using the Smart Rule Engine.
+ *
+ * Steps:
+ *  1. Fetch Tamil calendar data (cached per day, null on API failure)
+ *  2. Evaluate rule priority → get allowedCategory + ruleApplied
+ *  3. Select food obeying: available=true, 5-day history, category filter
+ *  4. Mark any existing active menu for that date as 'skipped'
+ *  5. Save new Menu document with rule metadata
+ *  6. Return populated Menu document
+ *
+ * @param {string} dateStr - Target date in YYYY-MM-DD format
+ * @returns {Promise<Object>} Populated Menu mongoose document
+ * @throws {Error} If no suitable food is available
  */
 export const generateLunchForDate = async (dateStr) => {
-  // 1. Get the list of dates for the previous 5 days
-  const targetDate = new Date(dateStr);
-  const previousDates = [];
-  for (let i = 1; i <= 5; i++) {
-    const prevDate = new Date(targetDate);
-    prevDate.setDate(targetDate.getDate() - i);
-    const yyyy = prevDate.getFullYear();
-    const mm = String(prevDate.getMonth() + 1).padStart(2, '0');
-    const dd = String(prevDate.getDate()).padStart(2, '0');
-    previousDates.push(`${yyyy}-${mm}-${dd}`);
-  }
+  // ── Step 1: Tamil Calendar Data ──────────────────────────────────────────
+  // Returns null on API failure; rule engine treats null as "Normal Day"
+  const tamilData = await getCalendarData(dateStr);
 
-  // 2. Find food IDs served in the previous 5 days (status must be 'active')
-  const recentMenus = await Menu.find({
-    date: { $in: previousDates },
-    status: 'active'
-  }).select('foodId');
-  const excludedFoodIds = recentMenus.map(m => m.foodId.toString());
+  // ── Step 2: Rule Engine ───────────────────────────────────────────────────
+  const ruleResult = evaluateRule(tamilData, dateStr);
 
-  // 3. Find food IDs already generated (active or skipped) for the target date to prevent repeats
-  const todayMenus = await Menu.find({ date: dateStr }).select('foodId');
-  const skippedOrActiveTodayIds = todayMenus.map(m => m.foodId.toString());
+  console.log(`[GeneratorService] Rule for ${dateStr}: "${ruleResult.ruleApplied}" | Category: ${ruleResult.allowedCategory}`);
 
-  // Merge exclusions
-  const allExcludedIds = Array.from(new Set([...excludedFoodIds, ...skippedOrActiveTodayIds]));
+  // ── Step 3: Select Food ───────────────────────────────────────────────────
+  // selectFood throws a typed error if no foods available for the category
+  const selectedFood = await selectFood(dateStr, ruleResult);
 
-  // 4. Query available foods that are NOT in the excluded list
-  let candidateFoods = await Food.find({
-    available: true,
-    _id: { $nin: allExcludedIds }
-  });
+  // ── Step 4: Mark existing active menu as skipped ──────────────────────────
+  await Menu.updateMany(
+    { date: dateStr, status: 'active' },
+    { status: 'skipped' }
+  );
 
-  // Fallback: If no candidate foods are available due to strict 5-day rule or skips,
-  // we reset the 5-day exclusion rule and only respect the skips for today.
-  if (candidateFoods.length === 0) {
-    console.warn(`No foods available for ${dateStr} with 5-day history constraint. Relaxing history rule.`);
-    candidateFoods = await Food.find({
-      available: true,
-      _id: { $nin: skippedOrActiveTodayIds }
-    });
-  }
-
-  // Fallback 2: If we still don't have foods (e.g. everything is skipped or there are no foods),
-  // we look for any available food at all, or return null.
-  if (candidateFoods.length === 0) {
-    candidateFoods = await Food.find({ available: true });
-  }
-
-  if (candidateFoods.length === 0) {
-    throw new Error('No available food items found in the database. Please add or mark food items as available first.');
-  }
-
-  // 5. Select a random food
-  const randomIndex = Math.floor(Math.random() * candidateFoods.length);
-  const selectedFood = candidateFoods[randomIndex];
-
-  // 6. If there is an existing 'active' menu for this date, mark it as 'skipped'
-  await Menu.updateMany({ date: dateStr, status: 'active' }, { status: 'skipped' });
-
-  // 7. Save the new menu item
+  // ── Step 5: Save new menu with rule metadata ──────────────────────────────
   const newMenu = new Menu({
     date: dateStr,
     foodId: selectedFood._id,
     generatedAt: new Date(),
-    status: 'active'
+    status: 'active',
+    ruleApplied: ruleResult.ruleApplied,
+    ruleCode: ruleResult.ruleCode,
+    tamilCalendarSnapshot: tamilData,
   });
 
   await newMenu.save();
 
-  // Populate food details and return
-  return await Menu.findById(newMenu._id).populate('foodId');
+  // ── Step 6: Populate and return ───────────────────────────────────────────
+  const populated = await Menu.findById(newMenu._id).populate('foodId');
+  console.log(`[GeneratorService] Menu saved: "${selectedFood.name}" for ${dateStr}`);
+  return populated;
 };

@@ -1,20 +1,9 @@
 import Food from '../models/Food.js';
-import { uploadImage } from '../config/cloudinary.js';
-import { mockDb } from '../services/mockDbService.js';
-
-// Get base URL for local file uploads fallback
-const getServerBaseUrl = (req) => {
-  return `${req.protocol}://${req.get('host')}`;
-};
 
 export const getFoods = async (req, res) => {
   try {
     const { search } = req.query;
-    if (process.env.USE_MOCK_DB === 'true') {
-      const foods = mockDb.getFoods(search);
-      return res.json(foods);
-    }
-    
+
     let query = {};
     if (search) {
       query = {
@@ -42,7 +31,7 @@ export const addFood = async (req, res) => {
 
     let imageUrl = '';
     if (req.file) {
-      imageUrl = await uploadImage(req.file.path, getServerBaseUrl(req));
+      imageUrl = `/uploads/${req.file.filename}`;
     } else if (req.body.image) {
       imageUrl = req.body.image;
     }
@@ -54,11 +43,6 @@ export const addFood = async (req, res) => {
       image: imageUrl,
       available: available === 'false' || available === false ? false : true
     };
-
-    if (process.env.USE_MOCK_DB === 'true') {
-      const food = mockDb.addFood(foodData);
-      return res.status(201).json(food);
-    }
 
     const food = new Food(foodData);
     await food.save();
@@ -75,24 +59,9 @@ export const updateFood = async (req, res) => {
 
     let imageUrl = null;
     if (req.file) {
-      imageUrl = await uploadImage(req.file.path, getServerBaseUrl(req));
+      imageUrl = `/uploads/${req.file.filename}`;
     } else if (req.body.image) {
       imageUrl = req.body.image;
-    }
-
-    const updateData = {};
-    if (name) updateData.name = name;
-    if (category) updateData.category = category;
-    if (description) updateData.description = description;
-    if (available !== undefined) {
-      updateData.available = available === 'false' || available === false ? false : true;
-    }
-    if (imageUrl) updateData.image = imageUrl;
-
-    if (process.env.USE_MOCK_DB === 'true') {
-      const food = mockDb.updateFood(id, updateData);
-      if (!food) return res.status(404).json({ message: 'Food item not found' });
-      return res.json(food);
     }
 
     const food = await Food.findById(id);
@@ -119,12 +88,6 @@ export const deleteFood = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (process.env.USE_MOCK_DB === 'true') {
-      const success = mockDb.deleteFood(id);
-      if (!success) return res.status(404).json({ message: 'Food item not found' });
-      return res.json({ message: 'Food item deleted successfully' });
-    }
-
     const food = await Food.findByIdAndDelete(id);
     if (!food) {
       return res.status(404).json({ message: 'Food item not found' });
@@ -142,12 +105,6 @@ export const patchAvailability = async (req, res) => {
 
     if (available === undefined) {
       return res.status(400).json({ message: 'available field is required.' });
-    }
-
-    if (process.env.USE_MOCK_DB === 'true') {
-      const food = mockDb.patchAvailability(id, available);
-      if (!food) return res.status(404).json({ message: 'Food item not found' });
-      return res.json(food);
     }
 
     const food = await Food.findById(id);

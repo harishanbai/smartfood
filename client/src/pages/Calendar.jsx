@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, ChefHat } from 'lucide-react';
 import { menuApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
+import { getImageUrl } from '../utils/imageUtils';
 
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -252,7 +253,7 @@ const Calendar = () => {
               <div className="space-y-4">
                 <div className="w-full h-44 rounded-2xl overflow-hidden bg-black/20 border border-white/10">
                   {selectedDayMenu.foodId?.image ? (
-                    <img src={selectedDayMenu.foodId?.image} alt={selectedDayMenu.foodId?.name || 'Food'} className="w-full h-full object-cover" />
+                    <img src={getImageUrl(selectedDayMenu.foodId?.image)} alt={selectedDayMenu.foodId?.name || 'Food'} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
                   )}

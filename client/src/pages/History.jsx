@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Calendar, ChefHat, Filter } from 'lucide-react';
 import { menuApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
+import { getImageUrl } from '../utils/imageUtils';
 
 const History = () => {
   const [history, setHistory] = useState([]);
@@ -122,7 +123,7 @@ const History = () => {
                         <td className="p-4 flex items-center gap-3">
                           <div className="h-12 w-12 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
                             {food.image ? (
-                              <img src={food.image} alt={food.name} className="w-full h-full object-cover" loading="lazy" />
+                              <img src={getImageUrl(food.image)} alt={food.name} className="w-full h-full object-cover" loading="lazy" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-500">No Image</div>
                             )}
@@ -163,7 +164,7 @@ const History = () => {
                   <div className="flex flex-row items-center gap-4">
                     <div className="h-16 w-16 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
                       {food.image ? (
-                        <img src={food.image} alt={food.name} className="w-full h-full object-cover" loading="lazy" />
+                        <img src={getImageUrl(food.image)} alt={food.name} className="w-full h-full object-cover" loading="lazy" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-500">No Image</div>
                       )}

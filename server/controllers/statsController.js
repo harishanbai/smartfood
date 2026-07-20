@@ -1,13 +1,8 @@
 import Food from '../models/Food.js';
 import Menu from '../models/Menu.js';
-import { mockDb } from '../services/mockDbService.js';
 
 export const getStats = async (req, res) => {
   try {
-    if (process.env.USE_MOCK_DB === 'true') {
-      const stats = mockDb.getStats();
-      return res.json(stats);
-    }
 
     const totalFoods = await Food.countDocuments();
     const availableFoods = await Food.countDocuments({ available: true });
