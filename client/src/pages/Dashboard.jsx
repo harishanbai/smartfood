@@ -188,7 +188,6 @@ const Dashboard = () => {
     }
   };
 
-<<<<<<< HEAD
   const fetchTamilCalendar = async () => {
     setCalendarLoading(true);
     try {
@@ -219,7 +218,6 @@ const Dashboard = () => {
     addNotification(reason || `Menu generated using rule: ${ruleCode}`, typeMap[ruleCode] || 'info');
   };
 
-=======
   const handleManualSchedule = async () => {
     if (!selectedFoodId || assigning) return;
     setAssigning(true);
@@ -239,7 +237,6 @@ const Dashboard = () => {
     }
   };
 
->>>>>>> e8b72c53091b4bac27a753812383404d58ab64e4
   const handleGenerateClick = async () => {
     if (isSpinning) return;
     try {
@@ -254,15 +251,12 @@ const Dashboard = () => {
         spinBtn.click();
       }
 
-<<<<<<< HEAD
       // Smart notification based on rule applied
       const ruleCode = generatedMenu.ruleCode || tamilTomorrow?.rule?.ruleCode || 'normal';
       const reason   = tamilTomorrow?.rule?.reason || "Tomorrow's Lunch menu generation initiated...";
       fireRuleNotification(ruleCode, reason);
 
-=======
       addNotification(t('dashboard.initAlert'), 'info');
->>>>>>> e8b72c53091b4bac27a753812383404d58ab64e4
     } catch (err) {
       const errData = err.response?.data;
       // Category-specific error: e.g. "No Non-Veg foods are currently available."
@@ -289,15 +283,12 @@ const Dashboard = () => {
         spinBtn.click();
       }
 
-<<<<<<< HEAD
       // Smart skip notification — preserve rule context
       const ruleCode = newMenu.ruleCode || tamilTomorrow?.rule?.ruleCode || 'normal';
       const ruleLabel = newMenu.ruleApplied || tamilTomorrow?.rule?.ruleApplied || 'Normal Random';
       addNotification(`Dish skipped. Next selection follows: ${ruleLabel}`, 'warning');
 
-=======
       addNotification(t('dashboard.skipAlert'), 'warning');
->>>>>>> e8b72c53091b4bac27a753812383404d58ab64e4
     } catch (err) {
       const errData = err.response?.data;
       if (errData?.code === 'NO_CATEGORY_FOODS') {
@@ -336,11 +327,8 @@ const Dashboard = () => {
       {/* Main Dashboard Layout */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 xl:gap-8">
 
-<<<<<<< HEAD
         {/* Left Side: Today, Tomorrow Cards + Tamil Calendar Card */}
-=======
         {/* Left Side: Today & Tomorrow Cards */}
->>>>>>> e8b72c53091b4bac27a753812383404d58ab64e4
         <div className="col-span-1 xl:col-span-7 flex flex-col gap-6">
 
           {/* ── Today's Lunch Card ── */}
@@ -374,7 +362,6 @@ const Dashboard = () => {
                     {todayMenu.foodId?.category}
                   </span>
                   <h3 className="text-xl sm:text-2xl font-bold text-white mt-2 mb-2 tracking-tight">{todayMenu.foodId?.name}</h3>
-<<<<<<< HEAD
                   <p className="text-gray-400 text-sm leading-relaxed mb-3">{todayMenu.foodId?.description}</p>
                   <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
                     <div className="inline-flex items-center gap-2 text-xs text-gray-400 glass-panel px-3 py-1.5 rounded-lg bg-black/20">
@@ -385,15 +372,10 @@ const Dashboard = () => {
                     {todayMenu.ruleCode && (
                       <RuleBadge ruleCode={todayMenu.ruleCode} ruleApplied={todayMenu.ruleApplied} />
                     )}
-=======
-                  <p className="text-gray-400 text-sm leading-relaxed mb-4">{todayMenu.foodId?.description}</p>
-                  <div className="inline-flex items-center gap-2 text-xs text-gray-400 glass-panel px-3 py-1.5 rounded-lg bg-black/20">
-                    <CheckCircle className="h-3.5 w-3.5 text-accentGreen" />
-                    <span>{t('dashboard.preparedServed')}</span>
->>>>>>> e8b72c53091b4bac27a753812383404d58ab64e4
                   </div>
                 </div>
               </div>
+
             ) : (
               <div className="flex flex-col items-center justify-center py-10 text-center">
                 <AlertCircle className="h-10 w-10 text-gray-500 mb-2" />
@@ -476,7 +458,6 @@ const Dashboard = () => {
                 <p className="text-xs text-gray-400">{t('dashboard.spinPrompt')}</p>
               </div>
             ) : (
-<<<<<<< HEAD
               <div className="flex flex-col items-center justify-center py-10 text-center">
                 {/* Pre-generation rule preview */}
                 {tomorrowRuleCode && (
@@ -484,9 +465,6 @@ const Dashboard = () => {
                     <RuleBadge ruleCode={tomorrowRuleCode} ruleApplied={tomorrowRuleApplied} />
                   </div>
                 )}
-=======
-              <div className="flex flex-col items-center justify-center py-8 text-center w-full">
->>>>>>> e8b72c53091b4bac27a753812383404d58ab64e4
                 <Sparkles className="h-10 w-10 text-accentPurple mb-2 animate-pulse" />
                 <h4 className="font-bold text-white mb-1">{t('dashboard.notSelectedTitle')}</h4>
                 <p className="text-xs text-gray-400 max-w-sm mb-5">{t('dashboard.notSelectedSub')}</p>
@@ -522,6 +500,7 @@ const Dashboard = () => {
                 </div>
               </div>
             )}
+
           </div>
 
           {/* ── Tamil Calendar Card ── */}

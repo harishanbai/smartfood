@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { ShieldAlert, Sparkles, ChefHat } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useLanguage } from '../context/LanguageContext';
+import { getImageUrl } from '../utils/imageUtils';
 
 const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpinning }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -208,7 +209,7 @@ const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpi
                 <div className="relative w-full h-[180px] rounded-2xl overflow-hidden mb-3 group bg-black/20">
                   {item.image ? (
                     <motion.img 
-                      src={item.image} 
+                      src={getImageUrl(item.image)} 
                       alt={item.name} 
                       className="w-full h-full object-cover"
                       animate={isCenter && !isSpinning ? { scale: [1, 1.03, 1] } : {}}
