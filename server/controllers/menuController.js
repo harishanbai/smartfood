@@ -127,3 +127,33 @@ export const getMenuHistory = async (req, res) => {
     res.status(500).json({ message: "Error retrieving menu history", error: error.message });
   }
 };
+
+export const assignMenu = async (req, res) => {
+  try {
+    const { date, foodId } = req.body;
+    if (!date || !foodId) {
+      return res.status(400).json({ message: "Date and foodId are required." });
+    }
+
+    if (process.env.USE_MOCK_DB === 'true') {
+      const menu = mockDb.assignMenu(date, foodId);
+      return res.status(201).json(menu);
+    }
+
+    // Deactivate existing active menus for this date
+    await Menu.updateMany({ date, status: 'active' }, { status: 'skipped' });
+
+    // Create new menu
+    const menu = new Menu({
+      date,
+      foodId,
+      status: 'active'
+    });
+    await menu.save();
+    
+    const populated = await Menu.findById(menu._id).populate('foodId');
+    res.status(201).json(populated);
+  } catch (error) {
+    res.status(500).json({ message: "Error assigning menu item", error: error.message });
+  }
+};

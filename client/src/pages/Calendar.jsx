@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, ChefHat } from 'lucide-react';
-import { menuApi } from '../services/api';
+import { menuApi, foodApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -9,6 +9,10 @@ const Calendar = () => {
   const [menus, setMenus] = useState({});
   const [loading, setLoading] = useState(false);
   const [selectedDayMenu, setSelectedDayMenu] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [availableFoods, setAvailableFoods] = useState([]);
+  const [selectedFoodId, setSelectedFoodId] = useState('');
+  const [assigning, setAssigning] = useState(false);
   const { addNotification } = useNotifications();
   const { language, t, tc } = useLanguage();
 
@@ -35,7 +39,44 @@ const Calendar = () => {
 
   useEffect(() => {
     fetchMonthMenus();
+    fetchAvailableFoods();
   }, [currentDate]);
+
+  const fetchAvailableFoods = async () => {
+    try {
+      const res = await foodApi.getFoods();
+      const list = Array.isArray(res?.data) ? res.data.filter(f => f && f.available) : [];
+      setAvailableFoods(list);
+      if (list.length > 0) {
+        setSelectedFoodId(list[0]._id);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAssignMenu = async () => {
+    if (!selectedDate || !selectedFoodId || assigning) return;
+    setAssigning(true);
+    try {
+      await menuApi.assignMenu(selectedDate, selectedFoodId);
+      addNotification('Menu successfully assigned! 🎉', 'success');
+      await fetchMonthMenus();
+      const foodObj = availableFoods.find(f => f._id === selectedFoodId);
+      const newMenuObj = {
+        date: selectedDate,
+        foodId: foodObj,
+        generatedAt: new Date(),
+        status: 'active'
+      };
+      setSelectedDayMenu(newMenuObj);
+    } catch (err) {
+      console.error(err);
+      addNotification(err.response?.data?.message || 'Failed to assign menu', 'warning');
+    } finally {
+      setAssigning(false);
+    }
+  };
 
   const fetchMonthMenus = async () => {
     setLoading(true);
@@ -83,11 +124,13 @@ const Calendar = () => {
   const handlePrevMonth = () => {
     setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
     setSelectedDayMenu(null);
+    setSelectedDate(null);
   };
 
   const handleNextMonth = () => {
     setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
     setSelectedDayMenu(null);
+    setSelectedDate(null);
   };
 
   const daysInMonth = () => {
@@ -107,6 +150,7 @@ const Calendar = () => {
   };
 
   const handleDayClick = (dateStr) => {
+    setSelectedDate(dateStr);
     if (menus[dateStr]) {
       setSelectedDayMenu(menus[dateStr]);
     } else {
@@ -279,6 +323,41 @@ const Calendar = () => {
                   <span>Date: {selectedDayMenu.date}</span>
                   <span>Gen: {new Date(selectedDayMenu.generatedAt).toLocaleTimeString(locales[language] || 'en-US', { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
+              </div>
+            ) : selectedDate ? (
+              <div className="space-y-4">
+                <div className="flex flex-col items-center justify-center py-6 text-center text-gray-500 border border-dashed border-white/10 rounded-2xl p-4 bg-white/5">
+                  <ChefHat className="h-8 w-8 mb-2 text-gray-500" />
+                  <span className="text-xs font-semibold text-gray-400">
+                    {language === 'ta' ? `${selectedDate}-க்கு உணவு திட்டமிடப்படவில்லை` : `No menu scheduled for ${selectedDate}`}
+                  </span>
+                </div>
+                
+                {availableFoods.length > 0 ? (
+                  <div className="space-y-3 pt-2">
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
+                      {language === 'ta' ? 'உணவை ஒதுக்கு' : 'Assign a Dish'}
+                    </label>
+                    <select
+                      value={selectedFoodId}
+                      onChange={(e) => setSelectedFoodId(e.target.value)}
+                      className="w-full glass-panel px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accentPurple/50 transition-all [&>option]:bg-bgCard"
+                    >
+                      {availableFoods.map(food => (
+                        <option key={food._id} value={food._id}>{food.name} ({tc(food.category)})</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleAssignMenu}
+                      disabled={assigning}
+                      className="w-full mt-2 py-3 px-4 bg-gradient-to-r from-accentPurple to-accentOrange text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] disabled:opacity-50 transition-all cursor-pointer"
+                    >
+                      {assigning ? (language === 'ta' ? 'திட்டமிடப்படுகிறது...' : 'Scheduling...') : (language === 'ta' ? 'உணவை திட்டமிடு' : 'Schedule Dish')}
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500 text-center">{t('dashboard.noAvailableFoodsSub')}</p>
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-10 text-center text-gray-500">

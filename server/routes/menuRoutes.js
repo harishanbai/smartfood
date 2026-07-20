@@ -4,7 +4,8 @@ import {
   getTomorrowMenu,
   generateTomorrowMenu,
   skipTomorrowMenu,
-  getMenuHistory
+  getMenuHistory,
+  assignMenu
 } from '../controllers/menuController.js';
 
 const router = express.Router();
@@ -14,5 +15,6 @@ router.get('/tomorrow', getTomorrowMenu);
 router.post('/generate', generateTomorrowMenu);
 router.post('/skip', skipTomorrowMenu);
 router.get('/history', getMenuHistory);
+router.post('/', assignMenu);
 
 export default router;

@@ -13,6 +13,8 @@ const Dashboard = () => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [carouselMode, setCarouselMode] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [selectedFoodId, setSelectedFoodId] = useState('');
+  const [assigning, setAssigning] = useState(false);
   const { addNotification } = useNotifications();
   const { t } = useLanguage();
   const carouselTriggerRef = useRef(null);
@@ -30,12 +32,35 @@ const Dashboard = () => {
       ]);
       setTodayMenu(todayRes?.data || null);
       setTomorrowMenu(tomorrowRes?.data || null);
-      setAvailableFoods(Array.isArray(foodsRes?.data) ? foodsRes.data.filter(f => f && f.available) : []);
+      const list = Array.isArray(foodsRes?.data) ? foodsRes.data.filter(f => f && f.available) : [];
+      setAvailableFoods(list);
+      if (list.length > 0) {
+        setSelectedFoodId(list[0]._id);
+      }
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setTodayMenu(null);
       setTomorrowMenu(null);
       setAvailableFoods([]);
+    }
+  };
+
+  const handleManualSchedule = async () => {
+    if (!selectedFoodId || assigning) return;
+    setAssigning(true);
+    try {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      const tomorrowStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+      await menuApi.assignMenu(tomorrowStr, selectedFoodId);
+      addNotification("Tomorrow's lunch scheduled successfully! 🎉", 'success');
+      await fetchData();
+    } catch (err) {
+      console.error(err);
+      addNotification(err.response?.data?.message || "Failed to assign tomorrow's menu", 'warning');
+    } finally {
+      setAssigning(false);
     }
   };
 
@@ -222,17 +247,40 @@ const Dashboard = () => {
                 <p className="text-xs text-gray-400">{t('dashboard.spinPrompt')}</p>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-10 text-center">
+              <div className="flex flex-col items-center justify-center py-8 text-center w-full">
                 <Sparkles className="h-10 w-10 text-accentPurple mb-2 animate-pulse" />
                 <h4 className="font-bold text-white mb-1">{t('dashboard.notSelectedTitle')}</h4>
                 <p className="text-xs text-gray-400 max-w-sm mb-5">{t('dashboard.notSelectedSub')}</p>
-                <button
-                  onClick={handleGenerateClick}
-                  className="w-full sm:w-auto px-6 py-3 rounded-2xl text-xs font-bold bg-gradient-to-r from-accentPurple to-accentOrange text-white hover:opacity-90 shadow-lg shadow-purple-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  {t('dashboard.btnRollSelect')}
-                </button>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mt-2">
+                  <button
+                    onClick={handleGenerateClick}
+                    className="w-full sm:w-auto px-6 py-3 rounded-2xl text-xs font-bold bg-gradient-to-r from-accentPurple to-accentOrange text-white hover:opacity-90 shadow-lg shadow-purple-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    {t('dashboard.btnRollSelect')}
+                  </button>
+
+                  {availableFoods.length > 0 && (
+                    <div className="w-full sm:w-auto flex items-center gap-2 mt-2 sm:mt-0">
+                      <select
+                        value={selectedFoodId}
+                        onChange={(e) => setSelectedFoodId(e.target.value)}
+                        className="glass-panel px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all [&>option]:bg-bgCard min-h-[44px] min-w-[150px]"
+                      >
+                        {availableFoods.map(food => (
+                          <option key={food._id} value={food._id}>{food.name}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={handleManualSchedule}
+                        disabled={assigning}
+                        className="px-4 py-3 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/15 text-white border border-white/15 cursor-pointer min-h-[44px]"
+                      >
+                        {assigning ? '...' : 'Schedule'}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

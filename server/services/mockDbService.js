@@ -157,6 +157,32 @@ export const mockDb = {
     return mockDb.generateLunchForDate(tomorrowStr);
   },
 
+  assignMenu: (dateStr, foodId) => {
+    // Deactivate existing active menus for this date
+    mockMenus.forEach(m => {
+      if (m.date === dateStr && m.status === 'active') {
+        m.status = 'skipped';
+      }
+    });
+
+    const food = mockFoods.find(f => f._id === foodId);
+    if (!food) {
+      throw new Error("Food item not found");
+    }
+
+    // Save new menu
+    const newMenu = {
+      _id: 'mock_menu_' + Math.random().toString(36).substr(2, 9),
+      date: dateStr,
+      foodId: foodId,
+      generatedAt: new Date(),
+      status: 'active'
+    };
+    mockMenus.push(newMenu);
+
+    return { ...newMenu, foodId: food };
+  },
+
   getHistory: (month = '', search = '') => {
     let list = mockMenus.filter(m => m.status === 'active');
     

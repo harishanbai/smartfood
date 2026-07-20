@@ -93,6 +93,17 @@ const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpi
     };
   }, []);
 
+  // Auto-play slideshow when not spinning
+  useEffect(() => {
+    if (isSpinning || foods.length <= 1) return;
+
+    const slideshowInterval = setInterval(() => {
+      setCurrentIndex(prev => (prev + 1) % foods.length);
+    }, 3500); // transitions slide every 3.5s
+
+    return () => clearInterval(slideshowInterval);
+  }, [isSpinning, foods.length]);
+
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
 
   useEffect(() => {
