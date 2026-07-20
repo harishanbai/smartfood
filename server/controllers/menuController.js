@@ -15,9 +15,7 @@ const getTomorrowStr = () => {
 
 export const getTodayMenu = async (req, res) => {
   try {
-<<<<<<< HEAD
 
-=======
     const todayStr = getTodayStr();
 
     if (process.env.USE_MOCK_DB === 'true') {
@@ -31,7 +29,6 @@ export const getTodayMenu = async (req, res) => {
       }
       return res.json(menu);
     }
->>>>>>> e8b72c53091b4bac27a753812383404d58ab64e4
 
     let menu = await Menu.findOne({ date: todayStr, status: 'active' }).populate('foodId');
     if (!menu) {
