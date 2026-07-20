@@ -51,6 +51,37 @@ const normaliseApiResponse = (raw) => {
 };
 
 /**
+ * Generates mock Tamil Calendar data for offline/fallback mode.
+ * @param {string} dateStr - Target date in YYYY-MM-DD format
+ * @returns {Object} Normalised mock Tamil calendar data
+ */
+const getMockCalendarData = (dateStr) => {
+  const dateObj = new Date(dateStr);
+  const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dateObj.getDay()];
+  
+  const isAmavasai = dateObj.getDate() === 15;
+  const isPournami = dateObj.getDate() === 30;
+  const isFestival = dateObj.getDate() === 14;
+
+  const mockData = {
+    tamil_date: String(dateObj.getDate()),
+    tamil_month: "Aadi",
+    tamil_year: "Sobakiruthu",
+    day: dayOfWeek,
+    tithi: isAmavasai ? "Amavasai" : (isPournami ? "Pournami" : "Thuthiyai"),
+    nakshatra: "Karthigai",
+    festival_name: isFestival ? "Special Festival" : "",
+    is_festival: isFestival,
+    is_amavasai: isAmavasai,
+    is_pournami: isPournami,
+    sunrise: "06:00",
+    sunset: "18:00"
+  };
+
+  return normaliseApiResponse(mockData);
+};
+
+/**
  * Fetches Tamil calendar data for the given date string.
  * Checks in-memory cache first; fetches from API on miss.
  *
@@ -67,11 +98,12 @@ export const getCalendarData = async (dateStr) => {
 
   const apiKey = process.env.TAMIL_CALENDAR_API;
 
-  // 2. API key guard
+  // 2. API key guard - Fallback to mock data offline
   if (!apiKey) {
-    console.warn('[TamilCalendarService] TAMIL_CALENDAR_API key is not set in environment. Falling back to Normal Random.');
-    calendarCache.set(dateStr, null);
-    return null;
+    console.warn('[TamilCalendarService] TAMIL_CALENDAR_API key is not set in environment. Falling back to MOCK calendar data.');
+    const normalised = getMockCalendarData(dateStr);
+    calendarCache.set(dateStr, normalised);
+    return normalised;
   }
 
   const apiHost = 'yawin-indian-astrology.p.rapidapi.com';
@@ -101,39 +133,16 @@ export const getCalendarData = async (dateStr) => {
 
       if (response.status === 401 || response.status === 403) {
         console.warn('  - Suggestion: RapidAPI key is invalid or not subscribed. USING MOCK DATA INSTEAD.');
-        
-        // Mock data generation
-        const dateObj = new Date(dateStr);
-        const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dateObj.getDay()];
-        
-        const isAmavasai = dateObj.getDate() === 15;
-        const isPournami = dateObj.getDate() === 30;
-        const isFestival = dateObj.getDate() === 14;
-
-        const mockData = {
-          tamil_date: String(dateObj.getDate()),
-          tamil_month: "Aadi",
-          tamil_year: "Sobakiruthu",
-          day: dayOfWeek,
-          tithi: isAmavasai ? "Amavasai" : (isPournami ? "Pournami" : "Thuthiyai"),
-          nakshatra: "Karthigai",
-          festival_name: isFestival ? "Special Festival" : "",
-          is_festival: isFestival,
-          is_amavasai: isAmavasai,
-          is_pournami: isPournami,
-          sunrise: "06:00",
-          sunset: "18:00"
-        };
-
-        const normalised = normaliseApiResponse(mockData);
+        const normalised = getMockCalendarData(dateStr);
         calendarCache.set(dateStr, normalised);
         return normalised;
       } else if (response.status === 429) {
         console.error('  - Suggestion: RapidAPI Rate Limit exceeded.');
       }
 
-      calendarCache.set(dateStr, null);
-      return null;
+      const normalised = getMockCalendarData(dateStr);
+      calendarCache.set(dateStr, normalised);
+      return normalised;
     }
 
     const data = await response.json();
@@ -147,12 +156,12 @@ export const getCalendarData = async (dateStr) => {
     return normalised;
 
   } catch (error) {
-    console.error(`[TamilCalendarService] Failed to fetch data for ${dateStr}:`);
+    console.error(`[TamilCalendarService] Failed to fetch data for ${dateStr}. Falling back to MOCK calendar data:`);
     console.error(`  - Error Message: ${error.message}`);
-    console.error(`  - Error Stack: ${error.stack}`);
     
-    calendarCache.set(dateStr, null);
-    return null;
+    const normalised = getMockCalendarData(dateStr);
+    calendarCache.set(dateStr, normalised);
+    return normalised;
   }
 };
 
