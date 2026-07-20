@@ -13,12 +13,14 @@ import {
 import { foodApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { getImageUrl } from '../utils/imageUtils';
+import { useLanguage } from '../context/LanguageContext';
 
 const Foods = () => {
   const [foods, setFoods] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const { addNotification } = useNotifications();
+  const { t, tc } = useLanguage();
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -55,7 +57,7 @@ const Foods = () => {
     } catch (err) {
       console.error(err);
       setFoods([]);
-      addNotification('Failed to fetch food items', 'warning');
+      addNotification(t('foods.failedFetch'), 'warning');
     } finally {
       setLoading(false);
     }
@@ -98,27 +100,27 @@ const Foods = () => {
       const newStatus = !food.available;
       await foodApi.patchAvailability(food._id, newStatus);
       setFoods(prev => prev.map(f => f._id === food._id ? { ...f, available: newStatus } : f));
-      addNotification(`"${food.name}" marked as ${newStatus ? 'Available' : 'Unavailable'}`, 'info');
+      addNotification(`"${food.name}" ${t('foods.status')}: ${newStatus ? t('dashboard.available') : t('dashboard.unavailable')}`, 'info');
     } catch (err) {
-      addNotification('Failed to update food status', 'warning');
+      addNotification(t('foods.failedFetch'), 'warning');
     }
   };
 
   const handleDeleteFood = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
+    if (!window.confirm(`${t('foods.confirmDelete')} ("${name}")`)) return;
     try {
       await foodApi.deleteFood(id);
       setFoods(prev => prev.filter(f => f._id !== id));
-      addNotification(`"${name}" deleted successfully`, 'success');
+      addNotification(`"${name}" ${t('foods.successDelete')}`, 'success');
     } catch (err) {
-      addNotification('Failed to delete food item', 'warning');
+      addNotification(t('foods.failedDelete'), 'warning');
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !category || !description) {
-      addNotification('Please fill in all required fields', 'warning');
+      addNotification(t('foods.nameRequired'), 'warning');
       return;
     }
 
@@ -135,11 +137,11 @@ const Foods = () => {
       if (modalMode === 'add') {
         const res = await foodApi.addFood(formData);
         setFoods(prev => [res.data, ...prev]);
-        addNotification(`"${name}" added successfully!`, 'success');
+        addNotification(`"${name}" ${t('foods.successAdd')}`, 'success');
       } else {
         const res = await foodApi.updateFood(selectedFoodId, formData);
         setFoods(prev => prev.map(f => f._id === selectedFoodId ? res.data : f));
-        addNotification(`"${name}" updated successfully!`, 'success');
+        addNotification(`"${name}" ${t('foods.successEdit')}`, 'success');
       }
       setIsModalOpen(false);
     } catch (err) {
@@ -157,7 +159,7 @@ const Foods = () => {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Search food by name, category or description..."
+            placeholder={t('foods.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full glass-panel pl-12 pr-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-gray-400 text-sm focus:outline-none focus:border-accentPurple/50 focus:shadow-[0_0_15px_rgba(168,85,247,0.15)] transition-all"
@@ -170,7 +172,7 @@ const Foods = () => {
           className="w-full md:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-accentPurple to-accentOrange text-white text-sm font-bold hover:opacity-95 shadow-lg shadow-purple-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
           <Plus className="h-5 w-5" />
-          Add Food Item
+          {t('foods.addDish')}
         </button>
       </div>
 
@@ -191,9 +193,9 @@ const Foods = () => {
       ) : foods.length === 0 ? (
         <div className="glass-panel rounded-[24px] p-12 text-center max-w-lg mx-auto flex flex-col items-center">
           <ChefHat className="h-12 w-12 text-gray-500 mb-3" />
-          <h3 className="text-xl font-bold text-white mb-2">No food items found</h3>
+          <h3 className="text-xl font-bold text-white mb-2">{t('history.noHistoryRecords')}</h3>
           <p className="text-gray-400 text-sm">
-            {search ? 'Try adjusting your search criteria.' : 'Get started by clicking Add Food Item.'}
+            {search ? t('history.noHistorySub') : t('foods.subtitle')}
           </p>
         </div>
       ) : (
@@ -204,11 +206,11 @@ const Foods = () => {
               <table className="w-full text-left border-collapse min-w-[700px]">
                 <thead>
                   <tr className="border-b border-white/5 bg-white/5 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                    <th className="p-4">Dish</th>
-                    <th className="p-4">Category</th>
-                    <th className="p-4">Description</th>
-                    <th className="p-4">Status</th>
-                    <th className="p-4 text-right">Actions</th>
+                    <th className="p-4">{t('history.dish')}</th>
+                    <th className="p-4">{t('foods.category')}</th>
+                    <th className="p-4">{t('dashboard.desc')}</th>
+                    <th className="p-4">{t('foods.status')}</th>
+                    <th className="p-4 text-right">{t('foods.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 text-sm">
@@ -226,7 +228,7 @@ const Foods = () => {
                       </td>
                       <td className="p-4">
                         <span className="text-[10px] bg-accentOrange/10 border border-accentOrange/30 text-accentOrange px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider whitespace-nowrap">
-                          {food.category}
+                          {tc(food.category)}
                         </span>
                       </td>
                       <td className="p-4 text-gray-400 max-w-xs truncate">{food.description}</td>
@@ -241,7 +243,7 @@ const Foods = () => {
                             <ToggleLeft className="h-6 w-6 text-gray-500" />
                           )}
                           <span className={food.available ? "text-accentGreen font-semibold" : "text-gray-500"}>
-                            {food.available ? 'Available' : 'Unavailable'}
+                            {food.available ? t('dashboard.available') : t('dashboard.unavailable')}
                           </span>
                         </button>
                       </td>
@@ -287,13 +289,13 @@ const Foods = () => {
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-gray-600 gap-2">
                       <ImageIcon className="h-8 w-8 text-gray-700" />
-                      <span className="text-xs">No image uploaded</span>
+                      <span className="text-xs">No Image</span>
                     </div>
                   )}
 
                   {/* Category tag */}
                   <span className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-[10px] text-accentOrange px-2.5 py-1 rounded-full border border-accentOrange/30 font-semibold uppercase tracking-wider">
-                    {food.category}
+                    {tc(food.category)}
                   </span>
 
                   {/* Availability status tag */}
@@ -303,7 +305,7 @@ const Foods = () => {
                       : 'bg-accentOrange/20 border-accentOrange/30 text-accentOrange'
                     }
                   `}>
-                    {food.available ? 'Available' : 'Unavailable'}
+                    {food.available ? t('dashboard.available') : t('dashboard.unavailable')}
                   </span>
                 </div>
 
@@ -327,7 +329,7 @@ const Foods = () => {
                     ) : (
                       <ToggleLeft className="h-6 w-6 text-gray-500" />
                     )}
-                    <span>Status</span>
+                    <span>{t('foods.status')}</span>
                   </button>
 
                   <div className="flex items-center gap-1">
@@ -363,13 +365,13 @@ const Foods = () => {
             </button>
 
             <h3 className="text-xl font-bold text-white mb-6">
-              {modalMode === 'add' ? 'Add New Food Item' : 'Edit Food Item'}
+              {modalMode === 'add' ? t('foods.addNew') : t('foods.editDish')}
             </h3>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Food Name *</label>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('foods.dishName')} *</label>
                 <input
                   type="text"
                   required
@@ -382,21 +384,21 @@ const Foods = () => {
 
               {/* Category */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Category *</label>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('foods.category')} *</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full glass-panel px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accentPurple/50 transition-all [&>option]:bg-bgCard"
                 >
                   {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat} value={cat}>{tc(cat)}</option>
                   ))}
                 </select>
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Description *</label>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('dashboard.desc')} *</label>
                 <textarea
                   required
                   rows="3"
@@ -409,7 +411,7 @@ const Foods = () => {
 
               {/* File Upload / Image Preview */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Food Image</label>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('foods.dishImage')}</label>
                 <div className="flex gap-4 items-center">
                   <div className="h-16 w-16 rounded-xl overflow-hidden bg-black/25 border border-white/10 flex-shrink-0 flex items-center justify-center text-gray-500">
                     {imagePreview ? (
@@ -430,9 +432,9 @@ const Foods = () => {
                       htmlFor="food-image-input"
                       className="inline-block px-4 py-2 bg-white/5 border border-white/10 text-xs text-white font-bold rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
                     >
-                      Choose Image File
+                      {t('foods.uploadPrompt')}
                     </label>
-                    <span className="text-[10px] text-gray-500 block mt-1">Accepts PNG, JPG or WEBP up to 5MB</span>
+                    <span className="text-[10px] text-gray-500 block mt-1">{t('foods.uploadFormats')}</span>
                   </div>
                 </div>
               </div>
@@ -440,8 +442,8 @@ const Foods = () => {
               {/* Availability Switch */}
               <div className="flex items-center justify-between p-3 bg-black/20 border border-white/5 rounded-xl">
                 <div>
-                  <h5 className="text-xs font-semibold text-white">Item Availability</h5>
-                  <p className="text-[10px] text-gray-400">Determines if this item can be chosen for lunch generations.</p>
+                  <h5 className="text-xs font-semibold text-white">{t('foods.status')}</h5>
+                  <p className="text-[10px] text-gray-400">{t('dashboard.availableRecipesSub')}</p>
                 </div>
                 <button
                   type="button"
@@ -463,13 +465,13 @@ const Foods = () => {
                   onClick={() => setIsModalOpen(false)}
                   className="w-full sm:w-auto px-5 py-3 sm:py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-white rounded-xl transition-all cursor-pointer min-h-[44px]"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   className="w-full sm:w-auto px-5 py-3 sm:py-2.5 bg-gradient-to-r from-accentPurple to-accentOrange text-xs font-bold text-white rounded-xl shadow-lg shadow-purple-500/10 transition-all cursor-pointer min-h-[44px]"
                 >
-                  {modalMode === 'add' ? 'Save Food' : 'Update Details'}
+                  {t('common.save')}
                 </button>
               </div>
             </form>

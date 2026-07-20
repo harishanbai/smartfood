@@ -1,0 +1,10 @@
+{
+  "name": "smartfood-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix client",
+    "start": "npm start --prefix server",
+    "install:all": "npm install --prefix client && npm install --prefix server"
+  }
+}

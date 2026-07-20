@@ -1,15 +1,22 @@
 import React, { useState } from 'react';
-import { ChefHat, Database, AlertTriangle, ShieldCheck, RefreshCw } from 'lucide-react';
+import { ChefHat, Database, AlertTriangle, ShieldCheck, RefreshCw, Globe } from 'lucide-react';
 import api from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const Settings = () => {
   const [loading, setLoading] = useState(false);
   const { addNotification } = useNotifications();
+  const { language, setLanguage, t } = useLanguage();
+
+  const languagesList = [
+    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'ta', name: 'தமிழ்', flag: '🇮🇳' }
+  ];
 
   // Function to seed database with premium recipes
   const handleSeedDatabase = async () => {
-    if (!window.confirm("This will add 10 pre-configured dishes to your food list. Proceed?")) return;
+    if (!window.confirm(t('settings.seedConfirm'))) return;
     setLoading(true);
     try {
       const seedDishes = [
@@ -85,37 +92,16 @@ const Settings = () => {
         }
       ];
 
-      // Add each item via API sequentially
-      for (const dish of seedDishes) {
-        const formData = new FormData();
-        formData.append('name', dish.name);
-        formData.append('category', dish.category);
-        formData.append('description', dish.description);
-        formData.append('available', dish.available);
-        // We will send the image URL. Let's make sure the backend controller allows setting a URL or handles it.
-        // Wait, our backend addFood sets image to req.file.path if req.file is present.
-        // Let's modify our backend addFood controller slightly if we want it to accept a direct string url as fallback.
-        // Let's check: in backend addFood, `let imageUrl = ''; if (req.file) { imageUrl = ... }`
-        // But what if `req.body.image` is already a URL string? We can easily check `if (req.body.image) imageUrl = req.body.image;`
-        // Let's do that! First let's send a post request with the image url.
-        formData.append('image', dish.image); // This is text, but we need to support it in controller. Let's make sure our controller handles it.
-      }
-
-      // To make it easy, we can hit a seed endpoint, or send JSON POST requests.
-      // Let's do direct JSON POST requests to /api/foods (without FormData headers, standard application/json)
-      // because our backend addFood accepts req.body fields if they are sent as JSON.
-      // Let's modify our backend route to support either json or multer. Standard Express app.use(express.json()) handles JSON!
-      // So if we send content-type application/json, we can seed foods directly.
       for (const dish of seedDishes) {
         await api.post('/foods', dish, {
           headers: { 'Content-Type': 'application/json' }
         });
       }
 
-      addNotification("Seeded database with 10 premium food items!", "success");
+      addNotification(t('settings.seedSuccess'), "success");
     } catch (err) {
       console.error(err);
-      addNotification("Failed to seed database", "warning");
+      addNotification(t('settings.seedFailed'), "warning");
     } finally {
       setLoading(false);
     }
@@ -125,19 +111,47 @@ const Settings = () => {
     <div className="min-h-screen pb-12 w-full max-w-3xl mx-auto">
       <div className="space-y-8">
         
+        {/* Language Selection Card */}
+        <div className="glass-panel rounded-[24px] p-6 border border-white/5 relative overflow-hidden">
+          <div className="absolute -right-20 -top-20 w-48 h-48 bg-accentPurple/10 rounded-full blur-[80px] pointer-events-none" />
+          <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+            <Globe className="h-5 w-5 text-accentPurple" />
+            {t('settings.langSelect')}
+          </h3>
+          <p className="text-xs text-gray-400 mb-6">{t('settings.langSelectDesc')}</p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {languagesList.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => setLanguage(lang.code)}
+                className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all cursor-pointer ${
+                  language === lang.code
+                    ? 'bg-accentPurple/10 border-accentPurple/50 text-white shadow-lg shadow-purple-500/10 scale-103'
+                    : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <span className="text-2xl mb-2">{lang.flag}</span>
+                <span className="text-sm font-semibold">{lang.name}</span>
+                <span className="text-[10px] text-gray-500 font-mono mt-1 uppercase">{lang.code}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Database Management Card */}
         <div className="glass-panel rounded-[24px] p-6 border border-white/5">
           <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
             <Database className="h-5 w-5 text-accentPurple" />
-            Database Setup
+            {t('settings.dbSetup')}
           </h3>
-          <p className="text-xs text-gray-400 mb-6">Seed demo recipes to populate the dashboard immediately.</p>
+          <p className="text-xs text-gray-400 mb-6">{t('settings.dbSetupSub')}</p>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-white/5 border border-white/5 rounded-2xl">
             <div>
-              <h4 className="text-sm font-semibold text-white">Pre-seed Premium Recipe Menu</h4>
+              <h4 className="text-sm font-semibold text-white">{t('settings.preseedTitle')}</h4>
               <p className="text-xs text-gray-400 mt-1 max-w-md">
-                Adds 10 diverse dishes (Main courses, salads, desserts, beverages) complete with high-res images and culinary descriptions.
+                {t('settings.preseedSub')}
               </p>
             </div>
             <button
@@ -146,7 +160,7 @@ const Settings = () => {
               className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-accentPurple to-accentOrange text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-500/20 hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-              Seed Recipes
+              {loading ? t('settings.seeding') : t('settings.btnSeed')}
             </button>
           </div>
         </div>
@@ -155,27 +169,27 @@ const Settings = () => {
         <div className="glass-panel rounded-[24px] p-6 border border-white/5">
           <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-accentGreen" />
-            System Scheduler Config
+            {t('settings.schedulerConfig')}
           </h3>
-          <p className="text-xs text-gray-400 mb-6">MESS master background workers and automation status.</p>
+          <p className="text-xs text-gray-400 mb-6">{t('settings.schedulerSub')}</p>
 
           <div className="space-y-4">
             <div className="flex justify-between items-center text-xs pb-3 border-b border-white/5">
-              <span className="text-gray-400">Node-Cron Status</span>
+              <span className="text-gray-400">{t('settings.cronStatus')}</span>
               <span className="text-accentGreen font-bold flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-accentGreen animate-pulse" />
-                Active & Running
+                {t('settings.cronActive')}
               </span>
             </div>
             
             <div className="flex justify-between items-center text-xs pb-3 border-b border-white/5">
-              <span className="text-gray-400">Trigger Frequency</span>
-              <span className="text-white font-mono font-medium">Daily at exactly 08:00 PM (20:00)</span>
+              <span className="text-gray-400">{t('settings.triggerFreq')}</span>
+              <span className="text-white font-mono font-medium">{t('settings.triggerTime')}</span>
             </div>
 
             <div className="flex justify-between items-center text-xs pb-3 border-b border-white/5">
-              <span className="text-gray-400">Target Action</span>
-              <span className="text-white font-medium">Generate tomorrow's menu avoiding previous 5-day selections</span>
+              <span className="text-gray-400">{t('settings.targetAction')}</span>
+              <span className="text-white font-medium">{t('settings.targetActionDesc')}</span>
             </div>
           </div>
         </div>
@@ -184,32 +198,30 @@ const Settings = () => {
         <div className="glass-panel rounded-[24px] p-6 border border-accentOrange/20 bg-accentOrange/5 relative overflow-hidden">
           <h3 className="text-lg font-bold text-accentOrange mb-2 flex items-center gap-2">
             <AlertTriangle className="h-5 w-5" />
-            Dangerous Settings
+            {t('settings.dangerousSettings')}
           </h3>
-          <p className="text-xs text-gray-400 mb-6">Destructive actions. Use with extreme caution.</p>
+          <p className="text-xs text-gray-400 mb-6">{t('settings.dangerousSub')}</p>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-black/20 border border-white/5 rounded-2xl">
             <div>
-              <h4 className="text-sm font-semibold text-white">Reset Database</h4>
+              <h4 className="text-sm font-semibold text-white">{t('settings.resetDb')}</h4>
               <p className="text-xs text-gray-400 mt-1 max-w-md">
-                Deletes all recipe items and generated menu selection logs. This cannot be undone.
+                {t('settings.resetDbSub')}
               </p>
             </div>
             <button
               onClick={async () => {
-                if (window.confirm("CRITICAL WARNING: Are you absolutely sure you want to drop all data? This will clear all foods and menus.")) {
+                if (window.confirm(t('settings.resetConfirm'))) {
                   try {
-                    // Let's clear foods. We can delete them one by one or create a bulk delete.
-                    // To keep it simple, we can delete foods via API. Let's handle this in backend.
-                    addNotification("Database reset initiated", "info");
+                    addNotification(t('settings.resetInitiated'), "info");
                   } catch (e) {
-                    addNotification("Reset failed", "warning");
+                    addNotification(t('settings.resetFailed'), "warning");
                   }
                 }
               }}
               className="w-full sm:w-auto px-5 py-2.5 bg-red-500/10 hover:bg-red-500/25 border border-red-500/30 text-red-500 text-xs font-bold rounded-xl transition-all cursor-pointer"
             >
-              Reset Data
+              {t('settings.btnReset')}
             </button>
           </div>
         </div>

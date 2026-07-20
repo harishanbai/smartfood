@@ -9,15 +9,18 @@ import {
   Settings, 
   ChefHat
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 const Sidebar = () => {
+  const { t } = useLanguage();
+
   const menuItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { name: 'Foods', path: '/foods', icon: UtensilsCrossed },
-    { name: 'History', path: '/history', icon: History },
-    { name: 'Calendar', path: '/calendar', icon: Calendar },
-    { name: 'Statistics', path: '/statistics', icon: BarChart3 },
-    { name: 'Settings', path: '/settings', icon: Settings },
+    { name: t('common.dashboard'), path: '/', icon: LayoutDashboard },
+    { name: t('common.foods'), path: '/foods', icon: UtensilsCrossed },
+    { name: t('common.history'), path: '/history', icon: History },
+    { name: t('common.calendar'), path: '/calendar', icon: Calendar },
+    { name: t('common.statistics'), path: '/statistics', icon: BarChart3 },
+    { name: t('common.settings'), path: '/settings', icon: Settings },
   ];
 
   return (
@@ -28,8 +31,8 @@ const Sidebar = () => {
           <ChefHat className="h-5 w-5 text-white" />
         </div>
         <div>
-          <h1 className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">Smart Lunch</h1>
-          <span className="text-xs text-accentPurple font-semibold uppercase tracking-wider">Mess Master</span>
+          <h1 className="font-extrabold text-lg tracking-tight text-accentPurple">Smart Lunch</h1>
+          <span className="text-xs text-accentPurple font-semibold uppercase tracking-wider">{t('common.messMaster')}</span>
         </div>
       </div>
 
@@ -72,7 +75,7 @@ const Sidebar = () => {
         <div className="glass-panel rounded-xl p-3 text-xs bg-black/20 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-accentGreen animate-pulse shadow-[0_0_8px_#22C55E]" />
-            <span className="text-gray-400 font-medium">Service Online</span>
+            <span className="text-gray-400 font-medium">{t('common.serviceOnline')}</span>
           </div>
           <span className="text-[10px] text-gray-500 font-mono">v1.0.0</span>
         </div>

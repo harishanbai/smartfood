@@ -1,15 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, ChefHat } from 'lucide-react';
-import { menuApi } from '../services/api';
+import { menuApi, foodApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { getImageUrl } from '../utils/imageUtils';
+import { useLanguage } from '../context/LanguageContext';
 
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [menus, setMenus] = useState({});
   const [loading, setLoading] = useState(false);
   const [selectedDayMenu, setSelectedDayMenu] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [availableFoods, setAvailableFoods] = useState([]);
+  const [selectedFoodId, setSelectedFoodId] = useState('');
+  const [assigning, setAssigning] = useState(false);
   const { addNotification } = useNotifications();
+  const { language, t, tc } = useLanguage();
+
+  const locales = {
+    en: 'en-US',
+    ta: 'ta-IN'
+  };
+
+  const tmrwLabel = language === 'ta' ? 'நாளை' : 'Tmrw';
+  const legendTmrw = language === 'ta' ? 'நாளை' : 'Tomorrow';
+  const legendLabel = language === 'ta' ? 'குறியீடு' : 'Legend';
 
   // Helper date strings
   const getTodayStr = () => {
@@ -25,7 +40,44 @@ const Calendar = () => {
 
   useEffect(() => {
     fetchMonthMenus();
+    fetchAvailableFoods();
   }, [currentDate]);
+
+  const fetchAvailableFoods = async () => {
+    try {
+      const res = await foodApi.getFoods();
+      const list = Array.isArray(res?.data) ? res.data.filter(f => f && f.available) : [];
+      setAvailableFoods(list);
+      if (list.length > 0) {
+        setSelectedFoodId(list[0]._id);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAssignMenu = async () => {
+    if (!selectedDate || !selectedFoodId || assigning) return;
+    setAssigning(true);
+    try {
+      await menuApi.assignMenu(selectedDate, selectedFoodId);
+      addNotification('Menu successfully assigned! 🎉', 'success');
+      await fetchMonthMenus();
+      const foodObj = availableFoods.find(f => f._id === selectedFoodId);
+      const newMenuObj = {
+        date: selectedDate,
+        foodId: foodObj,
+        generatedAt: new Date(),
+        status: 'active'
+      };
+      setSelectedDayMenu(newMenuObj);
+    } catch (err) {
+      console.error(err);
+      addNotification(err.response?.data?.message || 'Failed to assign menu', 'warning');
+    } finally {
+      setAssigning(false);
+    }
+  };
 
   const fetchMonthMenus = async () => {
     setLoading(true);
@@ -73,11 +125,13 @@ const Calendar = () => {
   const handlePrevMonth = () => {
     setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
     setSelectedDayMenu(null);
+    setSelectedDate(null);
   };
 
   const handleNextMonth = () => {
     setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
     setSelectedDayMenu(null);
+    setSelectedDate(null);
   };
 
   const daysInMonth = () => {
@@ -93,10 +147,11 @@ const Calendar = () => {
   };
 
   const monthLabel = () => {
-    return currentDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    return currentDate.toLocaleString(locales[language] || 'en-US', { month: 'long', year: 'numeric' });
   };
 
   const handleDayClick = (dateStr) => {
+    setSelectedDate(dateStr);
     if (menus[dateStr]) {
       setSelectedDayMenu(menus[dateStr]);
     } else {
@@ -153,13 +208,13 @@ const Calendar = () => {
               {day}
             </span>
             {isToday && (
-              <span className="hidden xs:inline text-[9px] bg-accentGreen/20 text-accentGreen font-bold px-1 sm:px-1.5 py-0.5 rounded uppercase">Today</span>
+              <span className="hidden xs:inline text-[9px] bg-accentGreen/20 text-accentGreen font-bold px-1 sm:px-1.5 py-0.5 rounded uppercase">{t('calendar.today')}</span>
             )}
             {isToday && (
               <span className="xs:hidden h-2 w-2 rounded-full bg-accentGreen flex-shrink-0" />
             )}
             {isTomorrow && (
-              <span className="hidden xs:inline text-[9px] bg-accentOrange/20 text-accentOrange font-bold px-1 sm:px-1.5 py-0.5 rounded uppercase">Tmrw</span>
+              <span className="hidden xs:inline text-[9px] bg-accentOrange/20 text-accentOrange font-bold px-1 sm:px-1.5 py-0.5 rounded uppercase">{tmrwLabel}</span>
             )}
             {isTomorrow && (
               <span className="xs:hidden h-2 w-2 rounded-full bg-accentOrange flex-shrink-0" />
@@ -174,7 +229,7 @@ const Calendar = () => {
               </p>
               <div className="flex gap-1 items-center mt-1">
                 <span className={`h-1.5 w-1.5 rounded-full ${isToday ? 'bg-accentGreen' : isTomorrow ? 'bg-accentOrange' : 'bg-accentPurple'}`} />
-                <span className="text-[8px] text-gray-500 truncate">{menu.foodId?.category}</span>
+                <span className="text-[8px] text-gray-500 truncate">{tc(menu.foodId?.category)}</span>
               </div>
             </div>
           ) : null}
@@ -216,13 +271,13 @@ const Calendar = () => {
 
         {/* Days label — abbreviated on tiny screens */}
         <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2 text-center text-[8px] xs:text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">
-          <div><span className="hidden xs:inline">Sun</span><span className="xs:hidden">S</span></div>
-          <div><span className="hidden xs:inline">Mon</span><span className="xs:hidden">M</span></div>
-          <div><span className="hidden xs:inline">Tue</span><span className="xs:hidden">T</span></div>
-          <div><span className="hidden xs:inline">Wed</span><span className="xs:hidden">W</span></div>
-          <div><span className="hidden xs:inline">Thu</span><span className="xs:hidden">T</span></div>
-          <div><span className="hidden xs:inline">Fri</span><span className="xs:hidden">F</span></div>
-          <div><span className="hidden xs:inline">Sat</span><span className="xs:hidden">S</span></div>
+          <div><span className="hidden xs:inline">{t('calendar.Sunday')}</span><span className="xs:hidden">{t('calendar.Sunday')[0]}</span></div>
+          <div><span className="hidden xs:inline">{t('calendar.Monday')}</span><span className="xs:hidden">{t('calendar.Monday')[0]}</span></div>
+          <div><span className="hidden xs:inline">{t('calendar.Tuesday')}</span><span className="xs:hidden">{t('calendar.Tuesday')[0]}</span></div>
+          <div><span className="hidden xs:inline">{t('calendar.Wednesday')}</span><span className="xs:hidden">{t('calendar.Wednesday')[0]}</span></div>
+          <div><span className="hidden xs:inline">{t('calendar.Thursday')}</span><span className="xs:hidden">{t('calendar.Thursday')[0]}</span></div>
+          <div><span className="hidden xs:inline">{t('calendar.Friday')}</span><span className="xs:hidden">{t('calendar.Friday')[0]}</span></div>
+          <div><span className="hidden xs:inline">{t('calendar.Saturday')}</span><span className="xs:hidden">{t('calendar.Saturday')[0]}</span></div>
         </div>
 
         {/* Calendar days grid */}
@@ -245,9 +300,9 @@ const Calendar = () => {
           <div>
             <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-accentPurple" />
-              Day Details
+              {t('calendar.selectedMenuDetails')}
             </h3>
-            <p className="text-xs text-gray-400 mb-6">Select a date in the calendar containing a recipe to view details.</p>
+            <p className="text-xs text-gray-400 mb-6">{t('calendar.clickAnyDay')}</p>
 
             {selectedDayMenu ? (
               <div className="space-y-4">
@@ -260,30 +315,65 @@ const Calendar = () => {
                 </div>
                 <div>
                   <span className="text-[10px] bg-accentPurple/20 border border-accentPurple/30 text-accentPurple px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider">
-                    {selectedDayMenu.foodId?.category}
+                    {tc(selectedDayMenu.foodId?.category)}
                   </span>
                   <h4 className="text-xl font-bold text-white mt-2 mb-1.5">{selectedDayMenu.foodId?.name}</h4>
                   <p className="text-xs text-gray-400 leading-relaxed">{selectedDayMenu.foodId?.description}</p>
                 </div>
                 <div className="pt-3 border-t border-white/5 text-[10px] text-gray-500 flex justify-between font-mono">
                   <span>Date: {selectedDayMenu.date}</span>
-                  <span>Gen: {new Date(selectedDayMenu.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span>Gen: {new Date(selectedDayMenu.generatedAt).toLocaleTimeString(locales[language] || 'en-US', { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
+              </div>
+            ) : selectedDate ? (
+              <div className="space-y-4">
+                <div className="flex flex-col items-center justify-center py-6 text-center text-gray-500 border border-dashed border-white/10 rounded-2xl p-4 bg-white/5">
+                  <ChefHat className="h-8 w-8 mb-2 text-gray-500" />
+                  <span className="text-xs font-semibold text-gray-400">
+                    {language === 'ta' ? `${selectedDate}-க்கு உணவு திட்டமிடப்படவில்லை` : `No menu scheduled for ${selectedDate}`}
+                  </span>
+                </div>
+                
+                {availableFoods.length > 0 ? (
+                  <div className="space-y-3 pt-2">
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">
+                      {language === 'ta' ? 'உணவை ஒதுக்கு' : 'Assign a Dish'}
+                    </label>
+                    <select
+                      value={selectedFoodId}
+                      onChange={(e) => setSelectedFoodId(e.target.value)}
+                      className="w-full glass-panel px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accentPurple/50 transition-all [&>option]:bg-bgCard"
+                    >
+                      {availableFoods.map(food => (
+                        <option key={food._id} value={food._id}>{food.name} ({tc(food.category)})</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleAssignMenu}
+                      disabled={assigning}
+                      className="w-full mt-2 py-3 px-4 bg-gradient-to-r from-accentPurple to-accentOrange text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] disabled:opacity-50 transition-all cursor-pointer"
+                    >
+                      {assigning ? (language === 'ta' ? 'திட்டமிடப்படுகிறது...' : 'Scheduling...') : (language === 'ta' ? 'உணவை திட்டமிடு' : 'Schedule Dish')}
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500 text-center">{t('dashboard.noAvailableFoodsSub')}</p>
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-10 text-center text-gray-500">
                 <ChefHat className="h-10 w-10 mb-2 text-gray-600" />
-                <span className="text-xs">No recipe details to display</span>
+                <span className="text-xs">{t('calendar.noSelectedMenu')}</span>
               </div>
             )}
           </div>
 
           <div className="mt-6 p-3 bg-black/20 border border-white/5 rounded-xl text-[10px] text-gray-500 leading-relaxed">
-            <span className="text-white font-semibold">Legend:</span>
+            <span className="text-white font-semibold">{legendLabel}:</span>
             <div className="flex flex-wrap gap-3 mt-1.5">
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-accentGreen" /> Today</span>
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-accentOrange" /> Tomorrow</span>
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-accentPurple" /> History</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-accentGreen" /> {t('calendar.today')}</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-accentOrange" /> {legendTmrw}</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-accentPurple" /> {t('common.history')}</span>
             </div>
           </div>
         </div>

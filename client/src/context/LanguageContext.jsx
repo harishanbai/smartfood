@@ -1,0 +1,379 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+const LanguageContext = createContext();
+
+export const useLanguage = () => useContext(LanguageContext);
+
+const translations = {
+  en: {
+    common: {
+      dashboard: "Dashboard",
+      foods: "Foods",
+      history: "History",
+      calendar: "Calendar",
+      statistics: "Statistics",
+      settings: "Settings",
+      save: "Save",
+      cancel: "Cancel",
+      delete: "Delete",
+      edit: "Edit",
+      add: "Add",
+      loading: "Loading...",
+      serviceOnline: "Service Online",
+      messMaster: "Mess Master"
+    },
+    topSection: {
+      goodMorning: "Good Morning",
+      goodAfternoon: "Good Afternoon",
+      goodEvening: "Good Evening",
+      master: "Master",
+      subtitle: "Manage tomorrow's lunch and configure recipes in real-time.",
+      autoGen: "Auto Generation",
+      active: "Active"
+    },
+    dashboard: {
+      todayTitle: "Today's Lunch Menu",
+      tomorrowTitle: "Tomorrow's Lunch Menu",
+      timeRange: "1:00 PM – 2:00 PM",
+      noTodayMenu: "No Menu generated for Today",
+      noTodaySub: "Menus are auto-generated daily at 08:00 PM. Use the section below to plan tomorrow.",
+      preparedServed: "Prepared & Served",
+      notSelectedTitle: "Tomorrow's menu is currently not selected",
+      notSelectedSub: "Click Roll & Select to trigger our custom recipe recommendation wheel.",
+      btnRollSelect: "Roll & Select Menu",
+      btnSkipMenu: "Skip Menu",
+      carouselTitle: "Selecting Tomorrow's Feast...",
+      spinPrompt: "Click below to stop the wheel!",
+      spinStopBtn: "Stop Wheel",
+      availableRecipes: "Available Dishes Pool",
+      availableRecipesSub: "Active recipes eligible for automatic daily scheduling.",
+      dishes: "dishes",
+      available: "Available",
+      unavailable: "Unavailable",
+      category: "Category",
+      desc: "Description",
+      tomorrowSelectedTitle: "Tomorrow's Lunch Selected",
+      skipAlert: "Lunch skipped. Selecting next available menu item...",
+      initAlert: "Tomorrow's Lunch menu generation initiated...",
+      noAvailableFoods: "No Available Foods Found",
+      noAvailableFoodsSub: "Please add some dishes in the Foods tab and make sure they are toggled as \"Available\" to start generating menus."
+    },
+    foods: {
+      title: "Food Items Directory",
+      subtitle: "Add, edit, or disable culinary options for menu generation.",
+      searchPlaceholder: "Search dishes by name or category...",
+      addNew: "Add New Food",
+      category: "Category",
+      status: "Status",
+      actions: "Actions",
+      editDish: "Edit Food Item",
+      addDish: "Add Food Item",
+      dishName: "Dish Name",
+      dishDesc: "Description",
+      dishImage: "Dish Image",
+      uploadPrompt: "Click to upload image or drag and drop",
+      uploadFormats: "PNG, JPG, JPEG up to 10MB",
+      saving: "Saving...",
+      successAdd: "Food item added successfully!",
+      successEdit: "Food item updated successfully!",
+      failedFetch: "Failed to fetch food items",
+      nameRequired: "Name is required",
+      confirmDelete: "Are you sure you want to delete this food item?",
+      successDelete: "Food item deleted successfully!",
+      failedDelete: "Failed to delete food item"
+    },
+    history: {
+      title: "Lunch History Logs",
+      subtitle: "Review previously generated menus and skipped selections.",
+      searchPlaceholder: "Search history by dish name or category...",
+      monthFilterPlaceholder: "All Months",
+      dish: "Dish",
+      servedOn: "Served On",
+      generatedAt: "Generated At",
+      noHistoryRecords: "No history records found",
+      noHistorySub: "Make sure you have generated lunch menus for yesterday, today or tomorrow.",
+      failedFetchHistory: "Failed to fetch history logs"
+    },
+    calendar: {
+      title: "Interactive Lunch Calendar",
+      subtitle: "Plan and view menus for the current and upcoming weeks.",
+      today: "Today",
+      prev: "Prev",
+      next: "Next",
+      selectedMenuDetails: "Selected Menu Details",
+      noSelectedMenu: "No Menu Generated",
+      clickAnyDay: "Click any highlighted day to see details.",
+      Sunday: "Sun",
+      Monday: "Mon",
+      Tuesday: "Tue",
+      Wednesday: "Wed",
+      Thursday: "Thu",
+      Friday: "Fri",
+      Saturday: "Sat"
+    },
+    statistics: {
+      title: "Culinary Insights & Stats",
+      subtitle: "Analytics on recipe usage, categories, and skip rates.",
+      totalDishes: "Total Dishes",
+      activeDishes: "Active Dishes",
+      inactiveDishes: "Inactive Dishes",
+      mostServed: "Most Served Recipe",
+      leastServed: "Least Served Recipe",
+      skipRate: "Average Skip Rate",
+      categoryDistribution: "Category Distribution",
+      servedTimeline: "Served Timeline",
+      noChartData: "No data available. Add foods in different categories.",
+      totalGenerations: "Menus Generated",
+      totalSkips: "Menus Skipped",
+      availabilityChart: "Availability Summary"
+    },
+    settings: {
+      title: "System Settings",
+      subtitle: "Admin preferences and database seeding options.",
+      dbSetup: "Database Setup",
+      dbSetupSub: "Seed demo recipes to populate the dashboard immediately.",
+      preseedTitle: "Pre-seed Premium Recipe Menu",
+      preseedSub: "Adds 10 diverse dishes (Main courses, salads, desserts, beverages) complete with high-res images and culinary descriptions.",
+      btnSeed: "Seed Recipes",
+      seeding: "Seeding...",
+      seedConfirm: "This will add 10 pre-configured dishes to your food list. Proceed?",
+      seedSuccess: "Seeded database with 10 premium food items!",
+      seedFailed: "Failed to seed database",
+      schedulerConfig: "System Scheduler Config",
+      schedulerSub: "MESS master background workers and automation status.",
+      cronStatus: "Node-Cron Status",
+      cronActive: "Active & Running",
+      triggerFreq: "Trigger Frequency",
+      triggerTime: "Daily at exactly 08:00 PM (20:00)",
+      targetAction: "Target Action",
+      targetActionDesc: "Generate tomorrow's menu avoiding previous 5-day selections",
+      dangerousSettings: "Dangerous Settings",
+      dangerousSub: "Destructive actions. Use with extreme caution.",
+      resetDb: "Reset Database",
+      resetDbSub: "Deletes all recipe items and generated menu selection logs. This cannot be undone.",
+      btnReset: "Reset Data",
+      resetConfirm: "CRITICAL WARNING: Are you absolutely sure you want to drop all data? This will clear all foods and menus.",
+      resetInitiated: "Database reset initiated",
+      resetFailed: "Reset failed",
+      langSelect: "Select Language",
+      langSelectDesc: "Choose your preferred user interface language."
+    }
+  },
+  ta: {
+    common: {
+      dashboard: "டாஷ்போர்டு",
+      foods: "உணவுகள்",
+      history: "வரலாறு",
+      calendar: "நாட்காட்டி",
+      statistics: "புள்ளிவிவரங்கள்",
+      settings: "அமைப்புகள்",
+      save: "சேமி",
+      cancel: "ரத்துசெய்",
+      delete: "அழி",
+      edit: "திருத்து",
+      add: "சேர்",
+      loading: "ஏற்றப்படுகிறது...",
+      serviceOnline: "சேவை ஆன்லைனில் உள்ளது",
+      messMaster: "மெஸ் மாஸ்டர்"
+    },
+    topSection: {
+      goodMorning: "காலை வணக்கம்",
+      goodAfternoon: "மதிய வணக்கம்",
+      goodEvening: "மாலை வணக்கம்",
+      master: "மாஸ்டர்",
+      subtitle: "நாளை மதிய உணவை நிர்வகித்து, உண்மையான நேரத்தில் சமையல் குறிப்புகளை உள்ளமைக்கவும்.",
+      autoGen: "தானியங்கி உருவாக்கம்",
+      active: "செயலில் உள்ளது"
+    },
+    dashboard: {
+      todayTitle: "இன்றைய மதிய உணவு மெனு",
+      tomorrowTitle: "நாளைய மதிய உணவு மெனு",
+      timeRange: "பிற்பகல் 1:00 – 2:00",
+      noTodayMenu: "இன்று எந்த மெனுவும் உருவாக்கப்படவில்லை",
+      noTodaySub: "மெனுக்கள் தினமும் இரவு 08:00 மணிக்கு தானாகவே உருவாக்கப்படும். நாளை திட்டமிட கீழே உள்ள பகுதியைப் பயன்படுத்தவும்.",
+      preparedServed: "தயாரிக்கப்பட்டு பரிமாறப்பட்டது",
+      notSelectedTitle: "நாளைய மெனு இன்னும் தேர்ந்தெடுக்கப்படவில்லை",
+      notSelectedSub: "எங்கள் தனிப்பயன் சமையல் பரிந்துரை சக்கரத்தை இயக்க 'சுழற்று & தேர்ந்தெடு' என்பதைக் கிளிக் செய்யவும்.",
+      btnRollSelect: "மெனுவைச் சுழற்றித் தேர்ந்தெடு",
+      btnSkipMenu: "மெனுவைத் தவிர்",
+      carouselTitle: "நாளைய விருந்தைத் தேர்ந்தெடுக்கிறது...",
+      spinPrompt: "சக்கரத்தை நிறுத்த கீழே கிளிக் செய்யவும்!",
+      spinStopBtn: "சக்கரத்தை நிறுத்து",
+      availableRecipes: "கிடைக்கக்கூடிய உணவுகளின் தொகுப்பு",
+      availableRecipesSub: "தானியங்கி தினசரி திட்டமிடலுக்குத் தகுதியான செயலில் உள்ள உணவுகள்.",
+      dishes: "உணவுகள்",
+      available: "கிடைக்கும்",
+      unavailable: "கிடைக்காது",
+      category: "வகை",
+      desc: "விளக்கம்",
+      tomorrowSelectedTitle: "நாளைய மதிய உணவு தேர்ந்தெடுக்கப்பட்டது",
+      skipAlert: "மதிய உணவு தவிர்க்கப்பட்டது. அடுத்த உணவு தேர்ந்தெடுக்கப்படுகிறது...",
+      initAlert: "நாளைய மதிய உணவு மெனு உருவாக்கம் தொடங்கப்பட்டது...",
+      noAvailableFoods: "கிடைக்கக்கூடிய உணவுகள் எதுவும் இல்லை",
+      noAvailableFoodsSub: "மெனுக்களை உருவாக்கத் தொடங்க தயவுசெய்து 'உணவுகள்' தாவலில் சில உணவுகளைச் சேர்த்து, அவை 'கிடைக்கும்' நிலையில் இருப்பதை உறுதிசெய்யவும்."
+    },
+    foods: {
+      title: "உணவுப் பொருட்களின் கோப்புத்தொகுப்பு",
+      subtitle: "மெனு உருவாக்கத்திற்கான உணவு விருப்பங்களைச் சேர்க்கவும், திருத்தவும் அல்லது முடக்கவும்.",
+      searchPlaceholder: "உணவுகளை பெயர் அல்லது வகை மூலம் தேடவும்...",
+      addNew: "புதிய உணவைச் சேர்",
+      category: "வகை",
+      status: "நிலை",
+      actions: "செயல்கள்",
+      editDish: "உணவைத் திருத்து",
+      addDish: "உணவைச் சேர்",
+      dishName: "உணவின் பெயர்",
+      dishDesc: "விளக்கம்",
+      dishImage: "உணவின் படம்",
+      uploadPrompt: "படத்தைப் பதிவேற்ற கிளிக் செய்யவும் அல்லது இழுத்து விடவும்",
+      uploadFormats: "10MB வரை PNG, JPG, JPEG வடிவங்கள்",
+      saving: "சேமிக்கப்படுகிறது...",
+      successAdd: "உணவு வெற்றிகரமாகச் சேர்க்கப்பட்டது!",
+      successEdit: "உணவு வெற்றிகரமாக மாற்றப்பட்டது!",
+      failedFetch: "உணவுகளைப் பெறுவதில் தோல்வி",
+      nameRequired: "பெயர் தேவை",
+      confirmDelete: "இந்த உணவை நிச்சயமாக அழிக்க விரும்புகிறீர்களா?",
+      successDelete: "உணவு வெற்றிகரமாக அழிக்கப்பட்டது!",
+      failedDelete: "உணவை அழிப்பதில் தோல்வி"
+    },
+    history: {
+      title: "மதிய உணவு வரலாற்று பதிவுகள்",
+      subtitle: "முன்பு உருவாக்கப்பட்ட மெனுக்கள் மற்றும் தவிர்க்கப்பட்ட தேர்வுகளை மதிப்பாய்வு செய்யவும்.",
+      searchPlaceholder: "வரலாற்றை உணவின் பெயர் அல்லது வகை மூலம் தேடவும்...",
+      monthFilterPlaceholder: "அனைத்து மாதங்களும்",
+      dish: "உணவு",
+      servedOn: "பரிமாறப்பட்ட நாள்",
+      generatedAt: "உருவாக்கப்பட்ட நேரம்",
+      noHistoryRecords: "வரலாற்று பதிவுகள் எதுவும் இல்லை",
+      noHistorySub: "நேற்று, இன்று அல்லது நாளைக்கான மதிய உணவு மெனுக்களை உருவாக்கியுள்ளதை உறுதிப்படுத்தவும்.",
+      failedFetchHistory: "வரலாற்று பதிவுகளைப் பெறுவதில் தோல்வி"
+    },
+    calendar: {
+      title: "ஊடாடும் மதிய உணவு நாட்காட்டி",
+      subtitle: "நடப்பு மற்றும் வரவிருக்கும் வாரங்களுக்கான மெனுக்களைத் திட்டமிட்டுப் பார்க்கவும்.",
+      today: "இன்று",
+      prev: "முந்தைய",
+      next: "அடுத்த",
+      selectedMenuDetails: "தேர்ந்தெடுக்கப்பட்ட மெனு விவரங்கள்",
+      noSelectedMenu: "மெனு எதுவும் உருவாக்கப்படவில்லை",
+      clickAnyDay: "விவரங்களைக் காண தனிப்படுத்தப்பட்ட எந்த நாளையும் கிளிக் செய்யவும்.",
+      Sunday: "ஞாயிறு",
+      Monday: "திங்கள்",
+      Tuesday: "செவ்வாய்",
+      Wednesday: "புதன்",
+      Thursday: "வியாழன்",
+      Friday: "வெள்ளி",
+      Saturday: "சனி"
+    },
+    statistics: {
+      title: "உணவு நுண்ணறிவு & புள்ளிவிவரங்கள்",
+      subtitle: "சமையல் குறிப்புகளின் பயன்பாடு, வகைகள் மற்றும் தவிர்க்கும் விகிதம் பற்றிய பகுப்பாய்வு.",
+      totalDishes: "மொத்த உணவுகள்",
+      activeDishes: "செயலில் உள்ள உணவுகள்",
+      inactiveDishes: "செயலற்ற உணவுகள்",
+      mostServed: "அதிகம் பரிமாறப்பட்ட உணவு",
+      leastServed: "குறைவாகப் பரிமாறப்பட்ட உணவு",
+      skipRate: "சராசரி தவிர் விகிதம்",
+      categoryDistribution: "வகை விநியோகம்",
+      servedTimeline: "பரிமாறப்பட்ட காலவரிசை",
+      noChartData: "தரவு எதுவும் இல்லை. வெவ்வேறு பிரிவுகளில் உணவுகளைச் சேர்க்கவும்.",
+      totalGenerations: "உருவாக்கப்பட்ட மெனுக்கள்",
+      totalSkips: "தவிர்க்கப்பட்ட மெனுக்கள்",
+      availabilityChart: "இருப்புச் சுருக்கம்"
+    },
+    settings: {
+      title: "அமைப்பு அமைப்புகள்",
+      subtitle: "நிர்வாக விருப்பங்கள் மற்றும் தரவுத்தள விதைப்பு விருப்பங்கள்.",
+      dbSetup: "தரவுத்தள அமைப்பு",
+      dbSetupSub: "டாஷ்போர்டை உடனடியாக நிரப்ப டெமோ உணவுகளை விதைக்கவும்.",
+      preseedTitle: "பிரீமியம் உணவு மெனுவை முன்கூட்டியே விதைக்கவும்",
+      preseedSub: "உயர்தர படங்கள் மற்றும் விளக்கங்களுடன் 10 வகையான உணவுகளை (முக்கிய உணவுகள், சாலடுகள், இனிப்புகள், பானங்கள்) சேர்க்கிறது.",
+      btnSeed: "உணவுகளை விதைக்கவும்",
+      seeding: "விதைக்கப்படுகிறது...",
+      seedConfirm: "இது உங்கள் உணவுப் பட்டியலில் 10 முன்கூட்டியே உள்ளமைக்கப்பட்ட உணவுகளைச் சேர்க்கும். தொடரலாமா?",
+      seedSuccess: "10 பிரீமியம் உணவுப் பொருட்களுடன் தரவுத்தளம் வெற்றிகரமாக விதைக்கப்பட்டது!",
+      seedFailed: "தரவுத்தளத்தை விதைப்பதில் தோல்வி",
+      schedulerConfig: "அமைப்பு திட்டமிடுபவர் உள்ளமைப்பு",
+      schedulerSub: "மெஸ் மாஸ்டர் பின்னணி பணியாளர்கள் மற்றும் ஆட்டோமேஷன் நிலை.",
+      cronStatus: "Node-Cron நிலை",
+      cronActive: "செயலில் உள்ளது & இயங்குகிறது",
+      triggerFreq: "தூண்டுதல் அதிர்வெண்",
+      triggerTime: "தினமும் சரியாக இரவு 08:00 மணிக்கு (20:00)",
+      targetAction: "இலக்கு நடவடிக்கை",
+      targetActionDesc: "முந்தைய 5 நாட்களின் தேர்வுகளைத் தவிர்த்து நாளைய மெனுவை உருவாக்கவும்",
+      dangerousSettings: "அபாயகரமான அமைப்புகள்",
+      dangerousSub: "அழிவுகரமான செயல்கள். மிகுந்த எச்சரிக்கையுடன் பயன்படுத்தவும்.",
+      resetDb: "தரவுத்தளத்தை மீட்டமைக்கவும்",
+      resetDbSub: "அனைத்து உணவுப் பொருட்களையும் உருவாக்கப்பட்ட மெனுக்களையும் நீக்குகிறது. இதை மாற்ற முடியாது.",
+      btnReset: "தரவை மீட்டமை",
+      resetConfirm: "முக்கிய எச்சரிக்கை: அனைத்து தரவையும் அழிக்க நீங்கள் உறுதியாக இருக்கிறீர்களா? இது அனைத்து உணவுகளையும் மெனுக்களையும் அழித்துவிடும்.",
+      resetInitiated: "தரவுத்தள மீட்பு தொடங்கப்பட்டது",
+      resetFailed: "மீட்டமைப்பில் தோல்வி",
+      langSelect: "மொழியைத் தேர்ந்தெடுக்கவும்",
+      langSelectDesc: "உங்களுக்கு விருப்பமான இடைமுக மொழியைத் தேர்ந்தெடுக்கவும்."
+    }
+  }
+};
+
+const categoryTranslations = {
+  en: {
+    'Main Course': 'Main Course',
+    'Starter': 'Starter',
+    'Dessert': 'Dessert',
+    'Beverage': 'Beverage',
+    'Salad': 'Salad',
+    'Soup': 'Soup',
+    'Special': 'Special'
+  },
+  ta: {
+    'Main Course': 'முதன்மை உணவு',
+    'Starter': 'துவக்க உணவு',
+    'Dessert': 'இனிப்பு',
+    'Beverage': 'பானம்',
+    'Salad': 'சாலட்',
+    'Soup': 'சূপ',
+    'Special': 'சிறப்பு உணவு'
+  }
+};
+
+export const LanguageProvider = ({ children }) => {
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('language') || 'en';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('language', language);
+  }, [language]);
+
+  const t = (path) => {
+    const keys = path.split('.');
+    let value = translations[language] || translations['en'];
+    for (const key of keys) {
+      if (value && value[key] !== undefined) {
+        value = value[key];
+      } else {
+        // fallback to english
+        let fallback = translations['en'];
+        for (const fkey of keys) {
+          if (fallback && fallback[fkey] !== undefined) {
+            fallback = fallback[fkey];
+          } else {
+            fallback = path; // return path if not found
+          }
+        }
+        return fallback;
+      }
+    }
+    return value;
+  };
+
+  const tc = (category) => {
+    return categoryTranslations[language]?.[category] || category;
+  };
+
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, t, tc }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};

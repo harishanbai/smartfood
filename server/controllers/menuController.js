@@ -15,12 +15,31 @@ const getTomorrowStr = () => {
 
 export const getTodayMenu = async (req, res) => {
   try {
+<<<<<<< HEAD
 
-
+=======
     const todayStr = getTodayStr();
-    const menu = await Menu.findOne({ date: todayStr, status: 'active' }).populate('foodId');
+
+    if (process.env.USE_MOCK_DB === 'true') {
+      let menu = mockDb.getToday();
+      if (!menu) {
+        try {
+          menu = mockDb.generateLunchForDate(todayStr);
+        } catch (err) {
+          return res.status(200).json(null);
+        }
+      }
+      return res.json(menu);
+    }
+>>>>>>> e8b72c53091b4bac27a753812383404d58ab64e4
+
+    let menu = await Menu.findOne({ date: todayStr, status: 'active' }).populate('foodId');
     if (!menu) {
-      return res.status(200).json(null);
+      try {
+        menu = await generateLunchForDate(todayStr);
+      } catch (err) {
+        return res.status(200).json(null);
+      }
     }
     res.json(menu);
   } catch (error) {
@@ -127,5 +146,35 @@ export const getMenuHistory = async (req, res) => {
     res.json(menus);
   } catch (error) {
     res.status(500).json({ message: "Error retrieving menu history", error: error.message });
+  }
+};
+
+export const assignMenu = async (req, res) => {
+  try {
+    const { date, foodId } = req.body;
+    if (!date || !foodId) {
+      return res.status(400).json({ message: "Date and foodId are required." });
+    }
+
+    if (process.env.USE_MOCK_DB === 'true') {
+      const menu = mockDb.assignMenu(date, foodId);
+      return res.status(201).json(menu);
+    }
+
+    // Deactivate existing active menus for this date
+    await Menu.updateMany({ date, status: 'active' }, { status: 'skipped' });
+
+    // Create new menu
+    const menu = new Menu({
+      date,
+      foodId,
+      status: 'active'
+    });
+    await menu.save();
+    
+    const populated = await Menu.findById(menu._id).populate('foodId');
+    res.status(201).json(populated);
+  } catch (error) {
+    res.status(500).json({ message: "Error assigning menu item", error: error.message });
   }
 };
