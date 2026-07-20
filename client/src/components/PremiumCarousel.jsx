@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { ShieldAlert, Sparkles, ChefHat } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useLanguage } from '../context/LanguageContext';
 
 const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpinning }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [targetIndex, setTargetIndex] = useState(null);
   const spinIntervalRef = useRef(null);
+  const { t } = useLanguage();
 
   // If foods array changes or initializes, reset currentIndex
   useEffect(() => {
@@ -103,9 +105,9 @@ const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpi
     return (
       <div className="glass-panel rounded-[24px] p-8 flex flex-col items-center justify-center text-center h-[350px]">
         <ShieldAlert className="h-12 w-12 text-accentOrange mb-4 animate-bounce" />
-        <h3 className="text-xl font-bold text-white mb-2">No Available Foods Found</h3>
+        <h3 className="text-xl font-bold text-white mb-2">{t('dashboard.noAvailableFoods')}</h3>
         <p className="text-gray-400 text-sm max-w-sm">
-          Please add some dishes in the Foods tab and make sure they are toggled as "Available" to start generating menus.
+          {t('dashboard.noAvailableFoodsSub')}
         </p>
       </div>
     );
@@ -231,9 +233,9 @@ const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpi
                     <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-400">
                       <span className="flex items-center gap-1">
                         <span className="h-1.5 w-1.5 rounded-full bg-accentGreen" />
-                        Available Dish
+                        {t('dashboard.available')}
                       </span>
-                      <span className="text-accentPurple font-semibold">Active Selection</span>
+                      <span className="text-accentPurple font-semibold">{t('topSection.active')}</span>
                     </div>
                   )}
                 </div>

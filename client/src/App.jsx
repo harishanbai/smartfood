@@ -11,13 +11,15 @@ import Statistics from './pages/Statistics';
 import Settings from './pages/Settings';
 import { NotificationProvider } from './context/NotificationContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
 
 function App() {
   return (
-    <ThemeProvider>
-      <NotificationProvider>
-        <Router>
-        <div className="flex min-h-screen bg-bgMain text-gray-200 antialiased font-sans overflow-x-hidden w-full">
+    <LanguageProvider>
+      <ThemeProvider>
+        <NotificationProvider>
+          <Router>
+          <div className="flex min-h-screen bg-bgMain text-gray-200 antialiased font-sans overflow-x-hidden w-full">
           
           {/* Floating premium sidebar */}
           <Sidebar />
@@ -43,9 +45,10 @@ function App() {
             </div>
           </main>
         </div>
-      </Router>
-    </NotificationProvider>
-  </ThemeProvider>
+        </Router>
+      </NotificationProvider>
+    </ThemeProvider>
+   </LanguageProvider>
   );
 }
 

@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { ChefHat, TrendingUp, Sparkles, PieChart as PieIcon, BarChart2, LineChart as LineIcon } from 'lucide-react';
 import { statsApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const Statistics = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const { addNotification } = useNotifications();
+  const { language, t, tc } = useLanguage();
 
   useEffect(() => {
     fetchStats();
@@ -57,7 +59,7 @@ const Statistics = () => {
       return (
         <div className="text-gray-500 text-xs py-10 flex flex-col items-center">
           <PieIcon className="h-8 w-8 mb-2 opacity-50" />
-          No data available. Add foods in different categories.
+          {t('statistics.noChartData')}
         </div>
       );
     }
@@ -106,7 +108,7 @@ const Statistics = () => {
             <div key={i} className="flex items-center justify-between text-xs text-gray-300">
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: seg.color }} />
-                <span>{seg.name}</span>
+                <span>{tc(seg.name)}</span>
               </div>
               <span className="font-semibold text-white">{seg.count} ({totalFoods > 0 ? Math.round((seg.count / totalFoods) * 100) : 0}%)</span>
             </div>
@@ -119,8 +121,8 @@ const Statistics = () => {
   // Custom inline SVG rendering helper for Availability Bar Chart
   const renderAvailabilityBar = () => {
     const data = [
-      { label: 'Available', value: availableFoods, color: '#22C55E' },
-      { label: 'Unavailable', value: unavailableFoods, color: '#F97316' }
+      { label: t('dashboard.available'), value: availableFoods, color: '#22C55E' },
+      { label: t('dashboard.unavailable'), value: unavailableFoods, color: '#F97316' }
     ];
     const maxVal = Math.max(availableFoods, unavailableFoods, 1);
 
@@ -131,7 +133,7 @@ const Statistics = () => {
           return (
             <div key={i} className="space-y-1.5">
               <div className="flex justify-between text-xs">
-                <span className="text-gray-400 font-medium">{bar.label} Dishes</span>
+                <span className="text-gray-400 font-medium">{bar.label} {t('dashboard.dishes')}</span>
                 <span className="text-white font-bold">{bar.value}</span>
               </div>
               <div className="w-full h-3 bg-black/35 rounded-full overflow-hidden border border-white/5">
@@ -153,7 +155,7 @@ const Statistics = () => {
       return (
         <div className="text-gray-500 text-xs py-10 flex flex-col items-center">
           <LineIcon className="h-8 w-8 mb-2 opacity-50" />
-          No recent generations recorded.
+          {t('history.noHistoryRecords')}
         </div>
       );
     }
@@ -172,6 +174,9 @@ const Statistics = () => {
     );
   };
 
+  const availabilitySub = language === 'ta' ? `${availableFoods} / ${totalFoods} உணவுகள் கிடைக்கின்றன` :
+                            `${availableFoods} / ${totalFoods} foods available`;
+
   return (
     <div className="min-h-screen pb-12 space-y-6 sm:space-y-8 w-full overflow-x-hidden">
       {/* 4 Cards Summary Info */}
@@ -179,43 +184,43 @@ const Statistics = () => {
         
         {/* Total Foods */}
         <div className="glass-panel rounded-2xl p-5 border border-white/5 relative overflow-hidden">
-          <div className="text-xs uppercase font-bold text-gray-500 tracking-wider">Total Recipes</div>
+          <div className="text-xs uppercase font-bold text-gray-500 tracking-wider">{t('statistics.totalDishes')}</div>
           <div className="text-3xl font-extrabold text-white mt-2">{totalFoods}</div>
           <div className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-accentPurple" />
-            Database active records
+            {t('statistics.totalDishes')}
           </div>
         </div>
 
         {/* Menus Generated */}
         <div className="glass-panel rounded-2xl p-5 border border-white/5 relative overflow-hidden">
-          <div className="text-xs uppercase font-bold text-gray-500 tracking-wider">Menus Served</div>
+          <div className="text-xs uppercase font-bold text-gray-500 tracking-wider">{t('statistics.totalGenerations')}</div>
           <div className="text-3xl font-extrabold text-white mt-2">{menusGenerated}</div>
           <div className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-accentGreen" />
-            Successfully served
+            {t('dashboard.preparedServed')}
           </div>
         </div>
 
         {/* Menus Skipped */}
         <div className="glass-panel rounded-2xl p-5 border border-white/5 relative overflow-hidden">
-          <div className="text-xs uppercase font-bold text-gray-500 tracking-wider">Menus Skipped</div>
+          <div className="text-xs uppercase font-bold text-gray-500 tracking-wider">{t('statistics.totalSkips')}</div>
           <div className="text-3xl font-extrabold text-white mt-2 text-accentOrange">{menusSkipped}</div>
           <div className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-accentOrange" />
-            Recipe updates skipped
+            {t('statistics.totalSkips')}
           </div>
         </div>
 
         {/* Availability Ratio */}
         <div className="glass-panel rounded-2xl p-5 border border-white/5 relative overflow-hidden">
-          <div className="text-xs uppercase font-bold text-gray-500 tracking-wider">Availability</div>
+          <div className="text-xs uppercase font-bold text-gray-500 tracking-wider">{t('statistics.availabilityChart')}</div>
           <div className="text-3xl font-extrabold text-white mt-2">
             {totalFoods > 0 ? `${Math.round((availableFoods / totalFoods) * 100)}%` : '0%'}
           </div>
           <div className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-accentPurple" />
-            {availableFoods} / {totalFoods} foods available
+            {availabilitySub}
           </div>
         </div>
 
@@ -231,7 +236,7 @@ const Statistics = () => {
           <div className="glass-panel rounded-[24px] p-4 sm:p-6 border border-white/5 relative">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <PieIcon className="h-5 w-5 text-accentPurple" />
-              Category Distribution
+              {t('statistics.categoryDistribution')}
             </h3>
             {renderCategoryPie()}
           </div>
@@ -240,7 +245,7 @@ const Statistics = () => {
           <div className="glass-panel rounded-[24px] p-4 sm:p-6 border border-white/5 relative">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <BarChart2 className="h-5 w-5 text-accentGreen" />
-              Recipe Availability Status
+              {t('statistics.availabilityChart')}
             </h3>
             {renderAvailabilityBar()}
           </div>
@@ -256,7 +261,7 @@ const Statistics = () => {
             
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-accentPurple" />
-              Most Generated Food
+              {t('statistics.mostServed')}
             </h3>
 
             {mostGeneratedFood ? (
@@ -270,16 +275,19 @@ const Statistics = () => {
                 </div>
                 <div>
                   <span className="text-[10px] bg-accentPurple/25 border border-accentPurple/40 text-accentPurple px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider">
-                    {mostGeneratedFood.category}
+                    {tc(mostGeneratedFood.category)}
                   </span>
                   <h4 className="text-base font-bold text-white mt-1.5">{mostGeneratedFood.name}</h4>
-                  <p className="text-xs text-gray-400 mt-0.5">Chosen <span className="text-accentPurple font-bold">{mostGeneratedFood.count}</span> times</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {language === 'ta' ? `${mostGeneratedFood.count} முறை தேர்ந்தெடுக்கப்பட்டது` : 
+                     `Chosen ${mostGeneratedFood.count} times`}
+                  </p>
                 </div>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-6 text-gray-500 text-xs">
                 <ChefHat className="h-8 w-8 mb-2 opacity-50" />
-                No selection history recorded yet.
+                {t('history.noHistoryRecords')}
               </div>
             )}
           </div>
@@ -288,7 +296,7 @@ const Statistics = () => {
           <div className="glass-panel rounded-[24px] p-4 sm:p-6 border border-white/5 relative">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-accentOrange" />
-              Recent Generations
+              {t('statistics.servedTimeline')}
             </h3>
             {renderWeeklyLine()}
           </div>
@@ -299,5 +307,4 @@ const Statistics = () => {
     </div>
   );
 };
-
 export default Statistics;

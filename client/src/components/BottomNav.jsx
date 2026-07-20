@@ -8,15 +8,18 @@ import {
   BarChart3, 
   Settings 
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 const BottomNav = () => {
+  const { t } = useLanguage();
+
   const menuItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { name: 'Foods', path: '/foods', icon: UtensilsCrossed },
-    { name: 'History', path: '/history', icon: History },
-    { name: 'Calendar', path: '/calendar', icon: Calendar },
-    { name: 'Stats', path: '/statistics', icon: BarChart3 },
-    { name: 'Settings', path: '/settings', icon: Settings },
+    { name: t('common.dashboard'), path: '/', icon: LayoutDashboard },
+    { name: t('common.foods'), path: '/foods', icon: UtensilsCrossed },
+    { name: t('common.history'), path: '/history', icon: History },
+    { name: t('common.calendar'), path: '/calendar', icon: Calendar },
+    { name: t('common.statistics'), path: '/statistics', icon: BarChart3 },
+    { name: t('common.settings'), path: '/settings', icon: Settings },
   ];
 
   return (

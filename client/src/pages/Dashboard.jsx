@@ -4,6 +4,7 @@ import { menuApi, foodApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import PremiumCarousel from '../components/PremiumCarousel';
 import NotificationsPanel from '../components/NotificationsPanel';
+import { useLanguage } from '../context/LanguageContext';
 
 const Dashboard = () => {
   const [todayMenu, setTodayMenu] = useState(null);
@@ -13,6 +14,7 @@ const Dashboard = () => {
   const [carouselMode, setCarouselMode] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const { addNotification } = useNotifications();
+  const { t } = useLanguage();
   const carouselTriggerRef = useRef(null);
 
   useEffect(() => {
@@ -50,7 +52,7 @@ const Dashboard = () => {
         spinBtn.click();
       }
 
-      addNotification("Tomorrow's Lunch menu generation initiated...", 'info');
+      addNotification(t('dashboard.initAlert'), 'info');
     } catch (err) {
       addNotification(err.response?.data?.message || "Failed to generate lunch", 'warning');
       setCarouselMode(false);
@@ -70,7 +72,7 @@ const Dashboard = () => {
         spinBtn.click();
       }
 
-      addNotification("Lunch skipped. Selecting next available menu item...", 'warning');
+      addNotification(t('dashboard.skipAlert'), 'warning');
     } catch (err) {
       addNotification(err.response?.data?.message || "Failed to skip menu item", 'warning');
       setCarouselMode(false);
@@ -80,7 +82,7 @@ const Dashboard = () => {
   const onCarouselFinished = (selectedFood) => {
     fetchData();
     setCarouselMode(false);
-    addNotification(`Tomorrow's Lunch set to: ${selectedFood.name} 🎉`, 'success');
+    addNotification(`${t('dashboard.tomorrowSelectedTitle')}: ${selectedFood.name} 🎉`, 'success');
   };
 
   return (
@@ -110,9 +112,9 @@ const Dashboard = () => {
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs uppercase font-bold tracking-wider text-accentGreen flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-full bg-accentGreen animate-pulse shadow-[0_0_8px_#22C55E]" />
-                Today's Lunch Menu
+                {t('dashboard.todayTitle')}
               </span>
-              <span className="text-xs text-gray-400 font-medium font-mono">1:00 PM – 2:00 PM</span>
+              <span className="text-xs text-gray-400 font-medium font-mono">{t('dashboard.timeRange')}</span>
             </div>
 
             {todayMenu ? (
@@ -139,15 +141,15 @@ const Dashboard = () => {
                   <p className="text-gray-400 text-sm leading-relaxed mb-4">{todayMenu.foodId?.description}</p>
                   <div className="inline-flex items-center gap-2 text-xs text-gray-400 glass-panel px-3 py-1.5 rounded-lg bg-black/20">
                     <CheckCircle className="h-3.5 w-3.5 text-accentGreen" />
-                    <span>Prepared &amp; Served</span>
+                    <span>{t('dashboard.preparedServed')}</span>
                   </div>
                 </div>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-10 text-center">
                 <AlertCircle className="h-10 w-10 text-gray-500 mb-2" />
-                <h4 className="font-bold text-white mb-1">No Menu generated for Today</h4>
-                <p className="text-xs text-gray-400 max-w-xs">Menus are auto-generated daily at 08:00 PM. Use the section below to plan tomorrow.</p>
+                <h4 className="font-bold text-white mb-1">{t('dashboard.noTodayMenu')}</h4>
+                <p className="text-xs text-gray-400 max-w-xs">{t('dashboard.noTodaySub')}</p>
               </div>
             )}
           </div>
@@ -159,7 +161,7 @@ const Dashboard = () => {
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs uppercase font-bold tracking-wider text-accentOrange flex items-center gap-1.5">
                 <CalendarRange className="h-4 w-4 text-accentOrange" />
-                Tomorrow's Lunch Plan
+                {t('dashboard.tomorrowTitle')}
               </span>
               {tomorrowMenu && (
                 <span className="text-[10px] text-gray-400 font-mono">
@@ -200,7 +202,7 @@ const Dashboard = () => {
                       disabled={isSpinning}
                       className="w-full xs:w-auto px-5 py-3 rounded-xl text-xs font-bold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[44px]"
                     >
-                      Skip Dish
+                      {t('dashboard.btnSkipMenu')}
                     </button>
                     <button
                       onClick={handleGenerateClick}
@@ -208,7 +210,7 @@ const Dashboard = () => {
                       className="w-full xs:w-auto px-5 py-3 rounded-xl text-xs font-bold bg-gradient-to-r from-accentPurple to-accentOrange text-white hover:opacity-90 shadow-lg shadow-purple-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[44px]"
                     >
                       <RefreshCw className={`h-3.5 w-3.5 ${isSpinning ? 'animate-spin' : ''}`} />
-                      Generate Again
+                      {t('dashboard.btnRollSelect')}
                     </button>
                   </div>
                 </div>
@@ -216,20 +218,20 @@ const Dashboard = () => {
             ) : carouselMode ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <div className="h-8 w-8 rounded-full border-2 border-accentPurple border-t-transparent animate-spin mb-3" />
-                <h4 className="font-bold text-white mb-1">Rolling Next Recipe...</h4>
-                <p className="text-xs text-gray-400">Watch the 3D Carousel spin on the panel below.</p>
+                <h4 className="font-bold text-white mb-1">{t('dashboard.carouselTitle')}</h4>
+                <p className="text-xs text-gray-400">{t('dashboard.spinPrompt')}</p>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-10 text-center">
                 <Sparkles className="h-10 w-10 text-accentPurple mb-2 animate-pulse" />
-                <h4 className="font-bold text-white mb-1">Plan Tomorrow's Recipe</h4>
-                <p className="text-xs text-gray-400 max-w-sm mb-5">Start by generating a random available dish from your database list.</p>
+                <h4 className="font-bold text-white mb-1">{t('dashboard.notSelectedTitle')}</h4>
+                <p className="text-xs text-gray-400 max-w-sm mb-5">{t('dashboard.notSelectedSub')}</p>
                 <button
                   onClick={handleGenerateClick}
                   className="w-full sm:w-auto px-6 py-3 rounded-2xl text-xs font-bold bg-gradient-to-r from-accentPurple to-accentOrange text-white hover:opacity-90 shadow-lg shadow-purple-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
                 >
                   <Sparkles className="h-4 w-4" />
-                  Generate Tomorrow's Lunch
+                  {t('dashboard.btnRollSelect')}
                 </button>
               </div>
             )}
@@ -242,9 +244,9 @@ const Dashboard = () => {
             <div className="mb-4">
               <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-accentPurple" />
-                Signature Carousel
+                {t('dashboard.carouselTitle')}
               </h3>
-              <p className="text-xs text-gray-400">A dynamic 3D view of current recipes and upcoming options.</p>
+              <p className="text-xs text-gray-400">{t('dashboard.availableRecipesSub')}</p>
             </div>
 
             {/* Carousel Container */}
@@ -258,7 +260,7 @@ const Dashboard = () => {
             </div>
 
             <div className="mt-4 pt-4 border-t border-white/5 text-[11px] text-gray-500 text-center">
-              Spinning uses Cover Flow 3D effects to highlight selections.
+              {t('dashboard.spinPrompt')}
             </div>
           </div>
         </div>
