@@ -50,7 +50,7 @@ cron.schedule('0 20 * * *', async () => {
     const dd = String(tomorrow.getDate()).padStart(2, '0');
     const tomorrowStr = `${yyyy}-${mm}-${dd}`;
 
-    const menu = await generateLunchForDate(tomorrowStr);
+    const menu = await generateLunchForDate(tomorrowStr, 'automatic');
     console.log(`Successfully generated tomorrow's lunch menu: ${menu.foodId.name} (${tomorrowStr})`);
   } catch (error) {
     console.error('Error during auto-generation cron job:', error.message);

@@ -19,6 +19,7 @@ const Foods = () => {
   const [foods, setFoods] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const { addNotification } = useNotifications();
   const { t, tc } = useLanguage();
 
@@ -32,6 +33,7 @@ const Foods = () => {
   const [category, setCategory] = useState('Main Course');
   const [description, setDescription] = useState('');
   const [available, setAvailable] = useState(true);
+  const [foodType, setFoodType] = useState('veg');
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
 
@@ -51,12 +53,14 @@ const Foods = () => {
 
   const fetchFoods = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await foodApi.getFoods(search);
       setFoods(Array.isArray(res?.data) ? res.data : []);
     } catch (err) {
       console.error(err);
       setFoods([]);
+      setError(err.response?.data?.message || t('foods.failedFetch') || 'Failed to fetch food items');
       addNotification(t('foods.failedFetch'), 'warning');
     } finally {
       setLoading(false);
@@ -70,6 +74,7 @@ const Foods = () => {
     setCategory('Main Course');
     setDescription('');
     setAvailable(true);
+    setFoodType('veg');
     setImageFile(null);
     setImagePreview('');
     setIsModalOpen(true);
@@ -82,6 +87,7 @@ const Foods = () => {
     setCategory(food.category);
     setDescription(food.description);
     setAvailable(food.available);
+    setFoodType(food.foodType || 'veg');
     setImageFile(null);
     setImagePreview(food.image || '');
     setIsModalOpen(true);
@@ -110,8 +116,8 @@ const Foods = () => {
     if (!window.confirm(`${t('foods.confirmDelete')} ("${name}")`)) return;
     try {
       await foodApi.deleteFood(id);
-      setFoods(prev => prev.filter(f => f._id !== id));
       addNotification(`"${name}" ${t('foods.successDelete')}`, 'success');
+      await fetchFoods();
     } catch (err) {
       addNotification(t('foods.failedDelete'), 'warning');
     }
@@ -129,21 +135,21 @@ const Foods = () => {
     formData.append('category', category);
     formData.append('description', description);
     formData.append('available', available);
+    formData.append('foodType', foodType);
     if (imageFile) {
       formData.append('image', imageFile);
     }
 
     try {
       if (modalMode === 'add') {
-        const res = await foodApi.addFood(formData);
-        setFoods(prev => [res.data, ...prev]);
+        await foodApi.addFood(formData);
         addNotification(`"${name}" ${t('foods.successAdd')}`, 'success');
       } else {
-        const res = await foodApi.updateFood(selectedFoodId, formData);
-        setFoods(prev => prev.map(f => f._id === selectedFoodId ? res.data : f));
+        await foodApi.updateFood(selectedFoodId, formData);
         addNotification(`"${name}" ${t('foods.successEdit')}`, 'success');
       }
       setIsModalOpen(false);
+      await fetchFoods();
     } catch (err) {
       console.error(err);
       addNotification(err.response?.data?.message || 'Operation failed', 'warning');
@@ -189,6 +195,18 @@ const Foods = () => {
               </div>
             </div>
           ))}
+        </div>
+      ) : error ? (
+        <div className="glass-panel rounded-[24px] p-12 text-center max-w-lg mx-auto flex flex-col items-center border border-red-500/20 bg-red-500/5">
+          <ChefHat className="h-12 w-12 text-red-400 mb-3" />
+          <h3 className="text-xl font-bold text-white mb-2">Error Loading Foods</h3>
+          <p className="text-gray-400 text-sm mb-4">{error}</p>
+          <button
+            onClick={fetchFoods}
+            className="px-5 py-2.5 bg-gradient-to-r from-accentPurple to-accentOrange text-white text-xs font-bold rounded-xl shadow-lg transition-all cursor-pointer"
+          >
+            Retry
+          </button>
         </div>
       ) : foods.length === 0 ? (
         <div className="glass-panel rounded-[24px] p-12 text-center max-w-lg mx-auto flex flex-col items-center">
@@ -380,6 +398,48 @@ const Foods = () => {
                   placeholder="e.g. Grilled Chicken Caesar Salad"
                   className="w-full glass-panel px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accentPurple/50 focus:shadow-[0_0_10px_rgba(168,85,247,0.1)] transition-all"
                 />
+              </div>
+
+              {/* Food Type Radio Selection */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Food Type *</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div
+                    onClick={() => setFoodType('veg')}
+                    className={`glass-panel p-3.5 rounded-xl border flex items-center gap-3 cursor-pointer transition-all ${
+                      foodType === 'veg'
+                        ? 'bg-accentGreen/10 border-accentGreen/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.15)]'
+                        : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                      foodType === 'veg' ? 'border-accentGreen bg-accentGreen' : 'border-gray-500'
+                    }`}>
+                      {foodType === 'veg' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </div>
+                    <span className="text-sm font-semibold flex items-center gap-1.5">
+                      🌿 Veg
+                    </span>
+                  </div>
+
+                  <div
+                    onClick={() => setFoodType('non-veg')}
+                    className={`glass-panel p-3.5 rounded-xl border flex items-center gap-3 cursor-pointer transition-all ${
+                      foodType === 'non-veg'
+                        ? 'bg-accentOrange/10 border-accentOrange/50 text-white shadow-[0_0_15px_rgba(249,115,22,0.15)]'
+                        : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                      foodType === 'non-veg' ? 'border-accentOrange bg-accentOrange' : 'border-gray-500'
+                    }`}>
+                      {foodType === 'non-veg' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                    </div>
+                    <span className="text-sm font-semibold flex items-center gap-1.5">
+                      🍗 Non-Veg
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Category */}

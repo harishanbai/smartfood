@@ -1,6 +1,5 @@
 import Menu from '../models/Menu.js';
 import { generateLunchForDate } from '../services/generatorService.js';
-import { mockDb } from '../services/mockDbService.js';
 
 // Date utility functions
 const getTodayStr = () => {
@@ -16,25 +15,12 @@ const getTomorrowStr = () => {
 
 export const getTodayMenu = async (req, res) => {
   try {
-
     const todayStr = getTodayStr();
-
-    if (process.env.USE_MOCK_DB === 'true') {
-      let menu = mockDb.getToday();
-      if (!menu) {
-        try {
-          menu = mockDb.generateLunchForDate(todayStr);
-        } catch (err) {
-          return res.status(200).json(null);
-        }
-      }
-      return res.json(menu);
-    }
 
     let menu = await Menu.findOne({ date: todayStr, status: 'active' }).populate('foodId');
     if (!menu) {
       try {
-        menu = await generateLunchForDate(todayStr);
+        menu = await generateLunchForDate(todayStr, 'automatic');
       } catch (err) {
         return res.status(200).json(null);
       }
@@ -47,8 +33,6 @@ export const getTodayMenu = async (req, res) => {
 
 export const getTomorrowMenu = async (req, res) => {
   try {
-
-
     const tomorrowStr = getTomorrowStr();
     const menu = await Menu.findOne({ date: tomorrowStr, status: 'active' }).populate('foodId');
     if (!menu) {
@@ -64,9 +48,7 @@ export const generateTomorrowMenu = async (req, res) => {
   try {
     const tomorrowStr = getTomorrowStr();
 
-
-
-    const menu = await generateLunchForDate(tomorrowStr);
+    const menu = await generateLunchForDate(tomorrowStr, 'manual');
     res.status(201).json(menu);
   } catch (error) {
     // Typed error: no foods available for the required category (e.g. No Non-Veg on Wednesday)
@@ -85,10 +67,7 @@ export const generateTomorrowMenu = async (req, res) => {
 export const skipTomorrowMenu = async (req, res) => {
   try {
     const tomorrowStr = getTomorrowStr();
-    if (process.env.USE_MOCK_DB === 'true') {
-      const newMenu = mockDb.skipTomorrow();
-      return res.json(newMenu);
-    }
+
     // Find active menu for tomorrow
     const activeMenu = await Menu.findOne({ date: tomorrowStr, status: 'active' });
     if (!activeMenu) {
@@ -100,7 +79,7 @@ export const skipTomorrowMenu = async (req, res) => {
     await activeMenu.save();
 
     // Generate another food for tomorrow — inherits the same Rule Engine category constraint
-    const newMenu = await generateLunchForDate(tomorrowStr);
+    const newMenu = await generateLunchForDate(tomorrowStr, 'manual');
     res.json(newMenu);
   } catch (error) {
     // Typed error: no more foods available for the required category after skipping
@@ -119,8 +98,6 @@ export const skipTomorrowMenu = async (req, res) => {
 export const getMenuHistory = async (req, res) => {
   try {
     const { month, search } = req.query; // YYYY-MM
-
-
 
     let query = { status: 'active' };
 
@@ -155,11 +132,6 @@ export const assignMenu = async (req, res) => {
       return res.status(400).json({ message: "Date and foodId are required." });
     }
 
-    if (process.env.USE_MOCK_DB === 'true') {
-      const menu = mockDb.assignMenu(date, foodId);
-      return res.status(201).json(menu);
-    }
-
     // Deactivate existing active menus for this date
     await Menu.updateMany({ date, status: 'active' }, { status: 'skipped' });
 
@@ -167,7 +139,8 @@ export const assignMenu = async (req, res) => {
     const menu = new Menu({
       date,
       foodId,
-      status: 'active'
+      status: 'active',
+      generationType: 'manual'
     });
     await menu.save();
 
@@ -181,14 +154,6 @@ export const assignMenu = async (req, res) => {
 export const deleteMenuRecord = async (req, res) => {
   try {
     const { id } = req.params;
-
-    if (process.env.USE_MOCK_DB === 'true') {
-      const success = mockDb.deleteMenuRecord(id);
-      if (!success) {
-        return res.status(404).json({ message: "Menu record not found" });
-      }
-      return res.json({ message: "Menu record deleted successfully" });
-    }
 
     const menu = await Menu.findByIdAndDelete(id);
     if (!menu) {

@@ -25,8 +25,7 @@ const connectDB = async () => {
     }
 
     const conn = await mongoose.connect(uri);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-    process.env.USE_MOCK_DB = 'false';
+    console.log(`MongoDB Connected: ${conn.connection.host} | DB: ${conn.connection.name}`);
   } catch (error) {
     console.error(`Database Connection Error: ${error.message}`);
     throw error;

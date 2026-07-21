@@ -24,6 +24,11 @@ const foodSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  foodType: {
+    type: String,
+    enum: ['veg', 'non-veg'],
+    default: 'veg'
+  },
   createdAt: {
     type: Date,
     default: Date.now

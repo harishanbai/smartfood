@@ -25,10 +25,15 @@ import Menu from '../models/Menu.js';
  * @param {'veg'|'non-veg'|'any'} allowedCategory
  * @returns {boolean}
  */
-const categoryMatches = (category, allowedCategory) => {
+const categoryMatches = (food, allowedCategory) => {
   if (allowedCategory === 'any') return true;
-  const lower = (category || '').toLowerCase();
-  const isNonVeg = lower.includes('non');
+  let isNonVeg = false;
+  if (food && food.foodType) {
+    isNonVeg = food.foodType === 'non-veg';
+  } else {
+    const lower = (food?.category || '').toLowerCase();
+    isNonVeg = lower.includes('non');
+  }
   if (allowedCategory === 'non-veg') return isNonVeg;
   if (allowedCategory === 'veg')     return !isNonVeg;
   return true;
@@ -98,7 +103,7 @@ export const selectFood = async (dateStr, ruleResult, extraSkips = []) => {
     ...baseFilter,
     _id: { $nin: fullExclusion },
   });
-  candidates = candidates.filter((f) => categoryMatches(f.category, allowedCategory));
+  candidates = candidates.filter((f) => categoryMatches(f, allowedCategory));
 
   // ── Pass 2: Relax 5-day history, keep today's skips + category filter ─────
   if (candidates.length === 0) {
@@ -107,14 +112,14 @@ export const selectFood = async (dateStr, ruleResult, extraSkips = []) => {
       ...baseFilter,
       _id: { $nin: allSkippedIds },
     });
-    candidates = candidates.filter((f) => categoryMatches(f.category, allowedCategory));
+    candidates = candidates.filter((f) => categoryMatches(f, allowedCategory));
   }
 
   // ── Pass 3: Relax everything, keep only category filter ───────────────────
   if (candidates.length === 0) {
     console.warn(`[MenuGenerator] Still no candidates for ${dateStr}. Relaxing all exclusions.`);
     candidates = await Food.find(baseFilter);
-    candidates = candidates.filter((f) => categoryMatches(f.category, allowedCategory));
+    candidates = candidates.filter((f) => categoryMatches(f, allowedCategory));
   }
 
   // ── No foods found for the required category ──────────────────────────────

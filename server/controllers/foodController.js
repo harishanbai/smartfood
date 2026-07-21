@@ -5,12 +5,13 @@ export const getFoods = async (req, res) => {
     const { search } = req.query;
 
     let query = {};
-    if (search) {
+    if (search && typeof search === 'string' && search.trim() !== '') {
+      const searchRegex = search.trim();
       query = {
         $or: [
-          { name: { $regex: search, $options: 'i' } },
-          { category: { $regex: search, $options: 'i' } },
-          { description: { $regex: search, $options: 'i' } }
+          { name: { $regex: searchRegex, $options: 'i' } },
+          { category: { $regex: searchRegex, $options: 'i' } },
+          { description: { $regex: searchRegex, $options: 'i' } }
         ]
       };
     }
@@ -23,7 +24,7 @@ export const getFoods = async (req, res) => {
 
 export const addFood = async (req, res) => {
   try {
-    const { name, category, description, available } = req.body;
+    const { name, category, description, available, foodType } = req.body;
 
     if (!name || !category || !description) {
       return res.status(400).json({ message: 'Name, category, and description are required fields.' });
@@ -41,7 +42,8 @@ export const addFood = async (req, res) => {
       category,
       description,
       image: imageUrl,
-      available: available === 'false' || available === false ? false : true
+      available: available === 'false' || available === false ? false : true,
+      foodType: foodType === 'non-veg' ? 'non-veg' : 'veg'
     };
 
     const food = new Food(foodData);
@@ -55,7 +57,7 @@ export const addFood = async (req, res) => {
 export const updateFood = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, category, description, available } = req.body;
+    const { name, category, description, available, foodType } = req.body;
 
     let imageUrl = null;
     if (req.file) {
@@ -74,6 +76,9 @@ export const updateFood = async (req, res) => {
     if (description) food.description = description;
     if (available !== undefined) {
       food.available = available === 'false' || available === false ? false : true;
+    }
+    if (foodType) {
+      food.foodType = foodType === 'non-veg' ? 'non-veg' : 'veg';
     }
     if (imageUrl) food.image = imageUrl;
 
