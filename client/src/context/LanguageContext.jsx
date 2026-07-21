@@ -85,7 +85,10 @@ const translations = {
       nameRequired: "Name is required",
       confirmDelete: "Are you sure you want to delete this food item?",
       successDelete: "Food item deleted successfully!",
-      failedDelete: "Failed to delete food item"
+      failedDelete: "Failed to delete food item",
+      foodTypeLabel: "Food Type",
+      vegLabel: "Veg",
+      nonVegLabel: "Non-Veg"
     },
     history: {
       title: "Lunch History Logs",
@@ -252,7 +255,10 @@ const translations = {
       nameRequired: "பெயர் தேவை",
       confirmDelete: "இந்த உணவை நிச்சயமாக அழிக்க விரும்புகிறீர்களா?",
       successDelete: "உணவு வெற்றிகரமாக அழிக்கப்பட்டது!",
-      failedDelete: "உணவை அழிப்பதில் தோல்வி"
+      failedDelete: "உணவை அழிப்பதில் தோல்வி",
+      foodTypeLabel: "உணவு வகை",
+      vegLabel: "சைவம் (Veg)",
+      nonVegLabel: "அசைவம் (Non-Veg)"
     },
     history: {
       title: "மதிய உணவு வரலாற்று பதிவுகள்",

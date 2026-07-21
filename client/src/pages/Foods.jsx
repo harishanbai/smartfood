@@ -512,7 +512,7 @@ const Foods = () => {
 
               {/* Food Type Radio Selection */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Food Type *</label>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('foods.foodTypeLabel')} *</label>
                 <div className="grid grid-cols-2 gap-3">
                   <div
                     onClick={() => setFoodType('veg')}
@@ -528,7 +528,7 @@ const Foods = () => {
                       {foodType === 'veg' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                     </div>
                     <span className="text-sm font-semibold flex items-center gap-1.5">
-                      🌿 Veg
+                      🌿 {t('foods.vegLabel')}
                     </span>
                   </div>
 
@@ -546,7 +546,7 @@ const Foods = () => {
                       {foodType === 'non-veg' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                     </div>
                     <span className="text-sm font-semibold flex items-center gap-1.5">
-                      🍗 Non-Veg
+                      🍗 {t('foods.nonVegLabel')}
                     </span>
                   </div>
                 </div>
