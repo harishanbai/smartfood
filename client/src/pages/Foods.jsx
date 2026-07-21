@@ -39,6 +39,8 @@ const Foods = () => {
   const [foodType, setFoodType] = useState('veg');
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [isNameTaEdited, setIsNameTaEdited] = useState(false);
+  const [isDescriptionTaEdited, setIsDescriptionTaEdited] = useState(false);
 
   const categories = [
     'Main Course',
@@ -53,6 +55,62 @@ const Foods = () => {
   useEffect(() => {
     fetchFoods();
   }, [search]);
+
+  // Auto-translate name when English name changes and Tamil name hasn't been manually edited
+  useEffect(() => {
+    if (!name.trim()) {
+      if (!isNameTaEdited) setNameTa('');
+      return;
+    }
+    if (isNameTaEdited) return;
+
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(name.trim())}&langpair=en|ta`
+        );
+        const data = await response.json();
+        if (data.responseData?.translatedText) {
+          const translated = data.responseData.translatedText;
+          if (translated.toLowerCase() !== name.trim().toLowerCase()) {
+            setNameTa(translated);
+          }
+        }
+      } catch (err) {
+        console.error('Translation error:', err);
+      }
+    }, 1000); // 1s debounce
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [name, isNameTaEdited]);
+
+  // Auto-translate description when English description changes and Tamil description hasn't been manually edited
+  useEffect(() => {
+    if (!description.trim()) {
+      if (!isDescriptionTaEdited) setDescriptionTa('');
+      return;
+    }
+    if (isDescriptionTaEdited) return;
+
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(description.trim())}&langpair=en|ta`
+        );
+        const data = await response.json();
+        if (data.responseData?.translatedText) {
+          const translated = data.responseData.translatedText;
+          if (translated.toLowerCase() !== description.trim().toLowerCase()) {
+            setDescriptionTa(translated);
+          }
+        }
+      } catch (err) {
+        console.error('Translation error:', err);
+      }
+    }, 1200); // 1.2s debounce
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [description, isDescriptionTaEdited]);
 
   const fetchFoods = async () => {
     setLoading(true);
@@ -82,6 +140,8 @@ const Foods = () => {
     setFoodType('veg');
     setImageFile(null);
     setImagePreview('');
+    setIsNameTaEdited(false);
+    setIsDescriptionTaEdited(false);
     setIsModalOpen(true);
   };
 
@@ -97,6 +157,8 @@ const Foods = () => {
     setFoodType(food.foodType || 'veg');
     setImageFile(null);
     setImagePreview(food.image || '');
+    setIsNameTaEdited(!!food.name_ta);
+    setIsDescriptionTaEdited(!!food.description_ta);
     setIsModalOpen(true);
   };
 
@@ -439,7 +501,10 @@ const Foods = () => {
                 <input
                   type="text"
                   value={nameTa}
-                  onChange={(e) => setNameTa(e.target.value)}
+                  onChange={(e) => {
+                    setNameTa(e.target.value);
+                    setIsNameTaEdited(true);
+                  }}
                   placeholder="எ.கா. பூண்டு நானுடன் பட்டர் சிக்கன்"
                   className="w-full glass-panel px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accentPurple/50 focus:shadow-[0_0_10px_rgba(168,85,247,0.1)] transition-all"
                 />
@@ -520,7 +585,10 @@ const Foods = () => {
                 <textarea
                   rows="3"
                   value={descriptionTa}
-                  onChange={(e) => setDescriptionTa(e.target.value)}
+                  onChange={(e) => {
+                    setDescriptionTa(e.target.value);
+                    setIsDescriptionTaEdited(true);
+                  }}
                   placeholder="விளக்கம், தயாரிப்பு முறை அல்லது சுவை குறிப்புகளை சுருக்கமாக எழுதவும்..."
                   className="w-full glass-panel px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accentPurple/50 focus:shadow-[0_0_10px_rgba(168,85,247,0.1)] transition-all resize-none"
                 />
