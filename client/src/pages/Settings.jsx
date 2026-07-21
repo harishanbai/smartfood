@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChefHat, Database, AlertTriangle, ShieldCheck, RefreshCw, Globe } from 'lucide-react';
+import { ChefHat, Database, AlertTriangle, ShieldCheck, RefreshCw, Globe, MessageSquare } from 'lucide-react';
 import api from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -8,6 +8,16 @@ const Settings = () => {
   const [loading, setLoading] = useState(false);
   const { addNotification } = useNotifications();
   const { language, setLanguage, t } = useLanguage();
+
+  const [chefName, setChefName] = useState(() => localStorage.getItem('chefName') || 'Chef');
+  const [chefPhone, setChefPhone] = useState(() => localStorage.getItem('chefPhone') || '');
+
+  const handleSaveChef = (e) => {
+    e.preventDefault();
+    localStorage.setItem('chefName', chefName);
+    localStorage.setItem('chefPhone', chefPhone);
+    addNotification(t('settings.chefConfigSaved'), 'success');
+  };
 
   const languagesList = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
@@ -137,6 +147,49 @@ const Settings = () => {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Chef Config Card */}
+        <div className="glass-panel rounded-[24px] p-6 border border-white/5">
+          <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-accentPurple" />
+            {t('settings.chefConfig')}
+          </h3>
+          <p className="text-xs text-gray-400 mb-6">{t('settings.chefConfigSub')}</p>
+
+          <form onSubmit={handleSaveChef} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('settings.chefName')}</label>
+                <input
+                  type="text"
+                  required
+                  value={chefName}
+                  onChange={(e) => setChefName(e.target.value)}
+                  placeholder={t('settings.chefNamePlaceholder')}
+                  className="w-full glass-panel px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('settings.chefPhone')}</label>
+                <input
+                  type="text"
+                  value={chefPhone}
+                  onChange={(e) => setChefPhone(e.target.value)}
+                  placeholder={t('settings.chefPhonePlaceholder')}
+                  className="w-full glass-panel px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="px-5 py-2.5 bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold rounded-xl shadow-lg transition-all cursor-pointer min-h-[44px]"
+              >
+                {t('settings.btnSaveChef')}
+              </button>
+            </div>
+          </form>
         </div>
 
         {/* Database Management Card */}

@@ -11,6 +11,7 @@
 
 import { getCalendarData } from '../services/tamilCalendarService.js';
 import { evaluateRule } from '../services/ruleEngine.js';
+import { translateResponse } from '../utils/translator.js';
 
 /**
  * Formats a JS Date to YYYY-MM-DD string.
@@ -24,13 +25,14 @@ const toDateStr = (d) =>
  * Builds a combined response with Tamil data + rule evaluation.
  *
  * @param {string} dateStr - YYYY-MM-DD
+ * @param {string} lang - Requested language
  * @returns {Promise<Object>}
  */
-const buildCalendarResponse = async (dateStr) => {
+const buildCalendarResponse = async (dateStr, lang = 'en') => {
   const tamilData = await getCalendarData(dateStr);
   const ruleResult = evaluateRule(tamilData, dateStr);
 
-  return {
+  const response = {
     date: dateStr,
     tamilCalendar: tamilData,
     rule: {
@@ -42,6 +44,8 @@ const buildCalendarResponse = async (dateStr) => {
     },
     apiAvailable: tamilData !== null,
   };
+
+  return translateResponse(response, lang);
 };
 
 /**
@@ -50,7 +54,8 @@ const buildCalendarResponse = async (dateStr) => {
 export const getTodayCalendar = async (req, res) => {
   try {
     const todayStr = toDateStr(new Date());
-    const result = await buildCalendarResponse(todayStr);
+    const lang = req.headers['accept-language'] || 'en';
+    const result = await buildCalendarResponse(todayStr, lang);
     res.json(result);
   } catch (error) {
     console.error('[TamilCalendarController] Error fetching today:', error.message);
@@ -69,7 +74,8 @@ export const getTomorrowCalendar = async (req, res) => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = toDateStr(tomorrow);
-    const result = await buildCalendarResponse(tomorrowStr);
+    const lang = req.headers['accept-language'] || 'en';
+    const result = await buildCalendarResponse(tomorrowStr, lang);
     res.json(result);
   } catch (error) {
     console.error('[TamilCalendarController] Error fetching tomorrow:', error.message);

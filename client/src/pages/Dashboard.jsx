@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Sparkles, RefreshCw, AlertCircle, CalendarRange, Bell, CheckCircle,
-  Sun, Moon, Star, Flame, Info, Calendar
+  Sun, Moon, Star, Flame, Info, Calendar, MessageSquare
 } from 'lucide-react';
 import { menuApi, foodApi, tamilCalendarApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
@@ -296,8 +296,85 @@ const Dashboard = () => {
       } else {
         addNotification(errData?.message || 'Failed to skip menu item', 'warning');
       }
-      setCarouselMode(false);
     }
+  };
+
+  const handleWhatsAppChef = () => {
+    if (!tomorrowMenu) return;
+
+    const chefName = localStorage.getItem('chefName') || 'Chef';
+    const chefPhone = localStorage.getItem('chefPhone') || '';
+
+    const foodName = tomorrowMenu.foodId?.name || '';
+    const foodDesc = tomorrowMenu.foodId?.description || '';
+    const foodCategory = tomorrowMenu.foodId?.category || '';
+
+    // Date formatting
+    const dateObj = new Date(tomorrowMenu.date);
+    const dayName = dateObj.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { weekday: 'long' });
+    const formattedDate = dateObj.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    let msg = '';
+
+    if (language === 'ta') {
+      msg = `வணக்கம் *${chefName}*,\n` +
+            `*${formattedDate} (${dayName})* நாளைய மதிய உணவு மெனு:\n\n` +
+            `*உணவு:* ${foodName}\n` +
+            `*வகை:* ${foodCategory}\n` +
+            `*விளக்கம்:* ${foodDesc}\n\n`;
+
+      if (tamilTomorrow?.tamilCalendar) {
+        const tc = tamilTomorrow.tamilCalendar;
+        msg += `*தமிழ் நாட்காட்டி விபரம்:*\n` +
+               `- தமிழ் தேதி: ${tc.tamilDate || '—'}\n` +
+               `- தமிழ் மாதம்: ${tc.tamilMonth || '—'}\n` +
+               `- திதி: ${tc.tithi || '—'}\n` +
+               `- நட்சத்திரம்: ${tc.nakshatra || '—'}\n`;
+        if (tc.isFestival && tc.festivalName) {
+          msg += `- பண்டிகை: 🪔 ${tc.festivalName}\n`;
+        }
+      }
+
+      if (tamilTomorrow?.rule) {
+        msg += `\n*பயன்படுத்தப்பட்ட விதி:*\n` +
+               `- ${tamilTomorrow.rule.ruleApplied || 'சாதாரண சீரற்ற முறை'}\n` +
+               `- காரணம்: ${tamilTomorrow.rule.reason || '—'}\n`;
+      }
+    } else {
+      msg = `Hello *${chefName}*,\n` +
+            `Here is the lunch menu for tomorrow, *${formattedDate} (${dayName})*:\n\n` +
+            `*Dish:* ${foodName}\n` +
+            `*Category:* ${foodCategory}\n` +
+            `*Description:* ${foodDesc}\n\n`;
+
+      if (tamilTomorrow?.tamilCalendar) {
+        const tc = tamilTomorrow.tamilCalendar;
+        msg += `*Tamil Panchang Details:*\n` +
+               `- Tamil Date: ${tc.tamilDate || '—'}\n` +
+               `- Tamil Month: ${tc.tamilMonth || '—'}\n` +
+               `- Tithi: ${tc.tithi || '—'}\n` +
+               `- Nakshatra: ${tc.nakshatra || '—'}\n`;
+        if (tc.isFestival && tc.festivalName) {
+          msg += `- Festival Today: 🪔 ${tc.festivalName}\n`;
+        }
+      }
+
+      if (tamilTomorrow?.rule) {
+        msg += `\n*Rule Applied:*\n` +
+               `- ${tamilTomorrow.rule.ruleApplied || 'Normal Random'}\n` +
+               `- Reason: ${tamilTomorrow.rule.reason || '—'}\n`;
+      }
+    }
+
+    msg += `\nThank you! / நன்றி!`;
+
+    // WhatsApp URL
+    const cleanPhone = chefPhone.replace(/[^+\d]/g, ''); // keep numbers and +
+    const waUrl = cleanPhone 
+      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`
+      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+
+    window.open(waUrl, '_blank');
   };
 
   const onCarouselFinished = (selectedFood) => {
@@ -447,6 +524,14 @@ const Dashboard = () => {
                     >
                       <RefreshCw className={`h-3.5 w-3.5 ${isSpinning ? 'animate-spin' : ''}`} />
                       {t('dashboard.btnRollSelect')}
+                    </button>
+                    <button
+                      onClick={handleWhatsAppChef}
+                      disabled={isSpinning}
+                      className="w-full xs:w-auto px-5 py-3 rounded-xl text-xs font-bold bg-accentGreen/10 border border-accentGreen/30 text-accentGreen hover:bg-accentGreen/20 transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      {t('dashboard.btnMessageChef')}
                     </button>
                   </div>
                 </div>

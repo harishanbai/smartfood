@@ -1,6 +1,7 @@
 import Menu from '../models/Menu.js';
 import { generateLunchForDate } from '../services/generatorService.js';
 import { mockDb } from '../services/mockDbService.js';
+import { translateResponse } from '../utils/translator.js';
 
 // Date utility functions
 const getTodayStr = () => {
@@ -16,7 +17,7 @@ const getTomorrowStr = () => {
 
 export const getTodayMenu = async (req, res) => {
   try {
-
+    const lang = req.headers['accept-language'] || 'en';
     const todayStr = getTodayStr();
 
     if (process.env.USE_MOCK_DB === 'true') {
@@ -28,7 +29,7 @@ export const getTodayMenu = async (req, res) => {
           return res.status(200).json(null);
         }
       }
-      return res.json(menu);
+      return res.json(translateResponse(menu, lang));
     }
 
     let menu = await Menu.findOne({ date: todayStr, status: 'active' }).populate('foodId');
@@ -39,7 +40,7 @@ export const getTodayMenu = async (req, res) => {
         return res.status(200).json(null);
       }
     }
-    res.json(menu);
+    res.json(translateResponse(menu, lang));
   } catch (error) {
     res.status(500).json({ message: "Error retrieving today's menu", error: error.message });
   }
@@ -47,14 +48,13 @@ export const getTodayMenu = async (req, res) => {
 
 export const getTomorrowMenu = async (req, res) => {
   try {
-
-
+    const lang = req.headers['accept-language'] || 'en';
     const tomorrowStr = getTomorrowStr();
     const menu = await Menu.findOne({ date: tomorrowStr, status: 'active' }).populate('foodId');
     if (!menu) {
       return res.status(200).json(null);
     }
-    res.json(menu);
+    res.json(translateResponse(menu, lang));
   } catch (error) {
     res.status(500).json({ message: "Error retrieving tomorrow's menu", error: error.message });
   }
@@ -62,12 +62,11 @@ export const getTomorrowMenu = async (req, res) => {
 
 export const generateTomorrowMenu = async (req, res) => {
   try {
+    const lang = req.headers['accept-language'] || 'en';
     const tomorrowStr = getTomorrowStr();
 
-
-
     const menu = await generateLunchForDate(tomorrowStr);
-    res.status(201).json(menu);
+    res.status(201).json(translateResponse(menu, lang));
   } catch (error) {
     // Typed error: no foods available for the required category (e.g. No Non-Veg on Wednesday)
     if (error.code === 'NO_CATEGORY_FOODS') {
@@ -84,12 +83,13 @@ export const generateTomorrowMenu = async (req, res) => {
 
 export const skipTomorrowMenu = async (req, res) => {
   try {
+    const lang = req.headers['accept-language'] || 'en';
     const tomorrowStr = getTomorrowStr();
     if (process.env.USE_MOCK_DB === 'true') {
       const newMenu = mockDb.skipTomorrow();
-      return res.json(newMenu);
+      return res.json(translateResponse(newMenu, lang));
     }
-    // Find active menu for tomorrow
+    // Find active tomorrow's menu
     const activeMenu = await Menu.findOne({ date: tomorrowStr, status: 'active' });
     if (!activeMenu) {
       return res.status(400).json({ message: "No active tomorrow's menu exists to skip." });
@@ -101,7 +101,7 @@ export const skipTomorrowMenu = async (req, res) => {
 
     // Generate another food for tomorrow — inherits the same Rule Engine category constraint
     const newMenu = await generateLunchForDate(tomorrowStr);
-    res.json(newMenu);
+    res.json(translateResponse(newMenu, lang));
   } catch (error) {
     // Typed error: no more foods available for the required category after skipping
     if (error.code === 'NO_CATEGORY_FOODS') {
@@ -119,8 +119,7 @@ export const skipTomorrowMenu = async (req, res) => {
 export const getMenuHistory = async (req, res) => {
   try {
     const { month, search } = req.query; // YYYY-MM
-
-
+    const lang = req.headers['accept-language'] || 'en';
 
     let query = { status: 'active' };
 
@@ -137,12 +136,13 @@ export const getMenuHistory = async (req, res) => {
         if (!m.foodId) return false;
         return (
           m.foodId.name.toLowerCase().includes(searchLower) ||
+          (m.foodId.name_ta && m.foodId.name_ta.toLowerCase().includes(searchLower)) ||
           m.foodId.category.toLowerCase().includes(searchLower)
         );
       });
     }
 
-    res.json(menus);
+    res.json(translateResponse(menus, lang));
   } catch (error) {
     res.status(500).json({ message: "Error retrieving menu history", error: error.message });
   }
@@ -151,13 +151,14 @@ export const getMenuHistory = async (req, res) => {
 export const assignMenu = async (req, res) => {
   try {
     const { date, foodId } = req.body;
+    const lang = req.headers['accept-language'] || 'en';
     if (!date || !foodId) {
       return res.status(400).json({ message: "Date and foodId are required." });
     }
 
     if (process.env.USE_MOCK_DB === 'true') {
       const menu = mockDb.assignMenu(date, foodId);
-      return res.status(201).json(menu);
+      return res.status(201).json(translateResponse(menu, lang));
     }
 
     // Deactivate existing active menus for this date
@@ -172,7 +173,7 @@ export const assignMenu = async (req, res) => {
     await menu.save();
 
     const populated = await Menu.findById(menu._id).populate('foodId');
-    res.status(201).json(populated);
+    res.status(201).json(translateResponse(populated, lang));
   } catch (error) {
     res.status(500).json({ message: "Error assigning menu item", error: error.message });
   }

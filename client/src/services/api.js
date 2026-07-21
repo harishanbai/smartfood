@@ -6,6 +6,12 @@ const api = axios.create({
   baseURL: API_BASE_URL
 });
 
+api.interceptors.request.use((config) => {
+  const lang = localStorage.getItem('language') || 'en';
+  config.headers['Accept-Language'] = lang;
+  return config;
+});
+
 export const foodApi = {
   getFoods: (search = '') => api.get(`/foods?search=${encodeURIComponent(search)}`),
   addFood: (formData) => api.post('/foods', formData, {

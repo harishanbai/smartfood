@@ -6,6 +6,11 @@ const foodSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  name_ta: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   category: {
     type: String,
     required: true,
@@ -15,6 +20,11 @@ const foodSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true
+  },
+  description_ta: {
+    type: String,
+    trim: true,
+    default: ''
   },
   image: {
     type: String,

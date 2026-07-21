@@ -19,8 +19,9 @@ const Foods = () => {
   const [foods, setFoods] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const { addNotification } = useNotifications();
-  const { t, tc } = useLanguage();
+  const { language, t, tc } = useLanguage();
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,8 +30,10 @@ const Foods = () => {
 
   // Form states
   const [name, setName] = useState('');
+  const [nameTa, setNameTa] = useState('');
   const [category, setCategory] = useState('Main Course');
   const [description, setDescription] = useState('');
+  const [descriptionTa, setDescriptionTa] = useState('');
   const [available, setAvailable] = useState(true);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
@@ -67,8 +70,10 @@ const Foods = () => {
     setModalMode('add');
     setSelectedFoodId(null);
     setName('');
+    setNameTa('');
     setCategory('Main Course');
     setDescription('');
+    setDescriptionTa('');
     setAvailable(true);
     setImageFile(null);
     setImagePreview('');
@@ -79,8 +84,10 @@ const Foods = () => {
     setModalMode('edit');
     setSelectedFoodId(food._id);
     setName(food.name);
+    setNameTa(food.name_ta || '');
     setCategory(food.category);
     setDescription(food.description);
+    setDescriptionTa(food.description_ta || '');
     setAvailable(food.available);
     setImageFile(null);
     setImagePreview(food.image || '');
@@ -126,8 +133,10 @@ const Foods = () => {
 
     const formData = new FormData();
     formData.append('name', name);
+    formData.append('name_ta', nameTa);
     formData.append('category', category);
     formData.append('description', description);
+    formData.append('description_ta', descriptionTa);
     formData.append('available', available);
     if (imageFile) {
       formData.append('image', imageFile);
@@ -150,26 +159,50 @@ const Foods = () => {
     }
   };
 
+  const filteredFoods = foods.filter(food => {
+    if (selectedCategory === 'All') return true;
+    return food.category === selectedCategory;
+  });
+
   return (
     <div className="min-h-screen pb-12 w-full overflow-x-hidden">
       {/* Search and Action Bar */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
-        {/* Search input */}
-        <div className="relative w-full md:max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder={t('foods.searchPlaceholder')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full glass-panel pl-12 pr-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-gray-400 text-sm focus:outline-none focus:border-accentPurple/50 focus:shadow-[0_0_15px_rgba(168,85,247,0.15)] transition-all"
-          />
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div className="w-full md:max-w-2xl flex flex-col gap-3">
+          {/* Search input */}
+          <div className="relative w-full">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder={t('foods.searchPlaceholder')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full glass-panel pl-12 pr-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-gray-400 text-sm focus:outline-none focus:border-accentPurple/50 focus:shadow-[0_0_15px_rgba(168,85,247,0.15)] transition-all"
+            />
+          </div>
+          {/* Category display at bottom of search bar */}
+          <div className="flex flex-wrap gap-2">
+            {['All', ...categories].map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all border cursor-pointer
+                  ${selectedCategory === cat
+                    ? 'bg-gradient-to-r from-accentPurple to-accentOrange border-transparent text-white shadow-md'
+                    : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
+                  }
+                `}
+              >
+                {cat === 'All' ? (language === 'ta' ? 'அனைத்தும்' : 'All') : tc(cat)}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Add food button */}
         <button
           onClick={handleOpenAddModal}
-          className="w-full md:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-accentPurple to-accentOrange text-white text-sm font-bold hover:opacity-95 shadow-lg shadow-purple-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full md:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-accentPurple to-accentOrange text-white text-sm font-bold hover:opacity-95 shadow-lg shadow-purple-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer flex-shrink-0"
         >
           <Plus className="h-5 w-5" />
           {t('foods.addDish')}
@@ -190,7 +223,7 @@ const Foods = () => {
             </div>
           ))}
         </div>
-      ) : foods.length === 0 ? (
+      ) : filteredFoods.length === 0 ? (
         <div className="glass-panel rounded-[24px] p-12 text-center max-w-lg mx-auto flex flex-col items-center">
           <ChefHat className="h-12 w-12 text-gray-500 mb-3" />
           <h3 className="text-xl font-bold text-white mb-2">{t('history.noHistoryRecords')}</h3>
@@ -214,7 +247,7 @@ const Foods = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 text-sm">
-                  {foods.map(food => (
+                  {filteredFoods.map(food => (
                     <tr key={food._id} className={`hover:bg-white/5 transition-colors ${!food.available ? 'opacity-70' : ''}`}>
                       <td className="p-4 flex items-center gap-3">
                         <div className="h-12 w-12 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
@@ -272,7 +305,7 @@ const Foods = () => {
 
           {/* Mobile Grid/Cards View */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
-            {foods.map(food => (
+            {filteredFoods.map(food => (
               <div 
                 key={food._id}
                 className={`glass-panel rounded-[24px] p-4 border border-white/5 flex flex-col justify-between group transition-all duration-300 relative
@@ -371,13 +404,25 @@ const Foods = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('foods.dishName')} *</label>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('foods.dishNameEn')} *</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Grilled Chicken Caesar Salad"
+                  className="w-full glass-panel px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accentPurple/50 focus:shadow-[0_0_10px_rgba(168,85,247,0.1)] transition-all"
+                />
+              </div>
+
+              {/* Name (Tamil) */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('foods.dishNameTa')}</label>
+                <input
+                  type="text"
+                  value={nameTa}
+                  onChange={(e) => setNameTa(e.target.value)}
+                  placeholder="எ.கா. பூண்டு நானுடன் பட்டர் சிக்கன்"
                   className="w-full glass-panel px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accentPurple/50 focus:shadow-[0_0_10px_rgba(168,85,247,0.1)] transition-all"
                 />
               </div>
@@ -398,13 +443,25 @@ const Foods = () => {
 
               {/* Description */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('dashboard.desc')} *</label>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('foods.dishDescEn')} *</label>
                 <textarea
                   required
                   rows="3"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Briefly describe the ingredients, preparation or flavor notes..."
+                  className="w-full glass-panel px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accentPurple/50 focus:shadow-[0_0_10px_rgba(168,85,247,0.1)] transition-all resize-none"
+                />
+              </div>
+
+              {/* Description (Tamil) */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('foods.dishDescTa')}</label>
+                <textarea
+                  rows="3"
+                  value={descriptionTa}
+                  onChange={(e) => setDescriptionTa(e.target.value)}
+                  placeholder="விளக்கம், தயாரிப்பு முறை அல்லது சுவை குறிப்புகளை சுருக்கமாக எழுதவும்..."
                   className="w-full glass-panel px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accentPurple/50 focus:shadow-[0_0_10px_rgba(168,85,247,0.1)] transition-all resize-none"
                 />
               </div>

@@ -1,8 +1,10 @@
 import Food from '../models/Food.js';
 import Menu from '../models/Menu.js';
+import { translateResponse } from '../utils/translator.js';
 
 export const getStats = async (req, res) => {
   try {
+    const lang = req.headers['accept-language'] || 'en';
 
     const totalFoods = await Food.countDocuments();
     const availableFoods = await Food.countDocuments({ available: true });
@@ -51,7 +53,7 @@ export const getStats = async (req, res) => {
       food: menu.foodId ? menu.foodId.name : 'Unknown'
     })).reverse();
 
-    res.json({
+    res.json(translateResponse({
       totalFoods,
       availableFoods,
       unavailableFoods,
@@ -60,7 +62,7 @@ export const getStats = async (req, res) => {
       mostGeneratedFood,
       categoryStats,
       weeklyStats
-    });
+    }, lang));
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving statistics', error: error.message });
   }

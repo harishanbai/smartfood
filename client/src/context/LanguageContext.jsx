@@ -42,6 +42,7 @@ const translations = {
       notSelectedSub: "Click Roll & Select to trigger our custom recipe recommendation wheel.",
       btnRollSelect: "Roll & Select Menu",
       btnSkipMenu: "Skip Menu",
+      btnMessageChef: "Message Chef",
       carouselTitle: "Selecting Tomorrow's Feast...",
       spinPrompt: "Click below to stop the wheel!",
       spinStopBtn: "Stop Wheel",
@@ -69,7 +70,11 @@ const translations = {
       editDish: "Edit Food Item",
       addDish: "Add Food Item",
       dishName: "Dish Name",
+      dishNameEn: "Dish Name (English)",
+      dishNameTa: "Dish Name (Tamil)",
       dishDesc: "Description",
+      dishDescEn: "Description (English)",
+      dishDescTa: "Description (Tamil)",
       dishImage: "Dish Image",
       uploadPrompt: "Click to upload image or drag and drop",
       uploadFormats: "PNG, JPG, JPEG up to 10MB",
@@ -156,7 +161,15 @@ const translations = {
       resetInitiated: "Database reset initiated",
       resetFailed: "Reset failed",
       langSelect: "Select Language",
-      langSelectDesc: "Choose your preferred user interface language."
+      langSelectDesc: "Choose your preferred user interface language.",
+      chefConfig: "Chef Communication Config",
+      chefConfigSub: "Configure Chef contact details for sharing daily menus.",
+      chefName: "Chef Name",
+      chefPhone: "Chef Phone Number (with Country Code)",
+      chefNamePlaceholder: "e.g. Ramu",
+      chefPhonePlaceholder: "e.g. +919876543210",
+      btnSaveChef: "Save Chef Config",
+      chefConfigSaved: "Chef settings saved successfully!"
     }
   },
   ta: {
@@ -196,6 +209,7 @@ const translations = {
       notSelectedSub: "எங்கள் தனிப்பயன் சமையல் பரிந்துரை சக்கரத்தை இயக்க 'சுழற்று & தேர்ந்தெடு' என்பதைக் கிளிக் செய்யவும்.",
       btnRollSelect: "மெனுவைச் சுழற்றித் தேர்ந்தெடு",
       btnSkipMenu: "மெனுவைத் தவிர்",
+      btnMessageChef: "சமையல்காரருக்கு அனுப்பு",
       carouselTitle: "நாளைய விருந்தைத் தேர்ந்தெடுக்கிறது...",
       spinPrompt: "சக்கரத்தை நிறுத்த கீழே கிளிக் செய்யவும்!",
       spinStopBtn: "சக்கரத்தை நிறுத்து",
@@ -223,7 +237,11 @@ const translations = {
       editDish: "உணவைத் திருத்து",
       addDish: "உணவைச் சேர்",
       dishName: "உணவின் பெயர்",
+      dishNameEn: "உணவின் பெயர் (ஆங்கிலம்)",
+      dishNameTa: "உணவின் பெயர் (தமிழ்)",
       dishDesc: "விளக்கம்",
+      dishDescEn: "விளக்கம் (ஆங்கிலம்)",
+      dishDescTa: "விளக்கம் (தமிழ்)",
       dishImage: "உணவின் படம்",
       uploadPrompt: "படத்தைப் பதிவேற்ற கிளிக் செய்யவும் அல்லது இழுத்து விடவும்",
       uploadFormats: "10MB வரை PNG, JPG, JPEG வடிவங்கள்",
@@ -310,7 +328,15 @@ const translations = {
       resetInitiated: "தரவுத்தள மீட்பு தொடங்கப்பட்டது",
       resetFailed: "மீட்டமைப்பில் தோல்வி",
       langSelect: "மொழியைத் தேர்ந்தெடுக்கவும்",
-      langSelectDesc: "உங்களுக்கு விருப்பமான இடைமுக மொழியைத் தேர்ந்தெடுக்கவும்."
+      langSelectDesc: "உங்களுக்கு விருப்பமான இடைமுக மொழியைத் தேர்ந்தெடுக்கவும்.",
+      chefConfig: "சமையல்காரர் தொடர்பு அமைப்புகள்",
+      chefConfigSub: "தினசரி மெனு அறிவிப்புகளை சமையல்காரருக்கு வாட்ஸ்அப் அல்லது எஸ்எம்எஸ் மூலம் அனுப்ப தொடர்பு விவரங்களை உள்ளமைக்கவும்.",
+      chefName: "சமையல்காரர் பெயர்",
+      chefPhone: "சமையல்காரர் தொலைபேசி எண்",
+      chefNamePlaceholder: "எ.கா. ராமு",
+      chefPhonePlaceholder: "எ.கா. +919876543210",
+      btnSaveChef: "அமைப்புகளைச் சேமி",
+      chefConfigSaved: "சமையல்காரர் அமைப்புகள் வெற்றிகரமாகச் சேமிக்கப்பட்டன!"
     }
   }
 };
