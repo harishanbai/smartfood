@@ -7,14 +7,15 @@ export const getFoods = async (req, res) => {
     const lang = req.headers['accept-language'] || 'en';
 
     let query = {};
-    if (search) {
+    if (search && typeof search === 'string' && search.trim() !== '') {
+      const searchRegex = search.trim();
       query = {
         $or: [
-          { name: { $regex: search, $options: 'i' } },
-          { name_ta: { $regex: search, $options: 'i' } },
-          { category: { $regex: search, $options: 'i' } },
-          { description: { $regex: search, $options: 'i' } },
-          { description_ta: { $regex: search, $options: 'i' } }
+          { name: { $regex: searchRegex, $options: 'i' } },
+          { name_ta: { $regex: searchRegex, $options: 'i' } },
+          { category: { $regex: searchRegex, $options: 'i' } },
+          { description: { $regex: searchRegex, $options: 'i' } },
+          { description_ta: { $regex: searchRegex, $options: 'i' } }
         ]
       };
     }
@@ -27,7 +28,7 @@ export const getFoods = async (req, res) => {
 
 export const addFood = async (req, res) => {
   try {
-    const { name, name_ta, category, description, description_ta, available } = req.body;
+    const { name, name_ta, category, description, description_ta, available, foodType } = req.body;
     const lang = req.headers['accept-language'] || 'en';
 
     if (!name || !category || !description) {
@@ -48,7 +49,8 @@ export const addFood = async (req, res) => {
       description,
       description_ta: description_ta || '',
       image: imageUrl,
-      available: available === 'false' || available === false ? false : true
+      available: available === 'false' || available === false ? false : true,
+      foodType: foodType === 'non-veg' ? 'non-veg' : 'veg'
     };
 
     const food = new Food(foodData);
@@ -62,7 +64,7 @@ export const addFood = async (req, res) => {
 export const updateFood = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, name_ta, category, description, description_ta, available } = req.body;
+    const { name, name_ta, category, description, description_ta, available, foodType } = req.body;
     const lang = req.headers['accept-language'] || 'en';
 
     let imageUrl = null;
@@ -84,6 +86,9 @@ export const updateFood = async (req, res) => {
     if (description_ta !== undefined) food.description_ta = description_ta;
     if (available !== undefined) {
       food.available = available === 'false' || available === false ? false : true;
+    }
+    if (foodType) {
+      food.foodType = foodType === 'non-veg' ? 'non-veg' : 'veg';
     }
     if (imageUrl) food.image = imageUrl;
 

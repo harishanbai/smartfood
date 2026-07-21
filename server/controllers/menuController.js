@@ -1,6 +1,5 @@
 import Menu from '../models/Menu.js';
 import { generateLunchForDate } from '../services/generatorService.js';
-import { mockDb } from '../services/mockDbService.js';
 import { translateResponse } from '../utils/translator.js';
 
 // Date utility functions
@@ -20,22 +19,10 @@ export const getTodayMenu = async (req, res) => {
     const lang = req.headers['accept-language'] || 'en';
     const todayStr = getTodayStr();
 
-    if (process.env.USE_MOCK_DB === 'true') {
-      let menu = mockDb.getToday();
-      if (!menu) {
-        try {
-          menu = mockDb.generateLunchForDate(todayStr);
-        } catch (err) {
-          return res.status(200).json(null);
-        }
-      }
-      return res.json(translateResponse(menu, lang));
-    }
-
     let menu = await Menu.findOne({ date: todayStr, status: 'active' }).populate('foodId');
     if (!menu) {
       try {
-        menu = await generateLunchForDate(todayStr);
+        menu = await generateLunchForDate(todayStr, 'automatic');
       } catch (err) {
         return res.status(200).json(null);
       }
@@ -65,7 +52,7 @@ export const generateTomorrowMenu = async (req, res) => {
     const lang = req.headers['accept-language'] || 'en';
     const tomorrowStr = getTomorrowStr();
 
-    const menu = await generateLunchForDate(tomorrowStr);
+    const menu = await generateLunchForDate(tomorrowStr, 'manual');
     res.status(201).json(translateResponse(menu, lang));
   } catch (error) {
     // Typed error: no foods available for the required category (e.g. No Non-Veg on Wednesday)
@@ -85,11 +72,8 @@ export const skipTomorrowMenu = async (req, res) => {
   try {
     const lang = req.headers['accept-language'] || 'en';
     const tomorrowStr = getTomorrowStr();
-    if (process.env.USE_MOCK_DB === 'true') {
-      const newMenu = mockDb.skipTomorrow();
-      return res.json(translateResponse(newMenu, lang));
-    }
-    // Find active tomorrow's menu
+
+    // Find active menu for tomorrow
     const activeMenu = await Menu.findOne({ date: tomorrowStr, status: 'active' });
     if (!activeMenu) {
       return res.status(400).json({ message: "No active tomorrow's menu exists to skip." });
@@ -100,7 +84,7 @@ export const skipTomorrowMenu = async (req, res) => {
     await activeMenu.save();
 
     // Generate another food for tomorrow — inherits the same Rule Engine category constraint
-    const newMenu = await generateLunchForDate(tomorrowStr);
+    const newMenu = await generateLunchForDate(tomorrowStr, 'manual');
     res.json(translateResponse(newMenu, lang));
   } catch (error) {
     // Typed error: no more foods available for the required category after skipping
@@ -156,11 +140,6 @@ export const assignMenu = async (req, res) => {
       return res.status(400).json({ message: "Date and foodId are required." });
     }
 
-    if (process.env.USE_MOCK_DB === 'true') {
-      const menu = mockDb.assignMenu(date, foodId);
-      return res.status(201).json(translateResponse(menu, lang));
-    }
-
     // Deactivate existing active menus for this date
     await Menu.updateMany({ date, status: 'active' }, { status: 'skipped' });
 
@@ -168,7 +147,8 @@ export const assignMenu = async (req, res) => {
     const menu = new Menu({
       date,
       foodId,
-      status: 'active'
+      status: 'active',
+      generationType: 'manual'
     });
     await menu.save();
 
@@ -182,14 +162,6 @@ export const assignMenu = async (req, res) => {
 export const deleteMenuRecord = async (req, res) => {
   try {
     const { id } = req.params;
-
-    if (process.env.USE_MOCK_DB === 'true') {
-      const success = mockDb.deleteMenuRecord(id);
-      if (!success) {
-        return res.status(404).json({ message: "Menu record not found" });
-      }
-      return res.json({ message: "Menu record deleted successfully" });
-    }
 
     const menu = await Menu.findByIdAndDelete(id);
     if (!menu) {

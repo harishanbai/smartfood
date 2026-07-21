@@ -19,6 +19,11 @@ const menuSchema = new mongoose.Schema({
     enum: ['active', 'skipped'],
     default: 'active'
   },
+  generationType: {
+    type: String,
+    enum: ['automatic', 'manual'],
+    default: 'automatic'
+  },
   // Smart Rule Engine fields (optional, backwards-compatible)
   ruleApplied: {
     type: String,

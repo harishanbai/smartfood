@@ -31,7 +31,7 @@ import { selectFood } from './menuGenerator.js';
  * @returns {Promise<Object>} Populated Menu mongoose document
  * @throws {Error} If no suitable food is available
  */
-export const generateLunchForDate = async (dateStr) => {
+export const generateLunchForDate = async (dateStr, generationType = 'automatic') => {
   // ── Step 1: Tamil Calendar Data ──────────────────────────────────────────
   // Returns null on API failure; rule engine treats null as "Normal Day"
   const tamilData = await getCalendarData(dateStr);
@@ -57,6 +57,7 @@ export const generateLunchForDate = async (dateStr) => {
     foodId: selectedFood._id,
     generatedAt: new Date(),
     status: 'active',
+    generationType,
     ruleApplied: ruleResult.ruleApplied,
     ruleCode: ruleResult.ruleCode,
     tamilCalendarSnapshot: tamilData,

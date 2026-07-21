@@ -473,7 +473,9 @@ const Dashboard = () => {
               </span>
               {tomorrowMenu && (
                 <span className="text-[10px] text-gray-400 font-mono">
-                  Gen: {new Date(tomorrowMenu.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {tomorrowMenu.generationType === 'manual'
+                    ? 'Manually Generated'
+                    : `Auto Generated at ${new Date(tomorrowMenu.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                 </span>
               )}
             </div>
