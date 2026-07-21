@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChefHat, Database, AlertTriangle, ShieldCheck, RefreshCw, Globe, MessageSquare } from 'lucide-react';
+import { Database, AlertTriangle, ShieldCheck, RefreshCw, Globe, MessageSquare } from 'lucide-react';
 import api from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
