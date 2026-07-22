@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Clock, Calendar, CheckCircle2, Sun, Moon, Globe, ChevronDown } from 'lucide-react';
+import { Calendar, CheckCircle2, Sun, Moon, Globe, ChevronDown } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -133,16 +133,11 @@ const TopSection = () => {
           </div>
         </button>
 
-        {/* Date and Clock Widget */}
-        <div className="glass-panel px-4 py-3 rounded-2xl flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-start gap-2.5 sm:gap-3 bg-white/5 border border-white/10 text-xs sm:text-sm flex-1 sm:flex-initial">
+        {/* Date Widget */}
+        <div className="glass-panel px-4 py-3 rounded-2xl flex items-center justify-start gap-2.5 bg-white/5 border border-white/10 text-xs sm:text-sm">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-accentPurple flex-shrink-0" />
             <span className="text-gray-300 font-medium whitespace-nowrap">{formatDate(time)}</span>
-          </div>
-          <span className="hidden sm:inline h-4 w-px bg-white/10" />
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-accentOrange flex-shrink-0" />
-            <span className="text-gray-200 font-mono font-semibold whitespace-nowrap">{formatTime(time)}</span>
           </div>
         </div>
 
