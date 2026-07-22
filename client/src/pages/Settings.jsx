@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { AlertTriangle, ShieldCheck, Globe, MessageSquare } from 'lucide-react';
 import api from '../services/api';
+import React from 'react';
+import { AlertTriangle, ShieldCheck, Globe, MessageSquare } from 'lucide-react';
 import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
 
 const Settings = () => {
-  const [loading, setLoading] = useState(false);
   const { addNotification } = useNotifications();
   const { language, setLanguage, t } = useLanguage();
 
