@@ -19,24 +19,61 @@ const Profile = () => {
       addNotification('Name and Designation are required.', 'warning');
       return;
     }
-    localStorage.setItem('profileName', profileName);
-    localStorage.setItem('profileDesignation', profileDesignation);
-    localStorage.setItem('profilePhoto', profilePhoto);
-    window.dispatchEvent(new Event('profile-change'));
-    addNotification('Website branding identity updated successfully!', 'success');
+    try {
+      localStorage.setItem('profileName', profileName);
+      localStorage.setItem('profileDesignation', profileDesignation);
+      localStorage.setItem('profilePhoto', profilePhoto);
+      window.dispatchEvent(new Event('profile-change'));
+      addNotification('Website branding identity updated successfully!', 'success');
+    } catch (err) {
+      console.error(err);
+      addNotification('Failed to save profile changes. Image storage space might be full.', 'warning');
+    }
+  };
+
+  const compressAndSetPhoto = (file) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 200;
+        const MAX_HEIGHT = 200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        setProfilePhoto(compressedBase64);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
   };
 
   const readPhotoFile = (file) => {
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        addNotification("Image is too large. Please select an image under 2MB.", "warning");
+      if (file.size > 10 * 1024 * 1024) {
+        addNotification("Image is too large. Please select an image under 10MB.", "warning");
         return;
       }
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setProfilePhoto(event.target.result);
-      };
-      reader.readAsDataURL(file);
+      compressAndSetPhoto(file);
     }
   };
 
