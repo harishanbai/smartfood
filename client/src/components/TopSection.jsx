@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Calendar, CheckCircle2, Sun, Moon, Globe, ChevronDown } from 'lucide-react';
+import { Calendar, CheckCircle2, Sun, Moon, Globe, ChevronDown, LogOut } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 const TopSection = () => {
   const [time, setTime] = useState(new Date());
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
+  const { currentUser, logout } = useAuth();
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -52,29 +54,18 @@ const TopSection = () => {
     });
   };
 
-  const formatTime = (date) => {
-    const locales = {
-      en: 'en-US',
-      ta: 'ta-IN'
-    };
-    return date.toLocaleTimeString(locales[language] || 'en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true
-    });
-  };
-
   return (
     <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8 w-full">
-      {/* Greeting & Time */}
-      <div className="w-full lg:w-auto">
-        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-1.5">
-          {getGreeting()}, {t('topSection.master')} 👋
-        </h2>
-        <p className="text-gray-400 text-xs sm:text-sm">
-          {t('topSection.subtitle')}
-        </p>
+      {/* Greeting & User Info */}
+      <div className="w-full lg:w-auto flex items-center justify-between lg:justify-start gap-4">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-1.5 flex items-center gap-2">
+            {getGreeting()}, {currentUser?.displayName ? currentUser.displayName.split(' ')[0] : t('topSection.master')} 👋
+          </h2>
+          <p className="text-gray-400 text-xs sm:text-sm">
+            {t('topSection.subtitle')}
+          </p>
+        </div>
       </div>
 
       {/* Date, Time & Scheduler Status Panel */}
@@ -153,6 +144,17 @@ const TopSection = () => {
             </div>
           </div>
         </div>
+
+        {/* Sign Out Button */}
+        {currentUser && (
+          <button
+            onClick={logout}
+            title="Sign Out"
+            className="glass-panel p-3 rounded-2xl flex items-center justify-center bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all text-red-400 hover:text-red-300 cursor-pointer min-h-[44px] min-w-[44px]"
+          >
+            <LogOut className="h-5 w-5" />
+          </button>
+        )}
       </div>
     </header>
   );
