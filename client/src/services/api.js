@@ -43,4 +43,8 @@ export const tamilCalendarApi = {
   getTomorrow: () => api.get('/tamil-calendar/tomorrow'),
 };
 
+export const whatsappApi = {
+  sendMenu: (target) => api.post('/whatsapp/send', { target })
+};
+
 export default api;
