@@ -254,7 +254,7 @@ const Dashboard = () => {
       setCarouselMode(true);
       const res = await menuApi.generateTomorrow();
       const generatedMenu = res.data;
-      const generatedFood = generatedMenu.foodId;
+      const generatedFood = generatedMenu.vegFoodId || generatedMenu.foodId;
 
       const spinBtn = document.getElementById('carousel-spin-trigger');
       if (spinBtn) {
@@ -286,7 +286,7 @@ const Dashboard = () => {
       setCarouselMode(true);
       const res = await menuApi.skipTomorrow();
       const newMenu = res.data;
-      const newFood = newMenu.foodId;
+      const newFood = newMenu.vegFoodId || newMenu.foodId;
 
       const spinBtn = document.getElementById('carousel-spin-trigger');
       if (spinBtn) {
@@ -356,40 +356,74 @@ const Dashboard = () => {
             </div>
 
             {todayMenu ? (
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start">
-                <div className="w-full sm:w-36 lg:w-40 h-40 rounded-2xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
-                  {todayMenu.foodId?.image ? (
-                    <img
-                      src={getImageUrl(todayMenu.foodId?.image)}
-                      alt={todayMenu.foodId?.name || 'Food'}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
+              <div className="flex flex-col gap-5">
+                {/* Veg Option */}
+                {(todayMenu.vegFoodId || todayMenu.foodId) && (
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start p-4 rounded-2xl bg-white/3 border border-white/5 hover:bg-white/5 transition-all duration-300 w-full">
+                    <div className="w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
+                      {(todayMenu.vegFoodId?.image || todayMenu.foodId?.image) ? (
+                        <img
+                          src={getImageUrl(todayMenu.vegFoodId?.image || todayMenu.foodId?.image)}
+                          alt={todayMenu.vegFoodId?.name || todayMenu.foodId?.name || 'Food'}
+                          className="w-full h-full object-cover transition-transform duration-500"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
+                      )}
+                    </div>
+                    <div className="flex-1 text-center sm:text-left">
+                      <span className="inline-flex items-center gap-1.5 text-[9px] bg-accentGreen/15 border border-accentGreen/30 text-accentGreen px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                        <span className="h-1.5 w-1.5 rounded-full bg-accentGreen animate-pulse" />
+                        VEG • {todayMenu.vegFoodId?.category || todayMenu.foodId?.category}
+                      </span>
+                      <h3 className="text-lg font-bold text-white mt-2 mb-1 tracking-tight">{todayMenu.vegFoodId?.name || todayMenu.foodId?.name}</h3>
+                      <p className="text-gray-400 text-xs leading-relaxed">{todayMenu.vegFoodId?.description || todayMenu.foodId?.description}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Non-Veg Option */}
+                {todayMenu.nonVegFoodId ? (
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start p-4 rounded-2xl bg-white/3 border border-white/5 hover:bg-white/5 transition-all duration-300 w-full">
+                    <div className="w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
+                      {todayMenu.nonVegFoodId?.image ? (
+                        <img
+                          src={getImageUrl(todayMenu.nonVegFoodId?.image)}
+                          alt={todayMenu.nonVegFoodId?.name || 'Food'}
+                          className="w-full h-full object-cover transition-transform duration-500"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
+                      )}
+                    </div>
+                    <div className="flex-1 text-center sm:text-left">
+                      <span className="inline-flex items-center gap-1.5 text-[9px] bg-red-500/15 border border-red-500/30 text-red-400 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                        NON-VEG • {todayMenu.nonVegFoodId?.category}
+                      </span>
+                      <h3 className="text-lg font-bold text-white mt-2 mb-1 tracking-tight">{todayMenu.nonVegFoodId?.name}</h3>
+                      <p className="text-gray-400 text-xs leading-relaxed">{todayMenu.nonVegFoodId?.description}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3.5 rounded-xl bg-accentGreen/5 border border-accentGreen/10 flex items-center justify-center text-xs text-accentGreen font-semibold gap-1.5">
+                    🌿 Vegetarian Only Today (No Non-Veg Served)
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start pt-2 border-t border-white/5">
+                  <div className="inline-flex items-center gap-2 text-xs text-gray-400 glass-panel px-3 py-1.5 rounded-lg bg-black/20">
+                    <CheckCircle className="h-3.5 w-3.5 text-accentGreen" />
+                    <span>Prepared &amp; Served</span>
+                  </div>
+                  {/* Rule badge for today's menu */}
+                  {todayMenu.ruleCode && (
+                    <RuleBadge ruleCode={todayMenu.ruleCode} ruleApplied={todayMenu.ruleApplied} />
                   )}
                 </div>
-                <div className="flex-1 text-center sm:text-left">
-                  <span className="text-[10px] bg-accentGreen/10 border border-accentGreen/30 text-accentGreen px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider">
-                    {todayMenu.foodId?.category}
-                  </span>
-                  <h3 className="text-xl sm:text-2xl font-bold text-white mt-2 mb-2 tracking-tight">{todayMenu.foodId?.name}</h3>
-                  <p className="text-gray-400 text-sm leading-relaxed mb-3">{todayMenu.foodId?.description}</p>
-                  <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
-                    <div className="inline-flex items-center gap-2 text-xs text-gray-400 glass-panel px-3 py-1.5 rounded-lg bg-black/20">
-                      <CheckCircle className="h-3.5 w-3.5 text-accentGreen" />
-                      <span>Prepared &amp; Served</span>
-                    </div>
-                    {/* Rule badge for today's menu */}
-                    {todayMenu.ruleCode && (
-                      <RuleBadge ruleCode={todayMenu.ruleCode} ruleApplied={todayMenu.ruleApplied} />
-                    )}
-
-
-                  </div>
-                </div>
               </div>
-
             ) : (
               <div className="flex flex-col items-center justify-center py-10 text-center">
                 <AlertCircle className="h-10 w-10 text-gray-500 mb-2" />
@@ -418,34 +452,70 @@ const Dashboard = () => {
             </div>
 
             {tomorrowMenu && !carouselMode ? (
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start">
-                <div className="w-full sm:w-36 lg:w-40 h-40 rounded-2xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
-                  {tomorrowMenu.foodId?.image ? (
-                    <img
-                      src={getImageUrl(tomorrowMenu.foodId?.image)}
-                      alt={tomorrowMenu.foodId?.name || 'Food'}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
-                  )}
-                </div>
-                <div className="flex-1 text-center sm:text-left flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] bg-accentOrange/10 border border-accentOrange/30 text-accentOrange px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider">
-                      {tomorrowMenu.foodId?.category}
-                    </span>
-                    <h3 className="text-xl sm:text-2xl font-bold text-white mt-2 mb-2 tracking-tight">{tomorrowMenu.foodId?.name}</h3>
-                    <p className="text-gray-400 text-sm leading-relaxed mb-3">{tomorrowMenu.foodId?.description}</p>
-
-                    {/* ── Rule Applied Badge ── */}
-                    {tomorrowRuleCode && (
-                      <div className="mb-4">
-                        <RuleBadge ruleCode={tomorrowRuleCode} ruleApplied={tomorrowRuleApplied} />
-                      </div>
-                    )}
+              <div className="flex flex-col gap-5">
+                {/* Veg Option */}
+                {(tomorrowMenu.vegFoodId || tomorrowMenu.foodId) && (
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start p-4 rounded-2xl bg-white/3 border border-white/5 hover:bg-white/5 transition-all duration-300 w-full">
+                    <div className="w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
+                      {(tomorrowMenu.vegFoodId?.image || tomorrowMenu.foodId?.image) ? (
+                        <img
+                          src={getImageUrl(tomorrowMenu.vegFoodId?.image || tomorrowMenu.foodId?.image)}
+                          alt={tomorrowMenu.vegFoodId?.name || tomorrowMenu.foodId?.name || 'Food'}
+                          className="w-full h-full object-cover transition-transform duration-500"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
+                      )}
+                    </div>
+                    <div className="flex-1 text-center sm:text-left">
+                      <span className="inline-flex items-center gap-1.5 text-[9px] bg-accentGreen/15 border border-accentGreen/30 text-accentGreen px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                        <span className="h-1.5 w-1.5 rounded-full bg-accentGreen" />
+                        VEG • {tomorrowMenu.vegFoodId?.category || tomorrowMenu.foodId?.category}
+                      </span>
+                      <h3 className="text-lg font-bold text-white mt-2 mb-1 tracking-tight">{tomorrowMenu.vegFoodId?.name || tomorrowMenu.foodId?.name}</h3>
+                      <p className="text-gray-400 text-xs leading-relaxed">{tomorrowMenu.vegFoodId?.description || tomorrowMenu.foodId?.description}</p>
+                    </div>
                   </div>
+                )}
+
+                {/* Non-Veg Option */}
+                {tomorrowMenu.nonVegFoodId ? (
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start p-4 rounded-2xl bg-white/3 border border-white/5 hover:bg-white/5 transition-all duration-300 w-full">
+                    <div className="w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
+                      {tomorrowMenu.nonVegFoodId?.image ? (
+                        <img
+                          src={getImageUrl(tomorrowMenu.nonVegFoodId?.image)}
+                          alt={tomorrowMenu.nonVegFoodId?.name || 'Food'}
+                          className="w-full h-full object-cover transition-transform duration-500"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
+                      )}
+                    </div>
+                    <div className="flex-1 text-center sm:text-left">
+                      <span className="inline-flex items-center gap-1.5 text-[9px] bg-red-500/15 border border-red-500/30 text-red-400 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                        NON-VEG • {tomorrowMenu.nonVegFoodId?.category}
+                      </span>
+                      <h3 className="text-lg font-bold text-white mt-2 mb-1 tracking-tight">{tomorrowMenu.nonVegFoodId?.name}</h3>
+                      <p className="text-gray-400 text-xs leading-relaxed">{tomorrowMenu.nonVegFoodId?.description}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3.5 rounded-xl bg-accentGreen/5 border border-accentGreen/10 flex items-center justify-center text-xs text-accentGreen font-semibold gap-1.5">
+                    🌿 Vegetarian Only Tomorrow (No Non-Veg Served)
+                  </div>
+                )}
+
+                <div className="flex flex-col justify-between pt-2 border-t border-white/5">
+                  {/* ── Rule Applied Badge ── */}
+                  {tomorrowRuleCode && (
+                    <div className="mb-4">
+                      <RuleBadge ruleCode={tomorrowRuleCode} ruleApplied={tomorrowRuleApplied} />
+                    </div>
+                  )}
 
                   {/* Action Buttons */}
                   <div className="flex flex-col xs:flex-row flex-wrap gap-3 justify-center sm:justify-start">
@@ -464,7 +534,6 @@ const Dashboard = () => {
                       <RefreshCw className={`h-3.5 w-3.5 ${isSpinning ? 'animate-spin' : ''}`} />
                       {t('dashboard.btnRollSelect')}
                     </button>
-
                   </div>
                 </div>
               </div>

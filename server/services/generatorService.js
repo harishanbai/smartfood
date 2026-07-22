@@ -41,9 +41,19 @@ export const generateLunchForDate = async (dateStr, generationType = 'automatic'
 
   console.log(`[GeneratorService] Rule for ${dateStr}: "${ruleResult.ruleApplied}" | Category: ${ruleResult.allowedCategory}`);
 
-  // ── Step 3: Select Food ───────────────────────────────────────────────────
-  // selectFood throws a typed error if no foods available for the category
-  const selectedFood = await selectFood(dateStr, ruleResult);
+  // ── Step 3: Select Food (Veg & Non-Veg options) ───────────────────────────
+  // Always generate a vegetarian option
+  const vegFood = await selectFood(dateStr, { ...ruleResult, allowedCategory: 'veg' });
+  
+  // Conditionally generate a non-vegetarian option if rules allow
+  let nonVegFood = null;
+  if (ruleResult.allowedCategory === 'non-veg' || ruleResult.allowedCategory === 'any') {
+    try {
+      nonVegFood = await selectFood(dateStr, { ...ruleResult, allowedCategory: 'non-veg' }, [vegFood._id]);
+    } catch (err) {
+      console.warn(`[GeneratorService] No Non-Veg foods available for ${dateStr}:`, err.message);
+    }
+  }
 
   // ── Step 4: Mark existing active menu as skipped ──────────────────────────
   await Menu.updateMany(
@@ -54,7 +64,9 @@ export const generateLunchForDate = async (dateStr, generationType = 'automatic'
   // ── Step 5: Save new menu with rule metadata ──────────────────────────────
   const newMenu = new Menu({
     date: dateStr,
-    foodId: selectedFood._id,
+    foodId: vegFood._id, // Backward compatibility: set to veg food
+    vegFoodId: vegFood._id,
+    nonVegFoodId: nonVegFood ? nonVegFood._id : null,
     generatedAt: new Date(),
     status: 'active',
     generationType,
@@ -66,7 +78,11 @@ export const generateLunchForDate = async (dateStr, generationType = 'automatic'
   await newMenu.save();
 
   // ── Step 6: Populate and return ───────────────────────────────────────────
-  const populated = await Menu.findById(newMenu._id).populate('foodId');
-  console.log(`[GeneratorService] Menu saved: "${selectedFood.name}" for ${dateStr}`);
+  const populated = await Menu.findById(newMenu._id)
+    .populate('foodId')
+    .populate('vegFoodId')
+    .populate('nonVegFoodId');
+
+  console.log(`[GeneratorService] Menu saved for ${dateStr} — Veg: "${vegFood.name}" | Non-Veg: "${nonVegFood ? nonVegFood.name : 'None'}"`);
   return populated;
 };

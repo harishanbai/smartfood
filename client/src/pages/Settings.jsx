@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Database, AlertTriangle, ShieldCheck, RefreshCw, Globe, MessageSquare } from 'lucide-react';
+import { AlertTriangle, ShieldCheck, Globe, MessageSquare } from 'lucide-react';
 import api from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -26,118 +26,7 @@ const Settings = () => {
     { code: 'ta', name: 'தமிழ்', flag: '🇮🇳' }
   ];
 
-  // Function to seed database with premium recipes
-  const handleSeedDatabase = async () => {
-    if (!window.confirm(t('settings.seedConfirm'))) return;
-    setLoading(true);
-    try {
-      const seedDishes = [
-        {
-          name: "Butter Chicken with Garlic Naan",
-          category: "Main Course",
-          description: "Tender chicken cooked in a rich, creamy, spiced tomato butter gravy, served alongside fresh tandoori garlic naan.",
-          image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&w=800&q=80",
-          available: true
-        },
-        {
-          name: "Crispy Grilled Salmon",
-          category: "Main Course",
-          description: "Pan-seared Atlantic salmon fillet with crispy skin, drizzled in lemon-herb butter sauce and served with roasted asparagus.",
-          image: "https://images.unsplash.com/photo-1485921325814-a50433396582?auto=format&fit=crop&w=800&q=80",
-          available: true
-        },
-        {
-          name: "Premium Veg Hakka Noodles",
-          category: "Main Course",
-          description: "Stir-fried wheat noodles tossed with crisp colorful bell peppers, cabbage, carrots, scallions, and signature soy-sesame glaze.",
-          image: "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=800&q=80",
-          available: true
-        },
-        {
-          name: "Caesar Salad with Crispy Bacon",
-          category: "Salad",
-          description: "Fresh romaine lettuce tossed with creamy Caesar dressing, garlic croutons, crispy smoked bacon pieces, and shaved parmesan.",
-          image: "https://images.unsplash.com/photo-1550304943-4f24f54ddde9?auto=format&fit=crop&w=800&q=80",
-          available: true
-        },
-        {
-          name: "Classic Italian Tiramisu",
-          category: "Dessert",
-          description: "Delicate espresso-dipped ladyfinger biscuits layered with a whipped mixture of egg yolks, sugar, mascarpone, and cocoa powder.",
-          image: "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&w=800&q=80",
-          available: true
-        },
-        {
-          name: "Double Chocolate Lava Cake",
-          category: "Dessert",
-          description: "Warm chocolate sponge cake with a liquid chocolate core, served with a scoop of premium Madagascan vanilla ice cream.",
-          image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80",
-          available: true
-        },
-        {
-          name: "Classic Garlic Butter Garlic Bread",
-          category: "Starter",
-          description: "Toasted baguette slices smothered in garlic, fresh parsley, and melted unsalted butter, topped with bubbling mozzarella.",
-          image: "https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?auto=format&fit=crop&w=800&q=80",
-          available: true
-        },
-        {
-          name: "Spiced Mango Smoothie",
-          category: "Beverage",
-          description: "Creamy blend of ripe Alphonso mangoes, Greek yogurt, honey, and a pinch of ground cardamom, served chilled.",
-          image: "https://images.unsplash.com/photo-1553530666-ba11a7da3888?auto=format&fit=crop&w=800&q=80",
-          available: true
-        },
-        {
-          name: "Creamy Roasted Tomato Soup",
-          category: "Soup",
-          description: "Smooth roasted tomatoes and red pepper soup, simmered with fresh basil, vegetable stock, and a touch of heavy cream.",
-          image: "https://images.unsplash.com/photo-1547592165-e1d17fed6005?auto=format&fit=crop&w=800&q=80",
-          available: true
-        },
-        {
-          name: "Organic Quinoa & Beet Salad",
-          category: "Salad",
-          description: "Cooked white quinoa, roasted diced beetroots, baby spinach, crumbled feta cheese, and toasted pumpkin seeds, tossed in orange-vinaigrette.",
-          image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80",
-          available: true
-        }
-      ];
 
-      // Add bilingual translations dynamically before calling addFood
-      for (const dish of seedDishes) {
-        if (dish.name === "Butter Chicken with Garlic Naan") {
-          dish.name_ta = "பூண்டு நானுடன் பட்டர் சிக்கன்";
-        } else if (dish.name === "Crispy Grilled Salmon") {
-          dish.name_ta = "மொருமொருப்பான வறுத்த சால்மன் மீன்";
-        } else if (dish.name === "Premium Veg Hakka Noodles") {
-          dish.name_ta = "பிரீமியம் காய்கறி ஹக்கா நூடுல்ஸ்";
-        } else if (dish.name === "Caesar Salad with Crispy Bacon") {
-          dish.name_ta = "சிஸர் சாலட் மற்றும் பேக்கன்";
-        } else if (dish.name === "Classic Italian Tiramisu") {
-          dish.name_ta = "இத்தாலியன் டிராமிசு இனிப்பு";
-        } else if (dish.name === "Double Chocolate Lava Cake") {
-          dish.name_ta = "சாக்லேட் லாவா கேக்";
-        } else if (dish.name === "Classic Garlic Butter Garlic Bread") {
-          dish.name_ta = "பூண்டு வெண்ணெய் பிரெட்";
-        } else if (dish.name === "Spiced Mango Smoothie") {
-          dish.name_ta = "மாம்பழ ஸ்மூத்தி";
-        } else if (dish.name === "Creamy Roasted Tomato Soup") {
-          dish.name_ta = "தக்காளி சூப்";
-        } else if (dish.name === "Organic Quinoa & Beet Salad") {
-          dish.name_ta = "கீனோவா மற்றும் பீட்ரூட் சாலட்";
-        }
-
-        await api.post('/foods', dish);
-      }
-      addNotification(t('settings.seedSuccess'), "success");
-    } catch (error) {
-      console.error(error);
-      addNotification(t('settings.seedFailed'), "warning");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen pb-12 w-full max-w-3xl mx-auto">
@@ -215,31 +104,7 @@ const Settings = () => {
         </div>
 
 
-        {/* Database Management Card */}
-        <div className="glass-panel rounded-[24px] p-6 border border-white/5">
-          <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-            <Database className="h-5 w-5 text-accentPurple" />
-            {t('settings.dbSetup')}
-          </h3>
-          <p className="text-xs text-gray-400 mb-6">{t('settings.dbSetupSub')}</p>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-white/5 border border-white/5 rounded-2xl">
-            <div>
-              <h4 className="text-sm font-semibold text-white">{t('settings.preseedTitle')}</h4>
-              <p className="text-xs text-gray-400 mt-1 max-w-md">
-                {t('settings.preseedSub')}
-              </p>
-            </div>
-            <button
-              onClick={handleSeedDatabase}
-              disabled={loading}
-              className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-accentPurple to-accentOrange text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-500/20 hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-              {loading ? t('settings.seeding') : t('settings.btnSeed')}
-            </button>
-          </div>
-        </div>
 
         {/* Automated Scheduler Details */}
         <div className="glass-panel rounded-[24px] p-6 border border-white/5">

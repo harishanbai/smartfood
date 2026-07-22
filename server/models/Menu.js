@@ -8,7 +8,17 @@ const menuSchema = new mongoose.Schema({
   foodId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Food',
-    required: true
+    default: null
+  },
+  vegFoodId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Food',
+    default: null
+  },
+  nonVegFoodId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Food',
+    default: null
   },
   generatedAt: {
     type: Date,

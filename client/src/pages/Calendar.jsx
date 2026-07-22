@@ -223,14 +223,15 @@ const Calendar = () => {
 
           {/* Dish preview — visible only on sm+ */}
           {menu ? (
-            <div className="text-left mt-auto hidden sm:block">
-              <p className="text-[9px] font-medium text-white truncate max-w-full">
-                {menu.foodId?.name}
+            <div className="text-left mt-auto hidden sm:block w-full overflow-hidden">
+              <p className="text-[9px] font-semibold text-green-400 truncate max-w-full">
+                🌿 {menu.vegFoodId?.name || menu.foodId?.name}
               </p>
-              <div className="flex gap-1 items-center mt-1">
-                <span className={`h-1.5 w-1.5 rounded-full ${isToday ? 'bg-accentGreen' : isTomorrow ? 'bg-accentOrange' : 'bg-accentPurple'}`} />
-                <span className="text-[8px] text-gray-500 truncate">{tc(menu.foodId?.category)}</span>
-              </div>
+              {menu.nonVegFoodId && (
+                <p className="text-[9px] font-semibold text-red-400 truncate max-w-full mt-0.5">
+                  🍗 {menu.nonVegFoodId?.name}
+                </p>
+              )}
             </div>
           ) : null}
           {/* Dot indicator on tiny screens */}
@@ -305,21 +306,59 @@ const Calendar = () => {
             <p className="text-xs text-gray-400 mb-6">{t('calendar.clickAnyDay')}</p>
 
             {selectedDayMenu ? (
-              <div className="space-y-4">
-                <div className="w-full h-44 rounded-2xl overflow-hidden bg-black/20 border border-white/10">
-                  {selectedDayMenu.foodId?.image ? (
-                    <img src={getImageUrl(selectedDayMenu.foodId?.image)} alt={selectedDayMenu.foodId?.name || 'Food'} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
-                  )}
-                </div>
-                <div>
-                  <span className="text-[10px] bg-accentPurple/20 border border-accentPurple/30 text-accentPurple px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider">
-                    {tc(selectedDayMenu.foodId?.category)}
-                  </span>
-                  <h4 className="text-xl font-bold text-white mt-2 mb-1.5">{selectedDayMenu.foodId?.name}</h4>
-                  <p className="text-xs text-gray-400 leading-relaxed">{selectedDayMenu.foodId?.description}</p>
-                </div>
+              <div className="space-y-4 max-h-[calc(100vh-250px)] overflow-y-auto pr-1">
+                {/* Veg Option Details */}
+                {(selectedDayMenu.vegFoodId || selectedDayMenu.foodId) && (
+                  <div className="p-4 rounded-2xl bg-white/3 border border-white/5 space-y-3">
+                    <div className="w-full h-32 rounded-xl overflow-hidden bg-black/20 border border-white/10">
+                      {(selectedDayMenu.vegFoodId?.image || selectedDayMenu.foodId?.image) ? (
+                        <img 
+                          src={getImageUrl(selectedDayMenu.vegFoodId?.image || selectedDayMenu.foodId?.image)} 
+                          alt={selectedDayMenu.vegFoodId?.name || selectedDayMenu.foodId?.name || 'Food'} 
+                          className="w-full h-full object-cover" 
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
+                      )}
+                    </div>
+                    <div>
+                      <span className="inline-flex items-center gap-1 text-[9px] bg-accentGreen/15 border border-accentGreen/30 text-accentGreen px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                        🌿 VEG • {tc(selectedDayMenu.vegFoodId?.category || selectedDayMenu.foodId?.category)}
+                      </span>
+                      <h4 className="text-base font-bold text-white mt-1.5 mb-1">{selectedDayMenu.vegFoodId?.name || selectedDayMenu.foodId?.name}</h4>
+                      <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{selectedDayMenu.vegFoodId?.description || selectedDayMenu.foodId?.description}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Non-Veg Option Details */}
+                {selectedDayMenu.nonVegFoodId ? (
+                  <div className="p-4 rounded-2xl bg-white/3 border border-white/5 space-y-3">
+                    <div className="w-full h-32 rounded-xl overflow-hidden bg-black/20 border border-white/10">
+                      {selectedDayMenu.nonVegFoodId?.image ? (
+                        <img 
+                          src={getImageUrl(selectedDayMenu.nonVegFoodId?.image)} 
+                          alt={selectedDayMenu.nonVegFoodId?.name || 'Food'} 
+                          className="w-full h-full object-cover" 
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
+                      )}
+                    </div>
+                    <div>
+                      <span className="inline-flex items-center gap-1 text-[9px] bg-red-500/15 border border-red-500/30 text-red-400 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                        🍗 NON-VEG • {tc(selectedDayMenu.nonVegFoodId?.category)}
+                      </span>
+                      <h4 className="text-base font-bold text-white mt-1.5 mb-1">{selectedDayMenu.nonVegFoodId?.name}</h4>
+                      <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{selectedDayMenu.nonVegFoodId?.description}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-xl bg-accentGreen/5 border border-accentGreen/15 text-center text-xs text-accentGreen font-semibold">
+                    🌿 Vegetarian Only Today
+                  </div>
+                )}
+
                 <div className="pt-3 border-t border-white/5 text-[10px] text-gray-500 flex justify-between font-mono">
                   <span>Date: {selectedDayMenu.date}</span>
                   <span>Gen: {new Date(selectedDayMenu.generatedAt).toLocaleTimeString(locales[language] || 'en-US', { hour: '2-digit', minute: '2-digit' })}</span>

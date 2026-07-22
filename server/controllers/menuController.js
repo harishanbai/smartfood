@@ -1,5 +1,7 @@
 import Menu from '../models/Menu.js';
+import Food from '../models/Food.js';
 import { generateLunchForDate } from '../services/generatorService.js';
+import { selectFood } from '../services/menuGenerator.js';
 import { translateResponse } from '../utils/translator.js';
 
 // Date utility functions
@@ -19,7 +21,10 @@ export const getTodayMenu = async (req, res) => {
     const lang = req.headers['accept-language'] || 'en';
     const todayStr = getTodayStr();
 
-    let menu = await Menu.findOne({ date: todayStr, status: 'active' }).populate('foodId');
+    let menu = await Menu.findOne({ date: todayStr, status: 'active' })
+      .populate('foodId')
+      .populate('vegFoodId')
+      .populate('nonVegFoodId');
     if (!menu) {
       try {
         menu = await generateLunchForDate(todayStr, 'automatic');
@@ -37,7 +42,10 @@ export const getTomorrowMenu = async (req, res) => {
   try {
     const lang = req.headers['accept-language'] || 'en';
     const tomorrowStr = getTomorrowStr();
-    const menu = await Menu.findOne({ date: tomorrowStr, status: 'active' }).populate('foodId');
+    const menu = await Menu.findOne({ date: tomorrowStr, status: 'active' })
+      .populate('foodId')
+      .populate('vegFoodId')
+      .populate('nonVegFoodId');
     if (!menu) {
       return res.status(200).json(null);
     }
@@ -111,18 +119,25 @@ export const getMenuHistory = async (req, res) => {
       query.date = { $regex: `^${month}` }; // Matches e.g. "2026-07"
     }
 
-    let menus = await Menu.find(query).populate('foodId').sort({ date: -1 });
+    let menus = await Menu.find(query)
+      .populate('foodId')
+      .populate('vegFoodId')
+      .populate('nonVegFoodId')
+      .sort({ date: -1 });
 
     // Filter by search query on food name or category if present
     if (search) {
       const searchLower = search.toLowerCase();
       menus = menus.filter(m => {
-        if (!m.foodId) return false;
-        return (
-          m.foodId.name.toLowerCase().includes(searchLower) ||
-          (m.foodId.name_ta && m.foodId.name_ta.toLowerCase().includes(searchLower)) ||
-          m.foodId.category.toLowerCase().includes(searchLower)
-        );
+        const matchesSearch = (food) => {
+          if (!food) return false;
+          return (
+            food.name.toLowerCase().includes(searchLower) ||
+            (food.name_ta && food.name_ta.toLowerCase().includes(searchLower)) ||
+            food.category.toLowerCase().includes(searchLower)
+          );
+        };
+        return matchesSearch(m.foodId) || matchesSearch(m.vegFoodId) || matchesSearch(m.nonVegFoodId);
       });
     }
 
@@ -140,19 +155,54 @@ export const assignMenu = async (req, res) => {
       return res.status(400).json({ message: "Date and foodId are required." });
     }
 
-    // Deactivate existing active menus for this date
-    await Menu.updateMany({ date, status: 'active' }, { status: 'skipped' });
+    const food = await Food.findById(foodId);
+    if (!food) {
+      return res.status(404).json({ message: "Food item not found." });
+    }
 
-    // Create new menu
-    const menu = new Menu({
-      date,
-      foodId,
-      status: 'active',
-      generationType: 'manual'
-    });
-    await menu.save();
+    const isNonVeg = food.foodType === 'non-veg';
 
-    const populated = await Menu.findById(menu._id).populate('foodId');
+    // Find if there is already an active menu for this date
+    let menu = await Menu.findOne({ date, status: 'active' });
+
+    if (menu) {
+      // Update the correct slot
+      if (isNonVeg) {
+        menu.nonVegFoodId = foodId;
+      } else {
+        menu.vegFoodId = foodId;
+        menu.foodId = foodId; // backward compatibility
+      }
+      menu.generationType = 'manual';
+      await menu.save();
+    } else {
+      // Create new menu
+      menu = new Menu({
+        date,
+        foodId: isNonVeg ? null : foodId,
+        vegFoodId: isNonVeg ? null : foodId,
+        nonVegFoodId: isNonVeg ? foodId : null,
+        status: 'active',
+        generationType: 'manual'
+      });
+      // If we assigned a non-veg food but have no veg food, auto-assign a fallback veg food
+      if (isNonVeg) {
+        try {
+          const defaultVeg = await selectFood(date, { allowedCategory: 'veg' });
+          menu.vegFoodId = defaultVeg._id;
+          menu.foodId = defaultVeg._id;
+        } catch (err) {
+          console.warn('[AssignMenu] Could not auto-assign a fallback veg food:', err.message);
+        }
+      }
+      await menu.save();
+    }
+
+    const populated = await Menu.findById(menu._id)
+      .populate('foodId')
+      .populate('vegFoodId')
+      .populate('nonVegFoodId');
+
     res.status(201).json(translateResponse(populated, lang));
   } catch (error) {
     res.status(500).json({ message: "Error assigning menu item", error: error.message });

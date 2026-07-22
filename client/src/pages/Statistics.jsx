@@ -45,6 +45,8 @@ const Statistics = () => {
 
   const {
     totalFoods = 0,
+    vegFoods = 0,
+    nonVegFoods = 0,
     availableFoods = 0,
     unavailableFoods = 0,
     menusGenerated = 0,
@@ -187,9 +189,12 @@ const Statistics = () => {
         <div className="glass-panel rounded-2xl p-5 border border-white/5 relative overflow-hidden">
           <div className="text-xs uppercase font-bold text-gray-500 tracking-wider">{t('statistics.totalDishes')}</div>
           <div className="text-3xl font-extrabold text-white mt-2">{totalFoods}</div>
-          <div className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-accentPurple" />
-            {t('statistics.totalDishes')}
+          <div className="text-[10px] text-gray-400 mt-1.5 flex items-center gap-1 font-semibold">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+            <span>{language === 'ta' ? `${vegFoods} சைவம்` : `${vegFoods} Veg`}</span>
+            <span className="mx-1 text-white/20">•</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+            <span>{language === 'ta' ? `${nonVegFoods} அசைவம்` : `${nonVegFoods} Non-Veg`}</span>
           </div>
         </div>
 

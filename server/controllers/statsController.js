@@ -7,6 +7,8 @@ export const getStats = async (req, res) => {
     const lang = req.headers['accept-language'] || 'en';
 
     const totalFoods = await Food.countDocuments();
+    const vegFoods = await Food.countDocuments({ foodType: 'veg' });
+    const nonVegFoods = await Food.countDocuments({ foodType: 'non-veg' });
     const availableFoods = await Food.countDocuments({ available: true });
     const unavailableFoods = await Food.countDocuments({ available: false });
     const menusGenerated = await Menu.countDocuments({ status: 'active' });
@@ -55,6 +57,8 @@ export const getStats = async (req, res) => {
 
     res.json(translateResponse({
       totalFoods,
+      vegFoods,
+      nonVegFoods,
       availableFoods,
       unavailableFoods,
       menusGenerated,

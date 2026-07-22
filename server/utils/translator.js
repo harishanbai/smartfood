@@ -249,9 +249,15 @@ const translateMenu = (menu, lang) => {
     }
   }
 
-  // Translate populated foodId if present
+  // Translate populated foodId, vegFoodId, and nonVegFoodId if present
   if (menuObj.foodId) {
     menuObj.foodId = translateFood(menuObj.foodId, lang);
+  }
+  if (menuObj.vegFoodId) {
+    menuObj.vegFoodId = translateFood(menuObj.vegFoodId, lang);
+  }
+  if (menuObj.nonVegFoodId) {
+    menuObj.nonVegFoodId = translateFood(menuObj.nonVegFoodId, lang);
   }
 
   // Translate tamilCalendarSnapshot if present

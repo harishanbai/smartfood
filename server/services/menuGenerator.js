@@ -85,12 +85,23 @@ export const selectFood = async (dateStr, ruleResult, extraSkips = []) => {
   const recentMenus = await Menu.find({
     date: { $in: prevDates },
     status: 'active',
-  }).select('foodId');
-  const historyIds = recentMenus.map((m) => m.foodId.toString());
+  }).select('foodId vegFoodId nonVegFoodId');
+  
+  const historyIds = [];
+  recentMenus.forEach(m => {
+    if (m.foodId) historyIds.push(m.foodId.toString());
+    if (m.vegFoodId) historyIds.push(m.vegFoodId.toString());
+    if (m.nonVegFoodId) historyIds.push(m.nonVegFoodId.toString());
+  });
 
   // Already generated (active or skipped) for target date
-  const todayMenus = await Menu.find({ date: dateStr }).select('foodId');
-  const todayIds = todayMenus.map((m) => m.foodId.toString());
+  const todayMenus = await Menu.find({ date: dateStr }).select('foodId vegFoodId nonVegFoodId');
+  const todayIds = [];
+  todayMenus.forEach(m => {
+    if (m.foodId) todayIds.push(m.foodId.toString());
+    if (m.vegFoodId) todayIds.push(m.vegFoodId.toString());
+    if (m.nonVegFoodId) todayIds.push(m.nonVegFoodId.toString());
+  });
 
   const allSkippedIds = Array.from(new Set([...todayIds, ...extraSkips.map(String)]));
   const fullExclusion = Array.from(new Set([...historyIds, ...allSkippedIds]));
