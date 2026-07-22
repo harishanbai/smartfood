@@ -106,34 +106,24 @@ const Settings = () => {
       for (const dish of seedDishes) {
         if (dish.name === "Butter Chicken with Garlic Naan") {
           dish.name_ta = "பூண்டு நானுடன் பட்டர் சிக்கன்";
-          dish.description_ta = "ருசியான பட்டர் சிக்கன் கிரேவியுடன் தவா பூண்டு நான்.";
         } else if (dish.name === "Crispy Grilled Salmon") {
           dish.name_ta = "மொருமொருப்பான வறுத்த சால்மன் மீன்";
-          dish.description_ta = "எலுமிச்சை வெண்ணெய் சாஸுடன் சுடச்சுட வறுக்கப்பட்ட சால்மன் மீன் துண்டு.";
         } else if (dish.name === "Premium Veg Hakka Noodles") {
           dish.name_ta = "பிரீமியம் காய்கறி ஹக்கா நூடுல்ஸ்";
-          dish.description_ta = "காய்கறிகள் மற்றும் சோயா சாஸ் கொண்டு வதக்கப்பட்ட நூடுல்ஸ்.";
         } else if (dish.name === "Caesar Salad with Crispy Bacon") {
           dish.name_ta = "சிஸர் சாலட் மற்றும் பேக்கன்";
-          dish.description_ta = "சீஸ் மற்றும் காய்கறிகள் கலந்த ஆரோக்கியமான சாலட்.";
         } else if (dish.name === "Classic Italian Tiramisu") {
           dish.name_ta = "இத்தாலியன் டிராமிசு இனிப்பு";
-          dish.description_ta = "காபி சுவை கொண்ட பாரம்பரிய இத்தாலிய இனிப்பு வகை.";
         } else if (dish.name === "Double Chocolate Lava Cake") {
           dish.name_ta = "சாக்லேட் லாவா கேக்";
-          dish.description_ta = "வெண்ணிலா ஐஸ்கிரீமுடன் சூடான சாக்லேட் கேக்.";
         } else if (dish.name === "Classic Garlic Butter Garlic Bread") {
           dish.name_ta = "பூண்டு வெண்ணெய் பிரெட்";
-          dish.description_ta = "பூண்டு மற்றும் வெண்ணெய் தடவி வறுக்கப்பட்ட ரொட்டித் துண்டுகள்.";
         } else if (dish.name === "Spiced Mango Smoothie") {
           dish.name_ta = "மாம்பழ ஸ்மூத்தி";
-          dish.description_ta = "ஏலக்காய் வாசனை கொண்ட குளிர்ந்த மாம்பழ ஸ்மூத்தி.";
         } else if (dish.name === "Creamy Roasted Tomato Soup") {
           dish.name_ta = "தக்காளி சூப்";
-          dish.description_ta = "வறுத்த தக்காளி மற்றும் மசாலா கொண்டு செய்யப்பட்ட சூப்.";
         } else if (dish.name === "Organic Quinoa & Beet Salad") {
           dish.name_ta = "கீனோவா மற்றும் பீட்ரூட் சாலட்";
-          dish.description_ta = "பீட்ரூட் மற்றும் கீரைகள் கலந்த ஆரோக்கியமான கீனோவா சாலட்.";
         }
 
         await api.post('/foods', dish);

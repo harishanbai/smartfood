@@ -14,8 +14,7 @@ export const getFoods = async (req, res) => {
           { name: { $regex: searchRegex, $options: 'i' } },
           { name_ta: { $regex: searchRegex, $options: 'i' } },
           { category: { $regex: searchRegex, $options: 'i' } },
-          { description: { $regex: searchRegex, $options: 'i' } },
-          { description_ta: { $regex: searchRegex, $options: 'i' } }
+          { description: { $regex: searchRegex, $options: 'i' } }
         ]
       };
     }
@@ -28,7 +27,7 @@ export const getFoods = async (req, res) => {
 
 export const addFood = async (req, res) => {
   try {
-    const { name, name_ta, category, description, description_ta, available, foodType } = req.body;
+    const { name, name_ta, category, description, available, foodType } = req.body;
     const lang = req.headers['accept-language'] || 'en';
 
     if (!name || !category || !description) {
@@ -47,7 +46,6 @@ export const addFood = async (req, res) => {
       name_ta: name_ta || '',
       category,
       description,
-      description_ta: description_ta || '',
       image: imageUrl,
       available: available === 'false' || available === false ? false : true,
       foodType: foodType === 'non-veg' ? 'non-veg' : 'veg'
@@ -64,7 +62,7 @@ export const addFood = async (req, res) => {
 export const updateFood = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, name_ta, category, description, description_ta, available, foodType } = req.body;
+    const { name, name_ta, category, description, available, foodType } = req.body;
     const lang = req.headers['accept-language'] || 'en';
 
     let imageUrl = null;
@@ -83,7 +81,6 @@ export const updateFood = async (req, res) => {
     if (name_ta !== undefined) food.name_ta = name_ta;
     if (category) food.category = category;
     if (description) food.description = description;
-    if (description_ta !== undefined) food.description_ta = description_ta;
     if (available !== undefined) {
       food.available = available === 'false' || available === false ? false : true;
     }

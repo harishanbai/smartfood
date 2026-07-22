@@ -34,13 +34,11 @@ const Foods = () => {
   const [nameTa, setNameTa] = useState('');
   const [category, setCategory] = useState('Main Course');
   const [description, setDescription] = useState('');
-  const [descriptionTa, setDescriptionTa] = useState('');
   const [available, setAvailable] = useState(true);
   const [foodType, setFoodType] = useState('veg');
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [isNameTaEdited, setIsNameTaEdited] = useState(false);
-  const [isDescriptionTaEdited, setIsDescriptionTaEdited] = useState(false);
 
   const categories = [
     'Main Course',
@@ -84,33 +82,7 @@ const Foods = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [name, isNameTaEdited]);
 
-  // Auto-translate description when English description changes and Tamil description hasn't been manually edited
-  useEffect(() => {
-    if (!description.trim()) {
-      if (!isDescriptionTaEdited) setDescriptionTa('');
-      return;
-    }
-    if (isDescriptionTaEdited) return;
 
-    const delayDebounceFn = setTimeout(async () => {
-      try {
-        const response = await fetch(
-          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(description.trim())}&langpair=en|ta`
-        );
-        const data = await response.json();
-        if (data.responseData?.translatedText) {
-          const translated = data.responseData.translatedText;
-          if (translated.toLowerCase() !== description.trim().toLowerCase()) {
-            setDescriptionTa(translated);
-          }
-        }
-      } catch (err) {
-        console.error('Translation error:', err);
-      }
-    }, 1200); // 1.2s debounce
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [description, isDescriptionTaEdited]);
 
   const fetchFoods = async () => {
     setLoading(true);
@@ -135,13 +107,11 @@ const Foods = () => {
     setNameTa('');
     setCategory('Main Course');
     setDescription('');
-    setDescriptionTa('');
     setAvailable(true);
     setFoodType('veg');
     setImageFile(null);
     setImagePreview('');
     setIsNameTaEdited(false);
-    setIsDescriptionTaEdited(false);
     setIsModalOpen(true);
   };
 
@@ -152,13 +122,11 @@ const Foods = () => {
     setNameTa(food.name_ta || '');
     setCategory(food.category);
     setDescription(food.description);
-    setDescriptionTa(food.description_ta || '');
     setAvailable(food.available);
     setFoodType(food.foodType || 'veg');
     setImageFile(null);
     setImagePreview(food.image || '');
     setIsNameTaEdited(!!food.name_ta);
-    setIsDescriptionTaEdited(!!food.description_ta);
     setIsModalOpen(true);
   };
 
@@ -204,7 +172,6 @@ const Foods = () => {
     formData.append('name_ta', nameTa);
     formData.append('category', category);
     formData.append('description', description);
-    formData.append('description_ta', descriptionTa);
     formData.append('available', available);
     formData.append('foodType', foodType);
     if (imageFile) {
@@ -579,20 +546,7 @@ const Foods = () => {
                 />
               </div>
 
-              {/* Description (Tamil) */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('foods.dishDescTa')}</label>
-                <textarea
-                  rows="3"
-                  value={descriptionTa}
-                  onChange={(e) => {
-                    setDescriptionTa(e.target.value);
-                    setIsDescriptionTaEdited(true);
-                  }}
-                  placeholder="விளக்கம், தயாரிப்பு முறை அல்லது சுவை குறிப்புகளை சுருக்கமாக எழுதவும்..."
-                  className="w-full glass-panel px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accentPurple/50 focus:shadow-[0_0_10px_rgba(168,85,247,0.1)] transition-all resize-none"
-                />
-              </div>
+
 
               {/* File Upload / Image Preview */}
               <div>

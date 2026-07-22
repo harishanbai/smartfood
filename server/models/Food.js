@@ -21,11 +21,7 @@ const foodSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  description_ta: {
-    type: String,
-    trim: true,
-    default: ''
-  },
+
   image: {
     type: String,
     default: ''

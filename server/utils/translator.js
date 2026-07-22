@@ -204,12 +204,7 @@ const translateFood = (food, lang) => {
       if (seeded) foodObj.name = seeded.name;
     }
 
-    if (foodObj.description_ta) {
-      foodObj.description = foodObj.description_ta;
-    } else {
-      const seeded = SEEDED_FOODS_TA[foodObj.name] || Object.values(SEEDED_FOODS_TA).find(s => s.name === foodObj.name);
-      if (seeded) foodObj.description = seeded.description;
-    }
+
 
     foodObj.category = translateText(foodObj.category, CATEGORIES_MAP);
   }
