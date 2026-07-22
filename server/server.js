@@ -9,7 +9,6 @@ import foodRoutes from './routes/foodRoutes.js';
 import menuRoutes from './routes/menuRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
 import tamilCalendarRoutes from './routes/tamilCalendarRoutes.js';
-import whatsappRoutes from './routes/whatsappRoutes.js';
 import { generateLunchForDate } from './services/generatorService.js';
 import { clearCache } from './services/tamilCalendarService.js';
 
@@ -34,7 +33,7 @@ app.use('/api/menu', menuRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/calendar', tamilCalendarRoutes);
 app.use('/api/tamil-calendar', tamilCalendarRoutes);
-app.use('/api/whatsapp', whatsappRoutes);
+
 
 // Root route
 app.get('/', (req, res) => {

@@ -3,7 +3,7 @@ import {
   Sparkles, RefreshCw, AlertCircle, CalendarRange, Bell, CheckCircle,
   Sun, Moon, Star, Flame, Info, Calendar, MessageSquare
 } from 'lucide-react';
-import { menuApi, foodApi, tamilCalendarApi, whatsappApi } from '../services/api';
+import { menuApi, foodApi, tamilCalendarApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { getImageUrl } from '../utils/imageUtils';
 import PremiumCarousel from '../components/PremiumCarousel';
@@ -310,145 +310,7 @@ const Dashboard = () => {
     }
   };
 
-  const handleWhatsAppChef = () => {
-    if (!tomorrowMenu) return;
 
-    const chefName = localStorage.getItem('chefName') || 'Chef';
-    const chefPhone = localStorage.getItem('chefPhone') || '';
-
-    const foodName = tomorrowMenu.foodId?.name || '';
-    const foodDesc = tomorrowMenu.foodId?.description || '';
-    const foodCategory = tomorrowMenu.foodId?.category || '';
-
-    // Date formatting
-    const dateObj = new Date(tomorrowMenu.date);
-    const dayName = dateObj.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { weekday: 'long' });
-    const formattedDate = dateObj.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' });
-
-    let msg = '';
-
-    if (language === 'ta') {
-      msg = `வணக்கம் *${chefName}*,\n` +
-            `*${formattedDate} (${dayName})* நாளைய மதிய உணவு மெனு:\n\n` +
-            `*உணவு:* ${foodName}\n` +
-            `*வகை:* ${foodCategory}\n` +
-            `*விளக்கம்:* ${foodDesc}\n\n`;
-
-      if (tamilTomorrow?.tamilCalendar) {
-        const tc = tamilTomorrow.tamilCalendar;
-        msg += `*தமிழ் நாட்காட்டி விபரம்:*\n` +
-               `- தமிழ் தேதி: ${tc.tamilDate || '—'}\n` +
-               `- தமிழ் மாதம்: ${tc.tamilMonth || '—'}\n` +
-               `- திதி: ${tc.tithi || '—'}\n` +
-               `- நட்சத்திரம்: ${tc.nakshatra || '—'}\n`;
-        if (tc.isFestival && tc.festivalName) {
-          msg += `- பண்டிகை: 🪔 ${tc.festivalName}\n`;
-        }
-      }
-
-      if (tamilTomorrow?.rule) {
-        msg += `\n*பயன்படுத்தப்பட்ட விதி:*\n` +
-               `- ${tamilTomorrow.rule.ruleApplied || 'சாதாரண சீரற்ற முறை'}\n` +
-               `- காரணம்: ${tamilTomorrow.rule.reason || '—'}\n`;
-      }
-    } else {
-      msg = `Hello *${chefName}*,\n` +
-            `Here is the lunch menu for tomorrow, *${formattedDate} (${dayName})*:\n\n` +
-            `*Dish:* ${foodName}\n` +
-            `*Category:* ${foodCategory}\n` +
-            `*Description:* ${foodDesc}\n\n`;
-
-      if (tamilTomorrow?.tamilCalendar) {
-        const tc = tamilTomorrow.tamilCalendar;
-        msg += `*Tamil Panchang Details:*\n` +
-               `- Tamil Date: ${tc.tamilDate || '—'}\n` +
-               `- Tamil Month: ${tc.tamilMonth || '—'}\n` +
-               `- Tithi: ${tc.tithi || '—'}\n` +
-               `- Nakshatra: ${tc.nakshatra || '—'}\n`;
-        if (tc.isFestival && tc.festivalName) {
-          msg += `- Festival Today: 🪔 ${tc.festivalName}\n`;
-        }
-      }
-
-      if (tamilTomorrow?.rule) {
-        msg += `\n*Rule Applied:*\n` +
-               `- ${tamilTomorrow.rule.ruleApplied || 'Normal Random'}\n` +
-               `- Reason: ${tamilTomorrow.rule.reason || '—'}\n`;
-      }
-    }
-
-    msg += `\nThank you! / நன்றி!`;
-
-    // WhatsApp URL
-    const cleanPhone = chefPhone.replace(/[^+\d]/g, ''); // keep numbers and +
-    const waUrl = cleanPhone 
-      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`
-      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-
-    window.open(waUrl, '_blank');
-  };
-
-  const handleWhatsAppTodayLink = () => {
-    if (!todayMenu) return;
-
-    const chefName = localStorage.getItem('chefName') || 'Chef';
-    const chefPhone = localStorage.getItem('chefPhone') || '';
-
-    const foodName = todayMenu.foodId?.name || '';
-    const foodDesc = todayMenu.foodId?.description || '';
-    const foodCategory = todayMenu.foodId?.category || '';
-
-    // Date formatting
-    const dateObj = new Date(todayMenu.date);
-    const dayName = dateObj.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { weekday: 'long' });
-    const formattedDate = dateObj.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' });
-
-    let msg = '';
-
-    if (language === 'ta') {
-      msg = `வணக்கம் *${chefName}*,\n` +
-            `*${formattedDate} (${dayName})* இன்றைய மதிய உணவு மெனு:\n\n` +
-            `*உணவு:* ${foodName}\n` +
-            `*வகை:* ${foodCategory}\n` +
-            `*விளக்கம்:* ${foodDesc}\n\n`;
-    } else {
-      msg = `Hello *${chefName}*,\n` +
-            `Here is the lunch menu for today, *${formattedDate} (${dayName})*:\n\n` +
-            `*Dish:* ${foodName}\n` +
-            `*Category:* ${foodCategory}\n` +
-            `*Description:* ${foodDesc}\n\n`;
-    }
-
-    msg += `Thank you! / நன்றி!`;
-
-    const cleanPhone = chefPhone.replace(/[^+\d]/g, '');
-    const waUrl = cleanPhone 
-      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`
-      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-
-    window.open(waUrl, '_blank');
-  };
-
-  const handleWhatsAppAutomated = async (target) => {
-    try {
-      addNotification("Sending automated WhatsApp notification...", "info");
-      const res = await whatsappApi.sendMenu(target);
-      if (res.data?.success) {
-        if (res.data.mode === 'simulation') {
-          addNotification("WhatsApp Simulation alert logged successfully to server console!", "success");
-        } else {
-          addNotification("Automated WhatsApp Alert sent successfully! 🎉", "success");
-        }
-      }
-    } catch (err) {
-      console.error(err);
-      addNotification(err.response?.data?.message || "Failed to send automated WhatsApp notification.", "warning");
-    }
-  };
-
-  const toggleWhatsappDropdown = (type) => {
-    setOpenDropdown(prev => prev === type ? null : type);
-  };
 
   const onCarouselFinished = (selectedFood) => {
     fetchData();
@@ -523,38 +385,7 @@ const Dashboard = () => {
                       <RuleBadge ruleCode={todayMenu.ruleCode} ruleApplied={todayMenu.ruleApplied} />
                     )}
 
-                    {/* WhatsApp share dropdown */}
-                    <div className="relative inline-block">
-                      <button
-                        onClick={() => toggleWhatsappDropdown('today')}
-                        className="inline-flex items-center gap-2 text-xs font-semibold text-accentGreen glass-panel px-3 py-1.5 rounded-lg bg-accentGreen/10 border border-accentGreen/20 hover:bg-accentGreen/20 transition-all cursor-pointer"
-                      >
-                        <MessageSquare className="h-3.5 w-3.5" />
-                        <span>Share Menu</span>
-                      </button>
-                      {openDropdown === 'today' && (
-                        <div className="absolute left-0 mt-1.5 w-52 glass-panel rounded-xl border border-white/10 bg-bgCard/95 p-1 shadow-lg z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                          <button
-                            onClick={() => {
-                              handleWhatsAppTodayLink();
-                              setOpenDropdown(null);
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all cursor-pointer text-left"
-                          >
-                            <span>🟢</span> Share via WhatsApp Web
-                          </button>
-                          <button
-                            onClick={() => {
-                              handleWhatsAppAutomated('today');
-                              setOpenDropdown(null);
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all cursor-pointer text-left"
-                          >
-                            <span>🤖</span> Send Automated Alert
-                          </button>
-                        </div>
-                      )}
-                    </div>
+
                   </div>
                 </div>
               </div>
@@ -633,38 +464,7 @@ const Dashboard = () => {
                       <RefreshCw className={`h-3.5 w-3.5 ${isSpinning ? 'animate-spin' : ''}`} />
                       {t('dashboard.btnRollSelect')}
                     </button>
-                    <div className="relative inline-block w-full xs:w-auto">
-                      <button
-                        onClick={() => toggleWhatsappDropdown('tomorrow')}
-                        disabled={isSpinning}
-                        className="w-full xs:w-auto px-5 py-3 rounded-xl text-xs font-bold bg-accentGreen/10 border border-accentGreen/30 text-accentGreen hover:bg-accentGreen/20 transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                        {t('dashboard.btnMessageChef') || 'Share via WhatsApp'}
-                      </button>
-                      {openDropdown === 'tomorrow' && (
-                        <div className="absolute left-0 mt-2 w-52 glass-panel rounded-xl border border-white/10 bg-bgCard/95 p-1 shadow-lg z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-                          <button
-                            onClick={() => {
-                              handleWhatsAppChef();
-                              setOpenDropdown(null);
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all cursor-pointer text-left"
-                          >
-                            <span>🟢</span> Share via WhatsApp Web
-                          </button>
-                          <button
-                            onClick={() => {
-                              handleWhatsAppAutomated('tomorrow');
-                              setOpenDropdown(null);
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all cursor-pointer text-left"
-                          >
-                            <span>🤖</span> Send Automated Alert
-                          </button>
-                        </div>
-                      )}
-                    </div>
+
                   </div>
                 </div>
               </div>

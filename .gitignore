@@ -2,7 +2,6 @@
 node_modules/
 client/node_modules/
 server/node_modules/
-
 # Environment configurations
 .env
 client/.env
@@ -11,18 +10,15 @@ server/.env
 .env.development.local
 .env.test.local
 .env.production.local
-
 # Production builds
 dist/
 client/dist/
-
 # Logs
 logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
 # System & IDE files
 .DS_Store
 Thumbs.db
@@ -32,7 +28,12 @@ Thumbs.db
 *.ntvs*
 *.njsproj
 *.sln
-
 # Upload backups
 server/uploads/*
 !server/uploads/.gitkeep
+
+# managed
+**.data.json
+**.node-persist**
+**_IGNORE_**
+# end managed

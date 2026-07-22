@@ -7,7 +7,7 @@ import { useLanguage } from '../context/LanguageContext';
 const Profile = () => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   const [profileName, setProfileName] = useState(() => localStorage.getItem('profileName') || 'Smart Lunch');
   const [profileDesignation, setProfileDesignation] = useState(() => localStorage.getItem('profileDesignation') || 'MESS MASTER');
@@ -19,6 +19,13 @@ const Profile = () => {
       addNotification('Name and Designation are required.', 'warning');
       return;
     }
+
+    const confirmMsg = language === 'ta'
+      ? 'சுயவிவர மாற்றங்களைச் சேமிக்க விரும்புகிறீர்களா?'
+      : 'sucessfully updated';
+                         
+    if (!window.confirm(confirmMsg)) return;
+
     try {
       localStorage.setItem('profileName', profileName);
       localStorage.setItem('profileDesignation', profileDesignation);

@@ -12,6 +12,8 @@ const Settings = () => {
   const [chefName, setChefName] = useState(() => localStorage.getItem('chefName') || 'Chef');
   const [chefPhone, setChefPhone] = useState(() => localStorage.getItem('chefPhone') || '');
 
+
+
   const handleSaveChef = (e) => {
     e.preventDefault();
     localStorage.setItem('chefName', chefName);
@@ -211,6 +213,7 @@ const Settings = () => {
             </div>
           </form>
         </div>
+
 
         {/* Database Management Card */}
         <div className="glass-panel rounded-[24px] p-6 border border-white/5">
