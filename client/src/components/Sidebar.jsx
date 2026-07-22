@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   UtensilsCrossed, 
@@ -14,6 +14,20 @@ import { useLanguage } from '../context/LanguageContext';
 const Sidebar = () => {
   const { t } = useLanguage();
 
+  const [profileName, setProfileName] = useState(() => localStorage.getItem('profileName') || 'Smart Lunch');
+  const [profileDesignation, setProfileDesignation] = useState(() => localStorage.getItem('profileDesignation') || 'MESS MASTER');
+  const [profilePhoto, setProfilePhoto] = useState(() => localStorage.getItem('profilePhoto') || '');
+
+  useEffect(() => {
+    const handleProfileChange = () => {
+      setProfileName(localStorage.getItem('profileName') || 'Smart Lunch');
+      setProfileDesignation(localStorage.getItem('profileDesignation') || 'MESS MASTER');
+      setProfilePhoto(localStorage.getItem('profilePhoto') || '');
+    };
+    window.addEventListener('profile-change', handleProfileChange);
+    return () => window.removeEventListener('profile-change', handleProfileChange);
+  }, []);
+
   const menuItems = [
     { name: t('common.dashboard'), path: '/', icon: LayoutDashboard },
     { name: t('common.foods'), path: '/foods', icon: UtensilsCrossed },
@@ -26,15 +40,22 @@ const Sidebar = () => {
   return (
     <aside className="hidden lg:flex fixed left-6 top-6 bottom-6 w-64 glass-panel rounded-[24px] p-6 flex-col z-40 transition-all duration-300 hover:shadow-[0_0_30px_rgba(168,85,247,0.15)]">
       {/* Brand Header */}
-      <div className="flex items-center gap-3 mb-10 px-2">
-        <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-accentPurple to-accentOrange flex items-center justify-center shadow-lg shadow-purple-500/25">
-          <ChefHat className="h-5 w-5 text-white" />
+      <Link 
+        to="/profile" 
+        className="flex items-center gap-3 mb-10 px-2 group hover:opacity-90 transition-all cursor-pointer"
+      >
+        <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-accentPurple to-accentOrange flex items-center justify-center shadow-lg shadow-purple-500/25 overflow-hidden flex-shrink-0 border border-white/10 group-hover:border-accentPurple/45 transition-all duration-300">
+          {profilePhoto ? (
+            <img src={profilePhoto} alt={profileName} className="w-full h-full object-cover" />
+          ) : (
+            <ChefHat className="h-5 w-5 text-white" />
+          )}
         </div>
-        <div>
-          <h1 className="font-extrabold text-lg tracking-tight text-accentPurple">Smart Lunch</h1>
-          <span className="text-xs text-accentPurple font-semibold uppercase tracking-wider">{t('common.messMaster')}</span>
+        <div className="min-w-0">
+          <h1 className="font-extrabold text-base tracking-tight text-white group-hover:text-accentPurple transition-colors duration-300 truncate max-w-[140px]">{profileName}</h1>
+          <span className="text-[10px] text-accentPurple font-bold uppercase tracking-wider block truncate max-w-[140px] mt-0.5">{profileDesignation}</span>
         </div>
-      </div>
+      </Link>
 
       {/* Nav Links */}
       <nav className="flex-1 space-y-2">

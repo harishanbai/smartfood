@@ -9,6 +9,7 @@ import History from './pages/History';
 import Calendar from './pages/Calendar';
 import Statistics from './pages/Statistics';
 import Settings from './pages/Settings';
+import Profile from './pages/Profile';
 import { NotificationProvider } from './context/NotificationContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -41,6 +42,7 @@ function App() {
                 <Route path="/calendar" element={<Calendar />} />
                 <Route path="/statistics" element={<Statistics />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/profile" element={<Profile />} />
               </Routes>
             </div>
           </main>
