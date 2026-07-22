@@ -26,6 +26,25 @@ const Profile = () => {
     addNotification('Website branding identity updated successfully!', 'success');
   };
 
+  const readPhotoFile = (file) => {
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        addNotification("Image is too large. Please select an image under 2MB.", "warning");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setProfilePhoto(event.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0];
+    readPhotoFile(file);
+  };
+
   const getInitials = (name) => {
     if (!name) return 'SL';
     const parts = name.trim().split(/\s+/);
@@ -51,13 +70,49 @@ const Profile = () => {
         <div className="glass-panel rounded-[24px] p-6 border border-white/5 relative overflow-hidden flex flex-col sm:flex-row items-center sm:items-start gap-6">
           <div className="absolute -right-20 -top-20 w-48 h-48 bg-accentPurple/10 rounded-full blur-[80px] pointer-events-none" />
 
-          {/* Profile Photo Display */}
-          <div className="h-24 w-24 rounded-full border-2 border-accentPurple/30 overflow-hidden bg-black/40 flex items-center justify-center flex-shrink-0 relative shadow-xl shadow-purple-500/10">
-            {profilePhoto ? (
-              <img src={profilePhoto} alt={profileName} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-3xl font-extrabold text-accentPurple">{getInitials(profileName)}</span>
-            )}
+          {/* Circular Profile Photo Upload Dropzone */}
+          <div className="relative group flex-shrink-0">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              className="hidden"
+              id="profile-photo-input"
+            />
+            <label
+              htmlFor="profile-photo-input"
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.currentTarget.classList.add('border-accentPurple', 'scale-105');
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                e.currentTarget.classList.remove('border-accentPurple', 'scale-105');
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.currentTarget.classList.remove('border-accentPurple', 'scale-105');
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                  readPhotoFile(e.dataTransfer.files[0]);
+                }
+              }}
+              className="h-24 w-24 rounded-full border-2 border-dashed border-white/20 hover:border-accentPurple flex flex-col items-center justify-center bg-black/40 overflow-hidden cursor-pointer relative shadow-xl shadow-purple-500/10 transition-all duration-300 group"
+            >
+              {profilePhoto ? (
+                <>
+                  <img src={profilePhoto} alt={profileName} className="w-full h-full object-cover group-hover:opacity-40 transition-opacity duration-300" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/50 text-white text-[10px] font-bold">
+                    <Camera className="h-4 w-4 mb-1 text-accentPurple" />
+                    Change
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-2 text-center">
+                  <Camera className="h-5 w-5 text-gray-500 mb-1 group-hover:text-accentPurple group-hover:scale-110 transition-all duration-300" />
+                  <span className="text-[9px] font-semibold text-gray-400">Upload Logo</span>
+                </div>
+              )}
+            </label>
           </div>
 
           <div className="flex-1 text-center sm:text-left">
@@ -110,19 +165,31 @@ const Profile = () => {
                 />
               </div>
 
-              {/* Photo URL Input */}
+              {/* Profile Photo Control */}
               <div>
                 <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                   <Camera className="h-3.5 w-3.5 text-gray-500" />
-                  Header Logo / Profile Photo URL
+                  Header Logo / Profile Photo
                 </label>
-                <input
-                  type="text"
-                  value={profilePhoto}
-                  onChange={(e) => setProfilePhoto(e.target.value)}
-                  placeholder="https://images.unsplash.com/photo-..."
-                  className="w-full glass-panel px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accentPurple/50 focus:shadow-[0_0_10px_rgba(168,85,247,0.1)] transition-all"
-                />
+                <div className="flex items-center gap-4 p-4 bg-white/5 border border-white/5 rounded-2xl">
+                  <div className="flex-1">
+                    <p className="text-xs text-white font-semibold">
+                      {profilePhoto ? 'Custom logo uploaded' : 'Using default Chef Hat icon'}
+                    </p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">
+                      Upload an image file directly or drop it in the circular upload zone above.
+                    </p>
+                  </div>
+                  {profilePhoto && (
+                    <button
+                      type="button"
+                      onClick={() => setProfilePhoto('')}
+                      className="px-3.5 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                    >
+                      Reset to Default
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
