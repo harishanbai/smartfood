@@ -24,7 +24,8 @@ const Profile = () => {
       localStorage.setItem('profileDesignation', profileDesignation);
       localStorage.setItem('profilePhoto', profilePhoto);
       window.dispatchEvent(new Event('profile-change'));
-      addNotification('Website branding identity updated successfully!', 'success');
+      addNotification('successfully changed', 'success');
+      navigate('/');
     } catch (err) {
       console.error(err);
       addNotification('Failed to save profile changes. Image storage space might be full.', 'warning');
