@@ -11,7 +11,10 @@ const TopSection = () => {
   const { currentUser, logout } = useAuth();
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const [chefName, setChefName] = useState(() => localStorage.getItem('chefName') || '');
+  const [chefName, setChefName] = useState(() => {
+    const lang = localStorage.getItem('language') || 'en';
+    return localStorage.getItem(`chefName_${lang}`) || localStorage.getItem('chefName') || '';
+  });
 
   const languagesList = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
@@ -27,10 +30,15 @@ const TopSection = () => {
 
   useEffect(() => {
     const handleProfileChange = () => {
-      setChefName(localStorage.getItem('chefName') || '');
+      const lang = localStorage.getItem('language') || 'en';
+      setChefName(localStorage.getItem(`chefName_${lang}`) || localStorage.getItem('chefName') || '');
     };
     window.addEventListener('profile-change', handleProfileChange);
-    return () => window.removeEventListener('profile-change', handleProfileChange);
+    window.addEventListener('language-change', handleProfileChange);
+    return () => {
+      window.removeEventListener('profile-change', handleProfileChange);
+      window.removeEventListener('language-change', handleProfileChange);
+    };
   }, []);
 
   useEffect(() => {

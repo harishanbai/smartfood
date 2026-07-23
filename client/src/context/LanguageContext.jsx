@@ -375,6 +375,7 @@ export const LanguageProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('language', language);
+    window.dispatchEvent(new Event('language-change'));
   }, [language]);
 
   const t = (path) => {

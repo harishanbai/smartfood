@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertTriangle, ShieldCheck, Globe, MessageSquare } from 'lucide-react';
 import api from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
@@ -10,13 +10,26 @@ const Settings = () => {
   const { language, setLanguage, t } = useLanguage();
   const confirm = useConfirm();
 
-  const [chefName, setChefName] = useState(() => localStorage.getItem('chefName') || 'Chef');
+  const [chefName, setChefName] = useState(() => {
+    const lang = localStorage.getItem('language') || 'en';
+    return localStorage.getItem(`chefName_${lang}`) || localStorage.getItem('chefName') || (lang === 'ta' ? 'மாஸ்டர்' : 'Chef');
+  });
   const [chefPhone, setChefPhone] = useState(() => localStorage.getItem('chefPhone') || '');
 
-
+  useEffect(() => {
+    const lang = language || 'en';
+    const stored = localStorage.getItem(`chefName_${lang}`) || localStorage.getItem('chefName');
+    if (stored) {
+      setChefName(stored);
+    } else {
+      setChefName(lang === 'ta' ? 'மாஸ்டர்' : 'Chef');
+    }
+  }, [language]);
 
   const handleSaveChef = (e) => {
     e.preventDefault();
+    const lang = language || 'en';
+    localStorage.setItem(`chefName_${lang}`, chefName);
     localStorage.setItem('chefName', chefName);
     localStorage.setItem('chefPhone', chefPhone);
     window.dispatchEvent(new Event('profile-change'));
