@@ -64,7 +64,7 @@ const TopSection = () => {
   };
 
   return (
-    <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8 w-full">
+    <header className="flex flex-col lg:flex-row justify-between items-start lg:items-start gap-6 mb-8 w-full">
       {/* Greeting & User Info */}
       <div className="w-full lg:w-auto flex items-center justify-between lg:justify-start gap-4">
         <div>
@@ -78,7 +78,7 @@ const TopSection = () => {
       </div>
 
       {/* Date, Time & Scheduler Status Panel */}
-      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-4 w-full lg:w-auto">
+      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full lg:w-auto">
         {/* Language Selector Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
