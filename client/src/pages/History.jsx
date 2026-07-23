@@ -36,7 +36,7 @@ const History = () => {
 
   useEffect(() => {
     fetchHistory();
-  }, [search, month]);
+  }, [search, month, language]);
 
   const fetchHistory = async () => {
     setLoading(true);

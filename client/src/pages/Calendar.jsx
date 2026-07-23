@@ -41,7 +41,7 @@ const Calendar = () => {
   useEffect(() => {
     fetchMonthMenus();
     fetchAvailableFoods();
-  }, [currentDate]);
+  }, [currentDate, language]);
 
   const fetchAvailableFoods = async () => {
     try {

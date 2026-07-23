@@ -159,13 +159,13 @@ const Dashboard = () => {
   const [assigning, setAssigning] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null); // 'today' | 'tomorrow' | null
   const { addNotification } = useNotifications();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const carouselTriggerRef = useRef(null);
 
   useEffect(() => {
     fetchData();
     fetchTamilCalendar();
-  }, []);
+  }, [language]);
 
   useEffect(() => {
     const handleGlobalClick = (event) => {

@@ -195,16 +195,21 @@ const translateFood = (food, lang) => {
   const foodObj = typeof food.toObject === 'function' ? food.toObject() : { ...food };
 
   if (lang === 'ta') {
+    const originalName = foodObj.name;
     // If the database has Tamil translations, use them
     if (foodObj.name_ta) {
       foodObj.name = foodObj.name_ta;
     } else {
       // Fallback to our seeded foods list
-      const seeded = SEEDED_FOODS_TA[foodObj.name];
+      const seeded = SEEDED_FOODS_TA[originalName];
       if (seeded) foodObj.name = seeded.name;
     }
 
-
+    // Fallback translation for description from seeded list
+    const seeded = SEEDED_FOODS_TA[originalName];
+    if (seeded && seeded.description) {
+      foodObj.description = seeded.description;
+    }
 
     foodObj.category = translateText(foodObj.category, CATEGORIES_MAP);
   }
@@ -276,24 +281,28 @@ const translateMenu = (menu, lang) => {
  * Identifies the type of data and maps translation accordingly.
  */
 export const translateResponse = (data, lang = 'en') => {
-  if (!data || (lang !== 'ta' && lang !== 'ta-IN')) {
+  const normalizedLang = String(lang || 'en').toLowerCase().startsWith('ta') ? 'ta' : 'en';
+  if (!data || normalizedLang !== 'ta') {
     // Return original data as is (no translation needed for English or empty lang)
     return data;
   }
 
   // Handle arrays
   if (Array.isArray(data)) {
-    return data.map(item => translateResponse(item, lang));
+    return data.map(item => translateResponse(item, normalizedLang));
   }
 
+  // Convert Mongoose document to plain object
+  const dataObj = typeof data.toObject === 'function' ? data.toObject() : data;
+
   // Handle Menu items (detected by date and status, or ruleApplied)
-  if (data.date !== undefined && (data.status !== undefined || data.ruleApplied !== undefined)) {
-    return translateMenu(data, lang);
+  if (dataObj.date !== undefined && (dataObj.status !== undefined || dataObj.ruleApplied !== undefined)) {
+    return translateMenu(dataObj, normalizedLang);
   }
 
   // Handle Food items (detected by name, category, and description)
-  if (data.name !== undefined && data.category !== undefined && data.description !== undefined) {
-    return translateFood(data, lang);
+  if (dataObj.name !== undefined && dataObj.category !== undefined && dataObj.description !== undefined) {
+    return translateFood(dataObj, normalizedLang);
   }
 
   // Handle Tamil Calendar responses (detected by tamilMonth, tithi, etc.)

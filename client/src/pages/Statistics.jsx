@@ -13,7 +13,7 @@ const Statistics = () => {
 
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [language]);
 
   const fetchStats = async () => {
     try {

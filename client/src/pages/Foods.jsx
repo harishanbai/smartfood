@@ -54,7 +54,7 @@ const Foods = () => {
 
   useEffect(() => {
     fetchFoods();
-  }, [search]);
+  }, [search, language]);
 
   // Auto-translate name when English name changes and Tamil name hasn't been manually edited
   useEffect(() => {
