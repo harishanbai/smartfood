@@ -78,12 +78,12 @@ const TopSection = () => {
       </div>
 
       {/* Date, Time & Scheduler Status Panel */}
-      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full lg:w-auto">
+      <div className="flex flex-col sm:flex-row lg:flex-nowrap items-stretch sm:items-center gap-2 lg:gap-2.5 w-full lg:w-auto">
         {/* Language Selector Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-            className="glass-panel px-4 py-3 rounded-2xl flex items-center justify-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-gray-300 hover:text-white cursor-pointer min-h-[44px]"
+            className="glass-panel px-3 py-2.5 lg:px-4 lg:py-3 rounded-2xl flex items-center justify-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-gray-300 hover:text-white cursor-pointer min-h-[44px]"
           >
             <Globe className="h-4.5 w-4.5 text-accentPurple" />
             <span className="text-xs font-bold uppercase tracking-wider">{activeLang.code}</span>
@@ -134,19 +134,19 @@ const TopSection = () => {
         </button>
 
         {/* Date Widget */}
-        <div className="glass-panel px-4 py-3 rounded-2xl flex items-center justify-start gap-2.5 bg-white/5 border border-white/10 text-xs sm:text-sm">
-          <div className="flex items-center gap-2">
+        <div className="glass-panel px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-2xl flex items-center justify-start gap-2 bg-white/5 border border-white/10 text-xs sm:text-sm">
+          <div className="flex items-center gap-1.5 lg:gap-2">
             <Calendar className="h-4 w-4 text-accentPurple flex-shrink-0" />
             <span className="text-gray-300 font-medium whitespace-nowrap">{formatDate(time)}</span>
           </div>
         </div>
 
         {/* Auto Generation status widget */}
-        <div className="glass-panel px-4 py-3 rounded-2xl flex items-center gap-3 bg-accentGreen/10 border border-accentGreen/30 shadow-[0_0_15px_rgba(34,197,94,0.1)] flex-1 sm:flex-initial">
+        <div className="glass-panel px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-2xl flex items-center gap-2 lg:gap-3 bg-accentGreen/10 border border-accentGreen/30 shadow-[0_0_15px_rgba(34,197,94,0.1)] flex-1 sm:flex-initial">
           <CheckCircle2 className="h-5 w-5 text-accentGreen flex-shrink-0" />
-          <div>
-            <div className="text-[10px] uppercase font-bold text-accentGreen tracking-wider">{t('topSection.autoGen')}</div>
-            <div className="text-xs text-white font-medium flex items-center gap-1.5">
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase font-bold text-accentGreen tracking-wider truncate">{t('topSection.autoGen')}</div>
+            <div className="text-xs text-white font-medium flex items-center gap-1.5 whitespace-nowrap">
               <span>08:00 PM</span>
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-accentGreen animate-ping" />
               <span className="text-accentGreen font-semibold">{t('topSection.active')}</span>
