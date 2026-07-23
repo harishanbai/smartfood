@@ -167,7 +167,7 @@ const TopSection = () => {
           <button
             onClick={logout}
             title="Sign Out"
-            className="glass-panel p-3 rounded-2xl flex items-center justify-center bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all text-red-400 hover:text-red-300 cursor-pointer min-h-[44px] min-w-[44px]"
+            className="lg:hidden glass-panel p-3 rounded-2xl flex items-center justify-center bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all text-red-400 hover:text-red-300 cursor-pointer min-h-[44px] min-w-[44px]"
           >
             <LogOut className="h-5 w-5" />
           </button>

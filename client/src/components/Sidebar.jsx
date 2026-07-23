@@ -7,12 +7,15 @@ import {
   Calendar, 
   BarChart3, 
   Settings, 
-  ChefHat
+  ChefHat,
+  LogOut
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
+  const { currentUser, logout } = useAuth();
 
   const [profileName, setProfileName] = useState(() => localStorage.getItem('profileName') || 'Smart Lunch');
   const [profileDesignation, setProfileDesignation] = useState(() => localStorage.getItem('profileDesignation') || 'MESS MASTER');
@@ -91,8 +94,18 @@ const Sidebar = () => {
         })}
       </nav>
 
-      {/* Bottom status indicator */}
-      <div className="mt-auto pt-6 border-t border-white/5">
+      {/* Bottom status indicator & Logout */}
+      <div className="mt-auto pt-6 border-t border-white/5 space-y-4">
+        {currentUser && (
+          <button
+            onClick={logout}
+            className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-300 text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/10 w-full text-left cursor-pointer"
+          >
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            <span>{language === 'ta' ? 'வெளியேறு' : 'Log Out'}</span>
+          </button>
+        )}
+
         <div className="glass-panel rounded-xl p-3 text-xs bg-black/20 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-accentGreen animate-pulse shadow-[0_0_8px_#22C55E]" />
