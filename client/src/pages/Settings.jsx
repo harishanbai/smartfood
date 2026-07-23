@@ -19,6 +19,7 @@ const Settings = () => {
     e.preventDefault();
     localStorage.setItem('chefName', chefName);
     localStorage.setItem('chefPhone', chefPhone);
+    window.dispatchEvent(new Event('profile-change'));
     addNotification(t('settings.chefConfigSaved'), 'success');
   };
 

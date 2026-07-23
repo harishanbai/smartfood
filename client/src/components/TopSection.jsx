@@ -11,6 +11,7 @@ const TopSection = () => {
   const { currentUser, logout } = useAuth();
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [chefName, setChefName] = useState(() => localStorage.getItem('chefName') || '');
 
   const languagesList = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
@@ -22,6 +23,14 @@ const TopSection = () => {
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const handleProfileChange = () => {
+      setChefName(localStorage.getItem('chefName') || '');
+    };
+    window.addEventListener('profile-change', handleProfileChange);
+    return () => window.removeEventListener('profile-change', handleProfileChange);
   }, []);
 
   useEffect(() => {
@@ -60,7 +69,7 @@ const TopSection = () => {
       <div className="w-full lg:w-auto flex items-center justify-between lg:justify-start gap-4">
         <div>
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-1.5 flex items-center gap-2">
-            {getGreeting()}, {currentUser?.displayName ? currentUser.displayName.split(' ')[0] : t('topSection.master')} 👋
+            {getGreeting()}, {chefName || (currentUser?.displayName ? currentUser.displayName.split(' ')[0] : t('topSection.master'))} 👋
           </h2>
           <p className="text-gray-400 text-xs sm:text-sm">
             {t('topSection.subtitle')}
