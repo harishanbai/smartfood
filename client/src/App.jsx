@@ -41,16 +41,24 @@ const ProtectedRoute = ({ children }) => {
 
 // Main Layout Wrapper
 const MainLayout = () => {
+  const [isCollapsed, setIsCollapsed] = React.useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
+
+  const toggleSidebar = () => {
+    const newVal = !isCollapsed;
+    setIsCollapsed(newVal);
+    localStorage.setItem('sidebarCollapsed', String(newVal));
+  };
+
   return (
     <div className="flex min-h-screen bg-bgMain text-gray-200 antialiased font-sans overflow-x-hidden w-full">
-      {/* Floating premium sidebar */}
-      <Sidebar />
+      {/* Sidebar */}
+      <Sidebar isCollapsed={isCollapsed} onToggle={toggleSidebar} />
       
       {/* Floating mobile bottom navigation */}
       <BottomNav />
 
       {/* Main Content Area */}
-      <main className="flex-1 ml-0 lg:ml-72 p-4 sm:p-6 md:p-8 pb-24 lg:pb-8 transition-all duration-300 w-full overflow-x-hidden">
+      <main className={`flex-1 ml-0 ${isCollapsed ? 'lg:ml-24' : 'lg:ml-72'} p-4 sm:p-6 md:p-8 pb-24 lg:pb-8 transition-all duration-300 w-full overflow-x-hidden`}>
         {/* Top digital date/clock, and greet bar */}
         <TopSection />
 
