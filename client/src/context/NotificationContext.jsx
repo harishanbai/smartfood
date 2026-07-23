@@ -13,7 +13,7 @@ export const NotificationProvider = ({ children }) => {
 
   const [toasts, setToasts] = useState([]);
 
-  const addNotification = (text, type = 'info') => {
+  const addNotification = (text, type = 'info', options = {}) => {
     const id = Date.now();
     // Add to historical notifications dropdown list
     const newNotif = {
@@ -28,10 +28,13 @@ export const NotificationProvider = ({ children }) => {
     const newToast = { id, text, type };
     setToasts(prev => [...prev, newToast]);
 
-    // Auto-remove after 4 seconds
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 4000);
+    // Auto-remove after 4 seconds (unless persist is true, or duration is customized)
+    if (!options.persist) {
+      const duration = options.duration !== undefined ? options.duration : 4000;
+      setTimeout(() => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+      }, duration);
+    }
   };
 
   const removeToast = (id) => {

@@ -20,18 +20,12 @@ const Profile = () => {
       return;
     }
 
-    const confirmMsg = language === 'ta'
-      ? 'சுயவிவர மாற்றங்களைச் சேமிக்க விரும்புகிறீர்களா?'
-      : 'sucessfully updated';
-                         
-    if (!window.confirm(confirmMsg)) return;
-
     try {
       localStorage.setItem('profileName', profileName);
       localStorage.setItem('profileDesignation', profileDesignation);
       localStorage.setItem('profilePhoto', profilePhoto);
       window.dispatchEvent(new Event('profile-change'));
-      addNotification('successfully changed', 'success');
+      addNotification('Successfully changed', 'success');
       navigate('/');
     } catch (err) {
       console.error(err);

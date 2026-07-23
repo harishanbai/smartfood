@@ -14,6 +14,7 @@ import { foodApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { getImageUrl } from '../utils/imageUtils';
 import { useLanguage } from '../context/LanguageContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const Foods = () => {
   const [foods, setFoods] = useState([]);
@@ -23,6 +24,7 @@ const Foods = () => {
   const [error, setError] = useState(null);
   const { addNotification } = useNotifications();
   const { language, t, tc } = useLanguage();
+  const confirm = useConfirm();
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -150,7 +152,14 @@ const Foods = () => {
   };
 
   const handleDeleteFood = async (id, name) => {
-    if (!window.confirm(`${t('foods.confirmDelete')} ("${name}")`)) return;
+    const isConfirmed = await confirm({
+      title: t('common.delete'),
+      message: `${t('foods.confirmDelete')} ("${name}")`,
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
+      type: 'danger'
+    });
+    if (!isConfirmed) return;
     try {
       await foodApi.deleteFood(id);
       addNotification(`"${name}" ${t('foods.successDelete')}`, 'success');

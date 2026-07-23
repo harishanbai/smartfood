@@ -3,10 +3,12 @@ import { AlertTriangle, ShieldCheck, Globe, MessageSquare } from 'lucide-react';
 import api from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const Settings = () => {
   const { addNotification } = useNotifications();
   const { language, setLanguage, t } = useLanguage();
+  const confirm = useConfirm();
 
   const [chefName, setChefName] = useState(() => localStorage.getItem('chefName') || 'Chef');
   const [chefPhone, setChefPhone] = useState(() => localStorage.getItem('chefPhone') || '');
@@ -151,7 +153,14 @@ const Settings = () => {
             </div>
             <button
               onClick={async () => {
-                if (window.confirm(t('settings.resetConfirm'))) {
+                const isConfirmed = await confirm({
+                  title: t('settings.resetDb'),
+                  message: t('settings.resetConfirm'),
+                  confirmText: t('settings.btnReset'),
+                  cancelText: t('common.cancel'),
+                  type: 'warning'
+                });
+                if (isConfirmed) {
                   try {
                     addNotification(t('settings.resetInitiated'), "info");
                   } catch (e) {

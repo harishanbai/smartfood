@@ -15,6 +15,7 @@ import { NotificationProvider } from './context/NotificationContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ConfirmProvider } from './context/ConfirmContext';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -97,9 +98,11 @@ function App() {
       <ThemeProvider>
         <NotificationProvider>
           <AuthProvider>
-            <Router>
-              <AppRoutes />
-            </Router>
+            <ConfirmProvider>
+              <Router>
+                <AppRoutes />
+              </Router>
+            </ConfirmProvider>
           </AuthProvider>
         </NotificationProvider>
       </ThemeProvider>

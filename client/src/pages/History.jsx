@@ -4,6 +4,7 @@ import { menuApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { getImageUrl } from '../utils/imageUtils';
 import { useLanguage } from '../context/LanguageContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 const History = () => {
   const [history, setHistory] = useState([]);
@@ -12,6 +13,7 @@ const History = () => {
   const [loading, setLoading] = useState(false);
   const { addNotification } = useNotifications();
   const { language, t, tc } = useLanguage();
+  const confirm = useConfirm();
 
   const locales = {
     en: 'en-US',
@@ -51,7 +53,14 @@ const History = () => {
   };
 
   const handleDeleteHistory = async (id) => {
-    if (!window.confirm(t('foods.confirmDelete'))) return;
+    const isConfirmed = await confirm({
+      title: t('common.delete'),
+      message: t('foods.confirmDelete'),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
+      type: 'danger'
+    });
+    if (!isConfirmed) return;
     try {
       await menuApi.deleteHistory(id);
       addNotification('History log deleted successfully!', 'success');

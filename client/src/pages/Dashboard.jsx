@@ -17,10 +17,10 @@ const RuleBadge = ({ ruleCode, ruleApplied }) => {
   if (!ruleCode) return null;
 
   const config = {
-    festival:  { bg: 'bg-purple-500/15', border: 'border-purple-500/40', text: 'text-purple-300', icon: '🪔', label: ruleApplied || 'Festival – Veg Only' },
-    amavasai:  { bg: 'bg-indigo-500/15', border: 'border-indigo-500/40', text: 'text-indigo-300', icon: '🌑', label: ruleApplied || 'Amavasai – Veg Only' },
+    festival: { bg: 'bg-purple-500/15', border: 'border-purple-500/40', text: 'text-purple-300', icon: '🪔', label: ruleApplied || 'Festival – Veg Only' },
+    amavasai: { bg: 'bg-indigo-500/15', border: 'border-indigo-500/40', text: 'text-indigo-300', icon: '🌑', label: ruleApplied || 'Amavasai – Veg Only' },
     wednesday: { bg: 'bg-orange-500/15', border: 'border-orange-500/40', text: 'text-orange-300', icon: '🍗', label: ruleApplied || 'Company Rule – Wednesday Non-Veg' },
-    normal:    { bg: 'bg-emerald-500/15', border: 'border-emerald-500/40', text: 'text-emerald-300', icon: '🎲', label: ruleApplied || 'Normal Random' },
+    normal: { bg: 'bg-emerald-500/15', border: 'border-emerald-500/40', text: 'text-emerald-300', icon: '🎲', label: ruleApplied || 'Normal Random' },
   };
 
   const c = config[ruleCode] || config.normal;
@@ -55,12 +55,12 @@ const TamilCalendarCard = ({ data, loading }) => {
   const apiAvailable = data?.apiAvailable;
 
   const fields = [
-    { label: 'Tamil Date',   value: tc?.tamilDate,   icon: <Calendar className="h-3.5 w-3.5" /> },
-    { label: 'Tamil Month',  value: tc?.tamilMonth,  icon: <Sun className="h-3.5 w-3.5" /> },
-    { label: 'Tithi',        value: tc?.tithi,        icon: <Moon className="h-3.5 w-3.5" /> },
-    { label: 'Nakshatra',    value: tc?.nakshatra,    icon: <Star className="h-3.5 w-3.5" /> },
-    { label: 'Sunrise',      value: tc?.sunrise,      icon: <Sun className="h-3.5 w-3.5 text-yellow-400" /> },
-    { label: 'Sunset',       value: tc?.sunset,       icon: <Moon className="h-3.5 w-3.5 text-orange-400" /> },
+    { label: 'Tamil Date', value: tc?.tamilDate, icon: <Calendar className="h-3.5 w-3.5" /> },
+    { label: 'Tamil Month', value: tc?.tamilMonth, icon: <Sun className="h-3.5 w-3.5" /> },
+    { label: 'Tithi', value: tc?.tithi, icon: <Moon className="h-3.5 w-3.5" /> },
+    { label: 'Nakshatra', value: tc?.nakshatra, icon: <Star className="h-3.5 w-3.5" /> },
+    { label: 'Sunrise', value: tc?.sunrise, icon: <Sun className="h-3.5 w-3.5 text-yellow-400" /> },
+    { label: 'Sunset', value: tc?.sunset, icon: <Moon className="h-3.5 w-3.5 text-orange-400" /> },
   ];
 
   return (
@@ -221,10 +221,10 @@ const Dashboard = () => {
   const fireRuleNotification = (ruleCode, reason) => {
     if (!ruleCode) return;
     const typeMap = {
-      festival:  'info',
-      amavasai:  'info',
+      festival: 'info',
+      amavasai: 'info',
       wednesday: 'warning',
-      normal:    'success',
+      normal: 'success',
     };
     addNotification(reason || `Menu generated using rule: ${ruleCode}`, typeMap[ruleCode] || 'info');
   };
@@ -264,7 +264,7 @@ const Dashboard = () => {
 
       // Smart notification based on rule applied
       const ruleCode = generatedMenu.ruleCode || tamilTomorrow?.rule?.ruleCode || 'normal';
-      const reason   = tamilTomorrow?.rule?.reason || "Tomorrow's Lunch menu generation initiated...";
+      const reason = tamilTomorrow?.rule?.reason || "Tomorrow's Lunch menu generation initiated...";
       fireRuleNotification(ruleCode, reason);
 
       addNotification(t('dashboard.initAlert'), 'info');
@@ -297,9 +297,9 @@ const Dashboard = () => {
       // Smart skip notification — preserve rule context
       const ruleCode = newMenu.ruleCode || tamilTomorrow?.rule?.ruleCode || 'normal';
       const ruleLabel = newMenu.ruleApplied || tamilTomorrow?.rule?.ruleApplied || 'Normal Random';
-      addNotification(`Dish skipped. Next selection follows: ${ruleLabel}`, 'warning');
+      addNotification(`Dish skipped. Next selection follows: ${ruleLabel}`, 'warning', { duration: 10000 });
 
-      addNotification(t('dashboard.skipAlert'), 'warning');
+      addNotification(t('dashboard.skipAlert'), 'warning', { duration: 10000 });
     } catch (err) {
       const errData = err.response?.data;
       if (errData?.code === 'NO_CATEGORY_FOODS') {
@@ -319,7 +319,7 @@ const Dashboard = () => {
   };
 
   // Resolve rule badge data: prefer live menu data, fall back to Tamil API prediction
-  const tomorrowRuleCode    = tomorrowMenu?.ruleCode    || tamilTomorrow?.rule?.ruleCode    || null;
+  const tomorrowRuleCode = tomorrowMenu?.ruleCode || tamilTomorrow?.rule?.ruleCode || null;
   const tomorrowRuleApplied = tomorrowMenu?.ruleApplied || tamilTomorrow?.rule?.ruleApplied || null;
 
   return (
@@ -632,10 +632,10 @@ const Dashboard = () => {
 
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {[
-                  { label: 'Tamil Date',  value: tamilTomorrow.tamilCalendar.tamilDate },
+                  { label: 'Tamil Date', value: tamilTomorrow.tamilCalendar.tamilDate },
                   { label: 'Tamil Month', value: tamilTomorrow.tamilCalendar.tamilMonth },
-                  { label: 'Tithi',       value: tamilTomorrow.tamilCalendar.tithi },
-                  { label: 'Nakshatra',   value: tamilTomorrow.tamilCalendar.nakshatra },
+                  { label: 'Tithi', value: tamilTomorrow.tamilCalendar.tithi },
+                  { label: 'Nakshatra', value: tamilTomorrow.tamilCalendar.nakshatra },
                 ].map((f) => (
                   <div key={f.label} className="bg-white/3 border border-white/5 rounded-xl p-2.5">
                     <p className="text-[9px] text-gray-500 uppercase tracking-wider font-semibold mb-0.5">{f.label}</p>
