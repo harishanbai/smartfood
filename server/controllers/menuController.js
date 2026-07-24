@@ -3,17 +3,26 @@ import Food from '../models/Food.js';
 import { generateLunchForDate } from '../services/generatorService.js';
 import { selectFood } from '../services/menuGenerator.js';
 import { translateResponse } from '../utils/translator.js';
+import { getKolkataDateStr } from '../server.js';
 
-// Date utility functions
+// Fallback date helper if import is not ready
 const getTodayStr = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  try {
+    return getKolkataDateStr(0);
+  } catch (err) {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
 };
 
 const getTomorrowStr = () => {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  try {
+    return getKolkataDateStr(1);
+  } catch (err) {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
 };
 
 export const getTodayMenu = async (req, res) => {
@@ -25,6 +34,7 @@ export const getTodayMenu = async (req, res) => {
       .populate('foodId')
       .populate('vegFoodId')
       .populate('nonVegFoodId');
+    
     if (!menu) {
       try {
         menu = await generateLunchForDate(todayStr, 'automatic');
@@ -63,13 +73,12 @@ export const generateTomorrowMenu = async (req, res) => {
     const menu = await generateLunchForDate(tomorrowStr, 'manual');
     res.status(201).json(translateResponse(menu, lang));
   } catch (error) {
-    // Typed error: no foods available for the required category (e.g. No Non-Veg on Wednesday)
-    if (error.code === 'NO_CATEGORY_FOODS') {
+    if (error.code === 'NO_ELIGIBLE_FOODS' || error.code === 'NO_CATEGORY_FOODS') {
       return res.status(409).json({
         message: error.message,
         ruleCode: error.ruleCode,
         allowedCategory: error.allowedCategory,
-        code: 'NO_CATEGORY_FOODS',
+        code: error.code || 'NO_ELIGIBLE_FOODS',
       });
     }
     res.status(500).json({ message: "Error generating tomorrow's menu", error: error.message });
@@ -81,27 +90,23 @@ export const skipTomorrowMenu = async (req, res) => {
     const lang = req.headers['accept-language'] || 'en';
     const tomorrowStr = getTomorrowStr();
 
-    // Find active menu for tomorrow
     const activeMenu = await Menu.findOne({ date: tomorrowStr, status: 'active' });
     if (!activeMenu) {
       return res.status(400).json({ message: "No active tomorrow's menu exists to skip." });
     }
 
-    // Mark current active menu as skipped
     activeMenu.status = 'skipped';
     await activeMenu.save();
 
-    // Generate another food for tomorrow — inherits the same Rule Engine category constraint
     const newMenu = await generateLunchForDate(tomorrowStr, 'manual');
     res.json(translateResponse(newMenu, lang));
   } catch (error) {
-    // Typed error: no more foods available for the required category after skipping
-    if (error.code === 'NO_CATEGORY_FOODS') {
+    if (error.code === 'NO_ELIGIBLE_FOODS' || error.code === 'NO_CATEGORY_FOODS') {
       return res.status(409).json({
         message: error.message,
         ruleCode: error.ruleCode,
         allowedCategory: error.allowedCategory,
-        code: 'NO_CATEGORY_FOODS',
+        code: error.code || 'NO_ELIGIBLE_FOODS',
       });
     }
     res.status(500).json({ message: "Error skipping menu item", error: error.message });
@@ -110,13 +115,13 @@ export const skipTomorrowMenu = async (req, res) => {
 
 export const getMenuHistory = async (req, res) => {
   try {
-    const { month, search } = req.query; // YYYY-MM
+    const { month, search } = req.query;
     const lang = req.headers['accept-language'] || 'en';
 
     let query = { status: 'active' };
 
     if (month) {
-      query.date = { $regex: `^${month}` }; // Matches e.g. "2026-07"
+      query.date = { $regex: `^${month}` };
     }
 
     let menus = await Menu.find(query)
@@ -125,7 +130,6 @@ export const getMenuHistory = async (req, res) => {
       .populate('nonVegFoodId')
       .sort({ date: -1 });
 
-    // Filter by search query on food name or category if present
     if (search) {
       const searchLower = search.toLowerCase();
       menus = menus.filter(m => {
@@ -162,39 +166,23 @@ export const assignMenu = async (req, res) => {
 
     const isNonVeg = food.foodType === 'non-veg';
 
-    // Find if there is already an active menu for this date
     let menu = await Menu.findOne({ date, status: 'active' });
 
     if (menu) {
-      // Update the correct slot
-      if (isNonVeg) {
-        menu.nonVegFoodId = foodId;
-      } else {
-        menu.vegFoodId = foodId;
-        menu.foodId = foodId; // backward compatibility
-      }
+      menu.foodId = foodId;
+      menu.vegFoodId = isNonVeg ? null : foodId;
+      menu.nonVegFoodId = isNonVeg ? foodId : null;
       menu.generationType = 'manual';
       await menu.save();
     } else {
-      // Create new menu
       menu = new Menu({
         date,
-        foodId: isNonVeg ? null : foodId,
+        foodId,
         vegFoodId: isNonVeg ? null : foodId,
         nonVegFoodId: isNonVeg ? foodId : null,
         status: 'active',
         generationType: 'manual'
       });
-      // If we assigned a non-veg food but have no veg food, auto-assign a fallback veg food
-      if (isNonVeg) {
-        try {
-          const defaultVeg = await selectFood(date, { allowedCategory: 'veg' });
-          menu.vegFoodId = defaultVeg._id;
-          menu.foodId = defaultVeg._id;
-        } catch (err) {
-          console.warn('[AssignMenu] Could not auto-assign a fallback veg food:', err.message);
-        }
-      }
       await menu.save();
     }
 

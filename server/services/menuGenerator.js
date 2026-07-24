@@ -4,49 +4,25 @@
  * Responsible for selecting an appropriate food item from the database
  * given a rule result from the Rule Engine.
  *
- * Responsibilities:
- *   - Exclude foods served in the previous 5 days
- *   - Exclude foods already skipped or active for the target date
+ * Requirements:
+ *   - Exclude foods served in the previous 15 days (MongoDB history)
+ *   - Select ONLY foods that are marked as available: true
+ *   - If no eligible foods remain due to 15-day restriction, log a warning and do not repeat
  *   - Filter by allowed category (veg / non-veg / any)
- *   - Select a random food from candidates
- *   - Return the selected Food document (or throw a descriptive error)
+ *   - Select randomly EXACTLY ONE food item
  */
 
 import Food from '../models/Food.js';
 import Menu from '../models/Menu.js';
 
 /**
- * Determines if a food's category matches the allowed category constraint.
- *
- * "Non-Veg" detection: category string contains "non" (case-insensitive)
- * e.g. "Non-Veg", "Non Veg", "NonVeg" all match.
- *
- * @param {string} category - Food category string from DB
- * @param {'veg'|'non-veg'|'any'} allowedCategory
- * @returns {boolean}
- */
-const categoryMatches = (food, allowedCategory) => {
-  if (allowedCategory === 'any') return true;
-  let isNonVeg = false;
-  if (food && food.foodType) {
-    isNonVeg = food.foodType === 'non-veg';
-  } else {
-    const lower = (food?.category || '').toLowerCase();
-    isNonVeg = lower.includes('non');
-  }
-  if (allowedCategory === 'non-veg') return isNonVeg;
-  if (allowedCategory === 'veg')     return !isNonVeg;
-  return true;
-};
-
-/**
- * Gets the date strings for the previous N days relative to a target date.
+ * Gets date strings for the previous N days relative to a target date.
  *
  * @param {string} dateStr - YYYY-MM-DD
- * @param {number} days - Number of previous days to include
+ * @param {number} days - Number of previous days to include (default 15)
  * @returns {string[]}
  */
-const getPreviousDates = (dateStr, days = 5) => {
+const getPreviousDates = (dateStr, days = 15) => {
   const target = new Date(dateStr);
   const result = [];
   for (let i = 1; i <= days; i++) {
@@ -61,32 +37,34 @@ const getPreviousDates = (dateStr, days = 5) => {
 };
 
 /**
- * Selects a food item for the given date respecting rule constraints.
- *
- * Selection strategy:
- *   Pass 1: Available foods, not in 5-day history, matching category
- *   Pass 2: If no Pass-1 candidates → relax 5-day history, keep category filter
- *   Pass 3: If still none → relax history AND skip exclusions, keep category filter
- *   Error:  If category filter finds zero available foods → throw category-specific error
- *
- * @param {string} dateStr        - Target date YYYY-MM-DD
- * @param {Object} ruleResult     - Output from ruleEngine.evaluateRule()
- * @param {string[]} [extraSkips] - Additional food IDs to exclude (beyond DB records)
- * @returns {Promise<Object>} Selected Food mongoose document
- * @throws {Error} When no foods are available for the required category
+ * Determines if a food's category matches the allowed category constraint.
  */
-export const selectFood = async (dateStr, ruleResult, extraSkips = []) => {
-  const { allowedCategory, ruleCode } = ruleResult;
+const categoryMatches = (food, allowedCategory) => {
+  if (!allowedCategory || allowedCategory === 'any') return true;
+  const isNonVeg = food.foodType === 'non-veg' || (food.category || '').toLowerCase().includes('non');
+  if (allowedCategory === 'non-veg') return isNonVeg;
+  if (allowedCategory === 'veg') return !isNonVeg;
+  return true;
+};
 
-  // ── Collect exclusions ────────────────────────────────────────────────────
+/**
+ * Selects exactly ONE eligible food item for the target date.
+ *
+ * @param {string} dateStr - Target date YYYY-MM-DD
+ * @param {Object} ruleResult - Output from ruleEngine.evaluateRule()
+ * @param {string[]} [extraSkips] - Additional food IDs to exclude
+ * @returns {Promise<Object>} Selected Food document
+ */
+export const selectFood = async (dateStr, ruleResult = {}, extraSkips = []) => {
+  const { allowedCategory = 'any', ruleCode = 'normal' } = ruleResult;
 
-  // 5-day history exclusions
-  const prevDates = getPreviousDates(dateStr, 5);
+  // 1. Fetch previous 15-day history from MongoDB
+  const prev15Dates = getPreviousDates(dateStr, 15);
   const recentMenus = await Menu.find({
-    date: { $in: prevDates },
-    status: 'active',
+    date: { $in: prev15Dates },
+    status: 'active'
   }).select('foodId vegFoodId nonVegFoodId');
-  
+
   const historyIds = [];
   recentMenus.forEach(m => {
     if (m.foodId) historyIds.push(m.foodId.toString());
@@ -94,62 +72,44 @@ export const selectFood = async (dateStr, ruleResult, extraSkips = []) => {
     if (m.nonVegFoodId) historyIds.push(m.nonVegFoodId.toString());
   });
 
-  // Already generated (active or skipped) for target date
-  const todayMenus = await Menu.find({ date: dateStr }).select('foodId vegFoodId nonVegFoodId');
-  const todayIds = [];
+  // 2. Fetch skipped items for the target date
+  const todayMenus = await Menu.find({ date: dateStr, status: 'skipped' }).select('foodId vegFoodId nonVegFoodId');
+  const skippedIds = [];
   todayMenus.forEach(m => {
-    if (m.foodId) todayIds.push(m.foodId.toString());
-    if (m.vegFoodId) todayIds.push(m.vegFoodId.toString());
-    if (m.nonVegFoodId) todayIds.push(m.nonVegFoodId.toString());
+    if (m.foodId) skippedIds.push(m.foodId.toString());
+    if (m.vegFoodId) skippedIds.push(m.vegFoodId.toString());
+    if (m.nonVegFoodId) skippedIds.push(m.nonVegFoodId.toString());
   });
 
-  const allSkippedIds = Array.from(new Set([...todayIds, ...extraSkips.map(String)]));
-  const fullExclusion = Array.from(new Set([...historyIds, ...allSkippedIds]));
+  // Combine 15-day history + skipped IDs + extra skips
+  const fullExclusion = Array.from(new Set([...historyIds, ...skippedIds, ...extraSkips.map(String)]));
 
-  // ── Base food query (always: available = true) ────────────────────────────
+  // 3. Base Query: Only Available Foods
   const baseFilter = { available: true };
 
-  // ── Pass 1: Full exclusions + category filter ─────────────────────────────
+  // 4. Query Available Foods excluding 15-day history
   let candidates = await Food.find({
     ...baseFilter,
-    _id: { $nin: fullExclusion },
+    _id: { $nin: fullExclusion }
   });
-  candidates = candidates.filter((f) => categoryMatches(f, allowedCategory));
 
-  // ── Pass 2: Relax 5-day history, keep today's skips + category filter ─────
+  // Apply category filter (Veg / Non-Veg / Any)
+  candidates = candidates.filter(f => categoryMatches(f, allowedCategory));
+
+  // 5. If no candidates exist under 15-day restriction
   if (candidates.length === 0) {
-    console.warn(`[MenuGenerator] No candidates with 5-day rule for ${dateStr}. Relaxing history.`);
-    candidates = await Food.find({
-      ...baseFilter,
-      _id: { $nin: allSkippedIds },
-    });
-    candidates = candidates.filter((f) => categoryMatches(f, allowedCategory));
-  }
-
-  // ── Pass 3: Relax everything, keep only category filter ───────────────────
-  if (candidates.length === 0) {
-    console.warn(`[MenuGenerator] Still no candidates for ${dateStr}. Relaxing all exclusions.`);
-    candidates = await Food.find(baseFilter);
-    candidates = candidates.filter((f) => categoryMatches(f, allowedCategory));
-  }
-
-  // ── No foods found for the required category ──────────────────────────────
-  if (candidates.length === 0) {
-    const categoryLabel =
-      allowedCategory === 'non-veg' ? 'Non-Veg' :
-      allowedCategory === 'veg'     ? 'Vegetarian' :
-      'available';
-
+    console.warn(`[MenuGenerator] WARNING: No eligible foods available for ${dateStr}. All available foods were served in the previous 15 days or restricted by category rules (${allowedCategory}).`);
+    
     throw Object.assign(
-      new Error(`No ${categoryLabel} foods are currently available.`),
-      { ruleCode, allowedCategory, code: 'NO_CATEGORY_FOODS' }
+      new Error(`No eligible foods available for menu generation. All available foods were served within the previous 15 days or do not match rule constraints (${allowedCategory}).`),
+      { code: 'NO_ELIGIBLE_FOODS', allowedCategory, ruleCode }
     );
   }
 
-  // ── Random selection ──────────────────────────────────────────────────────
+  // 6. Randomly select EXACTLY ONE food item
   const randomIndex = Math.floor(Math.random() * candidates.length);
-  const selected = candidates[randomIndex];
+  const selectedFood = candidates[randomIndex];
 
-  console.log(`[MenuGenerator] Selected "${selected.name}" (${selected.category}) for ${dateStr} — rule: ${ruleCode}`);
-  return selected;
+  console.log(`[MenuGenerator] Selected EXACTLY ONE food: "${selectedFood.name}" (${selectedFood.category}) for ${dateStr} — Rule: ${ruleCode}`);
+  return selectedFood;
 };

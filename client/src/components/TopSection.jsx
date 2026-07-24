@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Calendar, CheckCircle2, Sun, Moon, Globe, ChevronDown, LogOut } from 'lucide-react';
+import { Calendar, CheckCircle2, Sun, Moon, Globe, ChevronDown, LogOut, User } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -10,11 +10,15 @@ const TopSection = () => {
   const { language, setLanguage, t } = useLanguage();
   const { currentUser, logout } = useAuth();
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const [chefName, setChefName] = useState(() => {
     const lang = localStorage.getItem('language') || 'en';
     return localStorage.getItem(`chefName_${lang}`) || localStorage.getItem('chefName') || '';
   });
+
+  const langRef = useRef(null);
+  const profileRef = useRef(null);
 
   const languagesList = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
@@ -43,8 +47,11 @@ const TopSection = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (langRef.current && !langRef.current.contains(event.target)) {
         setLangDropdownOpen(false);
+      }
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -71,106 +78,177 @@ const TopSection = () => {
     });
   };
 
+  // Get user initials for avatar fallback
+  const getUserInitials = (name) => {
+    if (!name) return 'U';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
   return (
-    <header className="flex flex-col lg:flex-row justify-between items-start lg:items-start gap-6 mb-8 w-full">
-      {/* Greeting & User Info */}
-      <div className="w-full lg:w-auto flex items-center justify-between lg:justify-start gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-1.5 flex items-center gap-2">
-            {getGreeting()}, {chefName || (currentUser?.displayName ? currentUser.displayName.split(' ')[0] : t('topSection.master'))} 👋
-          </h2>
-          <p className="text-gray-400 text-xs sm:text-sm">
-            {t('topSection.subtitle')}
-          </p>
-        </div>
+    <header className="header-container mb-8 w-full relative">
+      {/* Left Section */}
+      <div className="left-section">
+        <h2 className="greeting-title text-white tracking-tight">
+          {getGreeting()}, {chefName || (currentUser?.displayName ? currentUser.displayName.split(' ')[0] : t('topSection.master'))} 👋
+        </h2>
+        <p className="subtitle-text text-gray-500">
+          {t('topSection.subtitle')}
+        </p>
       </div>
 
-      {/* Date, Time & Scheduler Status Panel */}
-      <div className="flex flex-col sm:flex-row lg:flex-nowrap items-stretch sm:items-center gap-2 lg:gap-2.5 w-full lg:w-auto">
-        {/* Language Selector Dropdown */}
-        <div className="relative" ref={dropdownRef}>
+      {/* Right Section */}
+      <div className="right-section">
+        {/* Row for Language & Theme on Mobile */}
+        <div className="lang-theme-row">
+          {/* 1. Language Selector */}
+          <div className="relative select-container" ref={langRef}>
+            <button
+              onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+              className="glass-panel lang-selector flex items-center justify-between bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-gray-300 hover:text-white cursor-pointer shadow-sm"
+            >
+              <span className="flex items-center gap-1.5">
+                <Globe className="h-4 w-4 text-accentPurple md:hidden" />
+                <span className="text-xs font-bold uppercase tracking-wider">{activeLang.code}</span>
+              </span>
+              <ChevronDown className={`h-3.5 w-3.5 text-gray-400 transition-transform duration-300 ${langDropdownOpen ? 'rotate-180' : ''} hidden md:block`} />
+            </button>
+
+            {langDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-40 glass-panel rounded-2xl border border-white/10 bg-bgCard/95 p-1.5 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                {languagesList.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      setLanguage(lang.code);
+                      setLangDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all hover:bg-white/5 cursor-pointer ${
+                      language === lang.code ? 'text-accentPurple bg-white/5 font-semibold' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span>{lang.flag}</span>
+                      <span>{lang.name}</span>
+                    </span>
+                    {language === lang.code && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-accentPurple shadow-[0_0_6px_#A855F7]" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 2. Theme Toggle */}
           <button
-            onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-            className="glass-panel px-3 py-2.5 lg:px-4 lg:py-3 rounded-2xl flex items-center justify-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-gray-300 hover:text-white cursor-pointer min-h-[44px]"
+            onClick={toggleTheme}
+            aria-label="Toggle Theme"
+            className="glass-panel theme-toggle flex items-center justify-center bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-gray-300 hover:text-white cursor-pointer shadow-sm relative overflow-hidden"
           >
-            <Globe className="h-4.5 w-4.5 text-accentPurple" />
-            <span className="text-xs font-bold uppercase tracking-wider">{activeLang.code}</span>
-            <span className="text-xs">{activeLang.flag}</span>
-            <ChevronDown className={`h-3 w-3 text-gray-400 transition-transform duration-300 ${langDropdownOpen ? 'rotate-180' : ''}`} />
+            <div className="relative h-4.5 w-4.5 flex items-center justify-center">
+              <Sun className={`h-4.5 w-4.5 text-accentOrange absolute transition-all duration-500 transform ${theme === 'light' ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'}`} />
+              <Moon className={`h-4.5 w-4.5 text-accentPurple absolute transition-all duration-500 transform ${theme === 'dark' ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'}`} />
+            </div>
           </button>
-
-          {langDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-40 glass-panel rounded-2xl border border-white/10 bg-bgCard/95 p-1.5 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-              {languagesList.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => {
-                    setLanguage(lang.code);
-                    setLangDropdownOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all hover:bg-white/5 cursor-pointer ${
-                    language === lang.code ? 'text-accentPurple bg-white/5 font-semibold' : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <span>{lang.flag}</span>
-                    <span>{lang.name}</span>
-                  </span>
-                  {language === lang.code && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-accentPurple shadow-[0_0_6px_#A855F7]" />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* Light/Dark Toggle Button */}
-        <button
-          onClick={toggleTheme}
-          aria-label="Toggle Theme"
-          className="glass-panel p-3 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-gray-300 hover:text-white cursor-pointer min-h-[44px] min-w-[44px] relative overflow-hidden"
-        >
-          <div className="relative h-5 w-5 flex items-center justify-center">
-            {/* Sun Icon */}
-            <Sun className={`h-5 w-5 text-accentOrange absolute transition-all duration-500 transform ${theme === 'light' ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'
-              }`} />
-            {/* Moon Icon */}
-            <Moon className={`h-5 w-5 text-accentPurple absolute transition-all duration-500 transform ${theme === 'dark' ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'
-              }`} />
-          </div>
-        </button>
-
-        {/* Date Widget */}
-        <div className="glass-panel px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-2xl flex items-center justify-start gap-2 bg-white/5 border border-white/10 text-xs sm:text-sm">
-          <div className="flex items-center gap-1.5 lg:gap-2">
-            <Calendar className="h-4 w-4 text-accentPurple flex-shrink-0" />
-            <span className="text-gray-300 font-medium whitespace-nowrap">{formatDate(time)}</span>
-          </div>
+        {/* 3. Date Card */}
+        <div className="glass-panel date-card flex items-center gap-2.5 bg-white/5 border border-white/10 text-xs font-semibold text-gray-300 shadow-sm">
+          <Calendar className="h-4.5 w-4.5 text-accentPurple flex-shrink-0" />
+          <span className="whitespace-nowrap">{formatDate(time)}</span>
         </div>
 
-        {/* Auto Generation status widget */}
-        <div className="glass-panel px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-2xl flex items-center gap-2 lg:gap-3 bg-accentGreen/10 border border-accentGreen/30 shadow-[0_0_15px_rgba(34,197,94,0.1)] flex-1 sm:flex-initial">
-          <CheckCircle2 className="h-5 w-5 text-accentGreen flex-shrink-0" />
-          <div className="min-w-0">
-            <div className="text-[10px] uppercase font-bold text-accentGreen tracking-wider truncate">{t('topSection.autoGen')}</div>
-            <div className="text-xs text-white font-medium flex items-center gap-1.5 whitespace-nowrap">
-              <span>08:00 PM</span>
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-accentGreen animate-ping" />
-              <span className="text-accentGreen font-semibold">{t('topSection.active')}</span>
-            </div>
+        {/* 4. Auto Generation Status Card */}
+        <div className="glass-panel autogen-card flex items-center justify-between bg-accentGreen/10 border border-accentGreen/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+          <div className="flex items-center gap-2.5">
+            <span className="relative flex h-2 w-2 flex-shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accentGreen opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-accentGreen"></span>
+            </span>
+            <span className="text-[10px] uppercase font-bold text-accentGreen tracking-wider select-none">
+              {(t('topSection.autoGen') || 'AUTO GENERATION').toUpperCase()}
+            </span>
           </div>
+          <span className="text-xs font-bold text-white tracking-wide">
+            08:00 PM
+          </span>
         </div>
 
-        {/* Sign Out Button */}
+        {/* 5. User Profile Avatar */}
         {currentUser && (
-          <button
-            onClick={logout}
-            title="Sign Out"
-            className="lg:hidden glass-panel p-3 rounded-2xl flex items-center justify-center bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all text-red-400 hover:text-red-300 cursor-pointer min-h-[44px] min-w-[44px]"
-          >
-            <LogOut className="h-5 w-5" />
-          </button>
+          <div className="avatar-container" ref={profileRef}>
+            <button
+              onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+              title={currentUser.displayName || 'Google Profile'}
+              className="relative avatar-button flex-shrink-0 rounded-full bg-gradient-to-tr from-accentPurple to-fuchsia-500 p-[2px] transition-all duration-300 hover:scale-105 cursor-pointer shadow-lg hover:shadow-[0_4px_20px_rgba(168,85,247,0.35)] group"
+            >
+              {/* Circular Avatar */}
+              <div className="w-full h-full rounded-full overflow-hidden bg-slate-900 flex items-center justify-center">
+                {currentUser.photoURL && !imgError ? (
+                  <img
+                    src={currentUser.photoURL}
+                    alt={currentUser.displayName || 'Gmail User'}
+                    onError={() => setImgError(true)}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full rounded-full bg-accentPurple/20 flex items-center justify-center text-accentPurple font-black text-sm">
+                    {getUserInitials(currentUser.displayName)}
+                  </div>
+                )}
+              </div>
+              
+              {/* Online Status Indicator */}
+              <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-accentGreen border-2 border-slate-900 rounded-full shadow-md" />
+            </button>
+
+            {/* Profile Dropdown Popover */}
+            {profileDropdownOpen && (
+              <div className="absolute right-0 mt-3 w-64 glass-panel rounded-2xl border border-white/10 bg-bgCard/95 p-4 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="flex items-center gap-3 pb-3 mb-3 border-b border-white/10">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center flex-shrink-0 shadow-md">
+                    {currentUser.photoURL && !imgError ? (
+                      <img
+                        src={currentUser.photoURL}
+                        alt={currentUser.displayName || 'Gmail User'}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-sm font-bold text-emerald-400">
+                        {getUserInitials(currentUser.displayName)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-sm font-bold text-white truncate">
+                      {currentUser.displayName || 'Google User'}
+                    </h4>
+                    <p className="text-xs text-gray-400 truncate">
+                      {currentUser.email || 'Gmail Account'}
+                    </p>
+                    <span className="inline-block mt-1 text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                      ✓ Gmail Connected
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setProfileDropdownOpen(false);
+                    logout();
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold transition-all cursor-pointer"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </header>

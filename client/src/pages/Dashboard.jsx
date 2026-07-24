@@ -357,61 +357,39 @@ const Dashboard = () => {
 
             {todayMenu ? (
               <div className="flex flex-col gap-5">
-                {/* Veg Option */}
-                {(todayMenu.vegFoodId || todayMenu.foodId) && (
-                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start p-4 rounded-2xl bg-white/3 border border-white/5 hover:bg-white/5 transition-all duration-300 w-full">
-                    <div className="w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
-                      {(todayMenu.vegFoodId?.image || todayMenu.foodId?.image) ? (
-                        <img
-                          src={getImageUrl(todayMenu.vegFoodId?.image || todayMenu.foodId?.image)}
-                          alt={todayMenu.vegFoodId?.name || todayMenu.foodId?.name || 'Food'}
-                          className="w-full h-full object-cover transition-transform duration-500"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
-                      )}
+                {(() => {
+                  const todayFood = todayMenu.foodId || todayMenu.vegFoodId || todayMenu.nonVegFoodId;
+                  if (!todayFood) return null;
+                  const isNonVeg = todayFood.foodType === 'non-veg' || (todayFood.category || '').toLowerCase().includes('non');
+                  return (
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start p-4 rounded-2xl bg-white/3 border border-white/5 hover:bg-white/5 transition-all duration-300 w-full">
+                      <div className="w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
+                        {todayFood.image ? (
+                          <img
+                            src={getImageUrl(todayFood.image)}
+                            alt={todayFood.name}
+                            className="w-full h-full object-cover transition-transform duration-500"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
+                        )}
+                      </div>
+                      <div className="flex-1 text-center sm:text-left">
+                        <span className={`inline-flex items-center gap-1.5 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                          isNonVeg
+                            ? 'bg-red-500/15 border border-red-500/30 text-red-400'
+                            : 'bg-accentGreen/15 border border-accentGreen/30 text-accentGreen'
+                        }`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${isNonVeg ? 'bg-red-400' : 'bg-accentGreen animate-pulse'}`} />
+                          {isNonVeg ? 'NON-VEG' : 'VEG'} • {todayFood.category}
+                        </span>
+                        <h3 className="text-lg font-bold text-white mt-2 mb-1 tracking-tight">{todayFood.name}</h3>
+                        <p className="text-gray-400 text-xs leading-relaxed">{todayFood.description}</p>
+                      </div>
                     </div>
-                    <div className="flex-1 text-center sm:text-left">
-                      <span className="inline-flex items-center gap-1.5 text-[9px] bg-accentGreen/15 border border-accentGreen/30 text-accentGreen px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                        <span className="h-1.5 w-1.5 rounded-full bg-accentGreen animate-pulse" />
-                        VEG • {todayMenu.vegFoodId?.category || todayMenu.foodId?.category}
-                      </span>
-                      <h3 className="text-lg font-bold text-white mt-2 mb-1 tracking-tight">{todayMenu.vegFoodId?.name || todayMenu.foodId?.name}</h3>
-                      <p className="text-gray-400 text-xs leading-relaxed">{todayMenu.vegFoodId?.description || todayMenu.foodId?.description}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Non-Veg Option */}
-                {todayMenu.nonVegFoodId ? (
-                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start p-4 rounded-2xl bg-white/3 border border-white/5 hover:bg-white/5 transition-all duration-300 w-full">
-                    <div className="w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
-                      {todayMenu.nonVegFoodId?.image ? (
-                        <img
-                          src={getImageUrl(todayMenu.nonVegFoodId?.image)}
-                          alt={todayMenu.nonVegFoodId?.name || 'Food'}
-                          className="w-full h-full object-cover transition-transform duration-500"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
-                      )}
-                    </div>
-                    <div className="flex-1 text-center sm:text-left">
-                      <span className="inline-flex items-center gap-1.5 text-[9px] bg-red-500/15 border border-red-500/30 text-red-400 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                        <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-                        NON-VEG • {todayMenu.nonVegFoodId?.category}
-                      </span>
-                      <h3 className="text-lg font-bold text-white mt-2 mb-1 tracking-tight">{todayMenu.nonVegFoodId?.name}</h3>
-                      <p className="text-gray-400 text-xs leading-relaxed">{todayMenu.nonVegFoodId?.description}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-3.5 rounded-xl bg-accentGreen/5 border border-accentGreen/10 flex items-center justify-center text-xs text-accentGreen font-semibold gap-1.5">
-                    🌿 Vegetarian Only Today (No Non-Veg Served)
-                  </div>
-                )}
+                  );
+                })()}
 
                 <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start pt-2 border-t border-white/5">
                   <div className="inline-flex items-center gap-2 text-xs text-gray-400 glass-panel px-3 py-1.5 rounded-lg bg-black/20">
@@ -443,71 +421,48 @@ const Dashboard = () => {
                 {t('dashboard.tomorrowTitle')}
               </span>
               {tomorrowMenu && (
-                <span className="text-[10px] text-gray-400 font-mono">
-                  {tomorrowMenu.generationType === 'manual'
-                    ? 'Manually Generated'
-                    : `Auto Generated at ${new Date(tomorrowMenu.generatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  {tomorrowMenu.generationType === 'automatic' ? 'Automatically Generated' : 'Manually Generated'}
                 </span>
               )}
             </div>
 
             {tomorrowMenu && !carouselMode ? (
               <div className="flex flex-col gap-5">
-                {/* Veg Option */}
-                {(tomorrowMenu.vegFoodId || tomorrowMenu.foodId) && (
-                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start p-4 rounded-2xl bg-white/3 border border-white/5 hover:bg-white/5 transition-all duration-300 w-full">
-                    <div className="w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
-                      {(tomorrowMenu.vegFoodId?.image || tomorrowMenu.foodId?.image) ? (
-                        <img
-                          src={getImageUrl(tomorrowMenu.vegFoodId?.image || tomorrowMenu.foodId?.image)}
-                          alt={tomorrowMenu.vegFoodId?.name || tomorrowMenu.foodId?.name || 'Food'}
-                          className="w-full h-full object-cover transition-transform duration-500"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
-                      )}
+                {(() => {
+                  const tomorrowFood = tomorrowMenu.foodId || tomorrowMenu.vegFoodId || tomorrowMenu.nonVegFoodId;
+                  if (!tomorrowFood) return null;
+                  const isNonVeg = tomorrowFood.foodType === 'non-veg' || (tomorrowFood.category || '').toLowerCase().includes('non');
+                  return (
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start p-4 rounded-2xl bg-white/3 border border-white/5 hover:bg-white/5 transition-all duration-300 w-full">
+                      <div className="w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
+                        {tomorrowFood.image ? (
+                          <img
+                            src={getImageUrl(tomorrowFood.image)}
+                            alt={tomorrowFood.name}
+                            className="w-full h-full object-cover transition-transform duration-500"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
+                        )}
+                      </div>
+                      <div className="flex-1 text-center sm:text-left">
+                        <span className={`inline-flex items-center gap-1.5 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                          isNonVeg
+                            ? 'bg-red-500/15 border border-red-500/30 text-red-400'
+                            : 'bg-accentGreen/15 border border-accentGreen/30 text-accentGreen'
+                        }`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${isNonVeg ? 'bg-red-400' : 'bg-accentGreen'}`} />
+                          {isNonVeg ? 'NON-VEG' : 'VEG'} • {tomorrowFood.category}
+                        </span>
+                        <h3 className="text-lg font-bold text-white mt-2 mb-1 tracking-tight">{tomorrowFood.name}</h3>
+                        <p className="text-gray-400 text-xs leading-relaxed">{tomorrowFood.description}</p>
+                      </div>
                     </div>
-                    <div className="flex-1 text-center sm:text-left">
-                      <span className="inline-flex items-center gap-1.5 text-[9px] bg-accentGreen/15 border border-accentGreen/30 text-accentGreen px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                        <span className="h-1.5 w-1.5 rounded-full bg-accentGreen" />
-                        VEG • {tomorrowMenu.vegFoodId?.category || tomorrowMenu.foodId?.category}
-                      </span>
-                      <h3 className="text-lg font-bold text-white mt-2 mb-1 tracking-tight">{tomorrowMenu.vegFoodId?.name || tomorrowMenu.foodId?.name}</h3>
-                      <p className="text-gray-400 text-xs leading-relaxed">{tomorrowMenu.vegFoodId?.description || tomorrowMenu.foodId?.description}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Non-Veg Option */}
-                {tomorrowMenu.nonVegFoodId ? (
-                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start p-4 rounded-2xl bg-white/3 border border-white/5 hover:bg-white/5 transition-all duration-300 w-full">
-                    <div className="w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
-                      {tomorrowMenu.nonVegFoodId?.image ? (
-                        <img
-                          src={getImageUrl(tomorrowMenu.nonVegFoodId?.image)}
-                          alt={tomorrowMenu.nonVegFoodId?.name || 'Food'}
-                          className="w-full h-full object-cover transition-transform duration-500"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
-                      )}
-                    </div>
-                    <div className="flex-1 text-center sm:text-left">
-                      <span className="inline-flex items-center gap-1.5 text-[9px] bg-red-500/15 border border-red-500/30 text-red-400 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                        <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-                        NON-VEG • {tomorrowMenu.nonVegFoodId?.category}
-                      </span>
-                      <h3 className="text-lg font-bold text-white mt-2 mb-1 tracking-tight">{tomorrowMenu.nonVegFoodId?.name}</h3>
-                      <p className="text-gray-400 text-xs leading-relaxed">{tomorrowMenu.nonVegFoodId?.description}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-3.5 rounded-xl bg-accentGreen/5 border border-accentGreen/10 flex items-center justify-center text-xs text-accentGreen font-semibold gap-1.5">
-                    🌿 Vegetarian Only Tomorrow (No Non-Veg Served)
-                  </div>
-                )}
+                  );
+                })()}
 
                 <div className="flex flex-col justify-between pt-2 border-t border-white/5">
                   {/* ── Rule Applied Badge ── */}

@@ -1,14 +1,13 @@
 /**
  * generatorService.js
  *
- * Orchestrates the Smart Lunch Generator pipeline:
+ * Orchestrates Tomorrow's Lunch Menu generation:
  *   1. Fetch Tamil Calendar data for the target date
  *   2. Evaluate business rules (Rule Engine)
- *   3. Select an appropriate food item (Menu Generator)
- *   4. Persist the menu to MongoDB with rule metadata
+ *   3. Select EXACTLY ONE food item (Menu Generator) obeying 15-day history & availability
+ *   4. Persist the single food menu to MongoDB
  *
- * This service is the single entry point for menu generation.
- * All business logic lives in the dedicated sub-services.
+ * Single Entry Point for Menu Generation.
  */
 
 import Menu from '../models/Menu.js';
@@ -17,56 +16,37 @@ import { evaluateRule } from './ruleEngine.js';
 import { selectFood } from './menuGenerator.js';
 
 /**
- * Generates a lunch menu for the given date using the Smart Rule Engine.
- *
- * Steps:
- *  1. Fetch Tamil calendar data (cached per day, null on API failure)
- *  2. Evaluate rule priority → get allowedCategory + ruleApplied
- *  3. Select food obeying: available=true, 5-day history, category filter
- *  4. Mark any existing active menu for that date as 'skipped'
- *  5. Save new Menu document with rule metadata
- *  6. Return populated Menu document
+ * Generates EXACTLY ONE lunch menu item for the given target date.
  *
  * @param {string} dateStr - Target date in YYYY-MM-DD format
+ * @param {'automatic'|'manual'} generationType - Generation source
  * @returns {Promise<Object>} Populated Menu mongoose document
- * @throws {Error} If no suitable food is available
  */
 export const generateLunchForDate = async (dateStr, generationType = 'automatic') => {
-  // ── Step 1: Tamil Calendar Data ──────────────────────────────────────────
-  // Returns null on API failure; rule engine treats null as "Normal Day"
+  // 1. Fetch Tamil Calendar Data
   const tamilData = await getCalendarData(dateStr);
 
-  // ── Step 2: Rule Engine ───────────────────────────────────────────────────
+  // 2. Evaluate Rule Engine
   const ruleResult = evaluateRule(tamilData, dateStr);
 
-  console.log(`[GeneratorService] Rule for ${dateStr}: "${ruleResult.ruleApplied}" | Category: ${ruleResult.allowedCategory}`);
+  console.log(`[GeneratorService] Target: ${dateStr} | Rule: "${ruleResult.ruleApplied}" | Category: ${ruleResult.allowedCategory}`);
 
-  // ── Step 3: Select Food (Veg & Non-Veg options) ───────────────────────────
-  // Always generate a vegetarian option
-  const vegFood = await selectFood(dateStr, { ...ruleResult, allowedCategory: 'veg' });
-  
-  // Conditionally generate a non-vegetarian option if rules allow
-  let nonVegFood = null;
-  if (ruleResult.allowedCategory === 'non-veg' || ruleResult.allowedCategory === 'any') {
-    try {
-      nonVegFood = await selectFood(dateStr, { ...ruleResult, allowedCategory: 'non-veg' }, [vegFood._id]);
-    } catch (err) {
-      console.warn(`[GeneratorService] No Non-Veg foods available for ${dateStr}:`, err.message);
-    }
-  }
+  // 3. Select EXACTLY ONE food item obeying 15-day history and availability
+  const selectedFood = await selectFood(dateStr, ruleResult);
 
-  // ── Step 4: Mark existing active menu as skipped ──────────────────────────
+  // 4. Mark any existing active menu for that target date as 'skipped'
   await Menu.updateMany(
     { date: dateStr, status: 'active' },
     { status: 'skipped' }
   );
 
-  // ── Step 5: Save new menu with rule metadata ──────────────────────────────
+  // 5. Save new Menu document with EXACTLY ONE food item
+  const isNonVeg = selectedFood.foodType === 'non-veg';
   const newMenu = new Menu({
     date: dateStr,
-    foodId: vegFood._id, // Backward compatibility: set to veg food
-    vegFoodId: vegFood._id,
-    nonVegFoodId: nonVegFood ? nonVegFood._id : null,
+    foodId: selectedFood._id,
+    vegFoodId: isNonVeg ? null : selectedFood._id,
+    nonVegFoodId: isNonVeg ? selectedFood._id : null,
     generatedAt: new Date(),
     status: 'active',
     generationType,
@@ -77,12 +57,12 @@ export const generateLunchForDate = async (dateStr, generationType = 'automatic'
 
   await newMenu.save();
 
-  // ── Step 6: Populate and return ───────────────────────────────────────────
+  // 6. Populate and return
   const populated = await Menu.findById(newMenu._id)
     .populate('foodId')
     .populate('vegFoodId')
     .populate('nonVegFoodId');
 
-  console.log(`[GeneratorService] Menu saved for ${dateStr} — Veg: "${vegFood.name}" | Non-Veg: "${nonVegFood ? nonVegFood.name : 'None'}"`);
+  console.log(`[GeneratorService] Single Menu generated for ${dateStr}: "${selectedFood.name}" (${generationType})`);
   return populated;
 };

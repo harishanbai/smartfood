@@ -17,6 +17,10 @@ import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ConfirmProvider } from './context/ConfirmContext';
 
+import SignUp from './pages/SignUp';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { currentUser, loading } = useAuth();
@@ -50,31 +54,33 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-bgMain text-gray-200 antialiased font-sans overflow-x-hidden w-full">
-      {/* Sidebar */}
-      <Sidebar isCollapsed={isCollapsed} onToggle={toggleSidebar} />
-      
-      {/* Floating mobile bottom navigation */}
-      <BottomNav />
+    <div className="flex flex-col min-h-screen bg-bgMain text-gray-200 antialiased font-sans overflow-x-hidden w-full">
+      <div className="flex flex-1 w-full">
+        {/* Sidebar */}
+        <Sidebar isCollapsed={isCollapsed} onToggle={toggleSidebar} />
+        
+        {/* Floating mobile bottom navigation */}
+        <BottomNav />
 
-      {/* Main Content Area */}
-      <main className={`flex-1 ml-0 ${isCollapsed ? 'lg:ml-24' : 'lg:ml-72'} p-4 sm:p-6 md:p-8 pb-24 lg:pb-8 transition-all duration-300 w-full overflow-x-hidden`}>
-        {/* Top digital date/clock, and greet bar */}
-        <TopSection />
+        {/* Main Content Area */}
+        <main className={`flex-1 ml-0 ${isCollapsed ? 'lg:ml-24' : 'lg:ml-72'} p-4 sm:p-6 md:p-8 pb-24 lg:pb-8 transition-all duration-300 w-full overflow-x-hidden`}>
+          {/* Top digital date/clock, and greet bar */}
+          <TopSection />
 
-        {/* Sub-page router */}
-        <div className="mt-2">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/foods" element={<Foods />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/statistics" element={<Statistics />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/profile" element={<Profile />} />
-          </Routes>
-        </div>
-      </main>
+          {/* Sub-page router */}
+          <div className="mt-2">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/foods" element={<Foods />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/calendar" element={<Calendar />} />
+              <Route path="/statistics" element={<Statistics />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/profile" element={<Profile />} />
+            </Routes>
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
@@ -87,6 +93,18 @@ function AppRoutes() {
       <Route 
         path="/login" 
         element={currentUser ? <Navigate to="/" replace /> : <Login />} 
+      />
+      <Route 
+        path="/signup" 
+        element={currentUser ? <Navigate to="/" replace /> : <SignUp />} 
+      />
+      <Route 
+        path="/forgot-password" 
+        element={currentUser ? <Navigate to="/" replace /> : <ForgotPassword />} 
+      />
+      <Route 
+        path="/reset-password" 
+        element={<ResetPassword />} 
       />
       <Route
         path="/*"
