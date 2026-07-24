@@ -111,7 +111,7 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
       </nav>
 
       {/* Bottom status indicator & Logout */}
-      <div className="mt-auto pt-6 border-t border-white/5 space-y-4">
+      <div className="mt-auto pt-6 border-t border-white/5">
         {currentUser && (
           <button
             onClick={logout}
@@ -122,14 +122,6 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
             <span className={`transition-all duration-300 ${isCollapsed ? 'w-0 h-0 overflow-hidden opacity-0' : 'opacity-100'}`}>{language === 'ta' ? 'வெளியேறு' : 'Log Out'}</span>
           </button>
         )}
-
-        <div className={`glass-panel rounded-xl p-3 text-xs bg-black/20 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-accentGreen animate-pulse shadow-[0_0_8px_#22C55E] flex-shrink-0" />
-            <span className={`text-white/70 font-medium ${isCollapsed ? 'hidden' : 'block'}`}>{t('common.serviceOnline')}</span>
-          </div>
-          <span className={`text-[10px] text-white/50 font-mono ${isCollapsed ? 'hidden' : 'block'}`}>v1.0.0</span>
-        </div>
       </div>
     </aside>
   );
