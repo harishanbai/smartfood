@@ -209,7 +209,7 @@ const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpi
                 <div className="relative w-full h-[180px] rounded-2xl overflow-hidden mb-3 group bg-black/20">
                   {item.image ? (
                     <motion.img 
-                      src={getImageUrl(item.image)} 
+                      src={getImageUrl(item)} 
                       alt={item.name} 
                       className="w-full h-full object-cover"
                       animate={isCenter && !isSpinning ? { scale: [1, 1.03, 1] } : {}}

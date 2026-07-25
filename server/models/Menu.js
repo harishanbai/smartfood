@@ -41,7 +41,7 @@ const menuSchema = new mongoose.Schema({
   },
   ruleCode: {
     type: String,
-    enum: ['festival', 'amavasai', 'wednesday', 'normal'],
+    enum: ['festival', 'viratham', 'amavasai', 'pournami', 'wednesday', 'normal'],
     default: 'normal'
   },
   tamilCalendarSnapshot: {

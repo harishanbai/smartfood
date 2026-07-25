@@ -3,36 +3,34 @@
  *
  * Pure business rule evaluator for the Smart Lunch Generator.
  * Determines which food category is allowed for a given date
- * based on Tamil Calendar data and company rules.
+ * based on Tamil Calendar / Panchangam data and company rules.
  *
  * Rule Priority (highest to lowest):
- *   1. Tamil Festival  → Veg Only
- *   2. Amavasai        → Veg Only  (overrides Wednesday)
- *   3. Wednesday       → Non-Veg Only
- *   4. Normal Day      → Any (random Veg or Non-Veg)
+ *   1. RELIGIOUS OBSERVANCES (Festival, Amavasai, Pournami, Viratham)
+ *      → STRICT VEGETARIAN ONLY — overrides ALL other rules including Wednesday
+ *   2. WEDNESDAY SPECIAL RULE
+ *      → NON-VEGETARIAN prioritized (only if no religious observance)
+ *   3. NORMAL DAY
+ *      → Full menu unlocked (Veg & Non-Veg allowed, random pick)
  *
- * This module has ZERO side effects and can be unit-tested in isolation.
+ * Output shape (all rule types):
+ *   ruleType       - NORMAL | FESTIVAL | AMAVASAI | POURNAMI | VIRATHAM
+ *   badgeTitle     - UI badge string (with emoji prefix)
+ *   isStrictVeg    - Boolean: force veg-only mode
+ *   isStrictNonVeg - Boolean: Wednesday forces non-veg preference
+ *   allowNonVeg    - Boolean: are non-veg items permitted at all?
+ *   uiDescription  - Human-readable explanation for the rule
+ *   recommendedTags - Tags to prioritise in food selection
+ *   [legacy props] - allowedCategory, ruleApplied, ruleCode, reason, festivalName
  */
 
-/**
- * @typedef {Object} RuleResult
- * @property {'veg'|'non-veg'|'any'} allowedCategory - Category constraint for food selection
- * @property {string} ruleApplied                    - Human-readable rule name
- * @property {string} reason                          - Detailed reason for notification display
- * @property {'festival'|'amavasai'|'wednesday'|'normal'} ruleCode - Machine-readable code
- */
-
-/**
- * Day-of-week index for Wednesday (JS Date.getDay() → 0=Sun, 3=Wed)
- */
-const WEDNESDAY = 3;
+const WEDNESDAY = 3; // JS Date.getDay() → 0=Sun, 3=Wed
 
 /**
  * Returns the JS Date.getDay() index for the given YYYY-MM-DD string.
- * We parse manually to avoid timezone issues.
- *
- * @param {string} dateStr - YYYY-MM-DD
- * @returns {number} 0 (Sun) to 6 (Sat)
+ * Parsed manually to avoid timezone issues.
+ * @param {string} dateStr
+ * @returns {number}
  */
 const getDayOfWeek = (dateStr) => {
   const [year, month, day] = dateStr.split('-').map(Number);
@@ -40,74 +38,145 @@ const getDayOfWeek = (dateStr) => {
 };
 
 /**
- * Evaluates all business rules and returns the allowed food category.
+ * Evaluates all business rules and returns the complete rule result object.
  *
- * @param {Object|null} tamilData - Normalised Tamil calendar data (from tamilCalendarService)
- *                                  null means API unavailable → treat as normal day
- * @param {string} dateStr        - Target date in YYYY-MM-DD format
- * @returns {RuleResult}
+ * @param {Object|null} tamilData - Normalised Tamil calendar data
+ * @param {string} dateStr        - Target date YYYY-MM-DD
+ * @returns {Object} RuleResult
  */
 export const evaluateRule = (tamilData, dateStr) => {
   const dayIndex = getDayOfWeek(dateStr);
 
-  // ─── Priority 1: Tamil Festival ───────────────────────────────────────────
-  if (tamilData?.isFestival === true) {
+  // ─── PRIORITY 1A: Festival ────────────────────────────────────────────────
+  if (tamilData?.isFestival === true || tamilData?.festivalName) {
     const festivalName = tamilData.festivalName || 'Tamil Festival';
     return {
+      ruleType: 'FESTIVAL',
+      badgeTitle: `🎉 ${festivalName} Special`,
+      isStrictVeg: true,
+      isStrictNonVeg: false,
+      allowNonVeg: false,
+      uiDescription: `Strict Veg rule active for ${festivalName}. Non-veg items strictly excluded. Traditional festive thali items prioritized.`,
+      recommendedTags: ['FestiveSpecial', 'Sattvic'],
+      // Legacy compatibility
       allowedCategory: 'veg',
-      ruleApplied: 'Festival – Veg Only',
-      reason: `🪔 ${festivalName} detected. Vegetarian menu selected.`,
+      ruleApplied: `🎉 ${festivalName} Special`,
       ruleCode: 'festival',
+      reason: `Strict Veg rule active for ${festivalName}. Non-veg items strictly excluded. Traditional festive thali items prioritized.`,
       festivalName,
     };
   }
 
-  // ─── Priority 2: Amavasai (No Moon Day) ───────────────────────────────────
-  // Overrides Wednesday Non-Veg rule
+  // ─── PRIORITY 1B: Viratham (Fasting Day) ─────────────────────────────────
+  if (tamilData?.isViratham === true || tamilData?.virathamName) {
+    const virathamName = tamilData.virathamName || 'Auspicious';
+    return {
+      ruleType: 'VIRATHAM',
+      badgeTitle: `🪔 ${virathamName} Viratham`,
+      isStrictVeg: true,
+      isStrictNonVeg: false,
+      allowNonVeg: false,
+      uiDescription: 'Auspicious Viratham day. Non-vegetarian dishes disabled. Light and Sattvic menu active.',
+      recommendedTags: ['Sattvic'],
+      // Legacy compatibility
+      allowedCategory: 'veg',
+      ruleApplied: `🪔 ${virathamName} Viratham`,
+      ruleCode: 'viratham',
+      reason: 'Auspicious Viratham day. Non-vegetarian dishes disabled.',
+      festivalName: null,
+      virathamName,
+    };
+  }
+
+  // ─── PRIORITY 1C: Amavasai (New Moon) ────────────────────────────────────
   if (tamilData?.isAmavasai === true) {
     return {
+      ruleType: 'AMAVASAI',
+      badgeTitle: '🌑 Amavasai Special',
+      isStrictVeg: true,
+      isStrictNonVeg: false,
+      allowNonVeg: false,
+      uiDescription: 'Strict Veg rule active for Amavasai. Non-veg items strictly excluded.',
+      recommendedTags: ['Sattvic', 'NoOnionNoGarlic'],
+      // Legacy compatibility
       allowedCategory: 'veg',
-      ruleApplied: 'Amavasai – Veg Only',
-      reason: '🌑 Amavasai detected. Vegetarian menu selected.',
+      ruleApplied: '🌑 Amavasai Special',
       ruleCode: 'amavasai',
+      reason: 'Strict Veg rule active for Amavasai. Non-veg items strictly excluded.',
       festivalName: null,
     };
   }
 
-  // ─── Priority 3: Wednesday Company Rule ───────────────────────────────────
+  // ─── PRIORITY 1D: Pournami (Full Moon) ───────────────────────────────────
+  if (tamilData?.isPournami === true) {
+    return {
+      ruleType: 'POURNAMI',
+      badgeTitle: '🌕 Pournami Special',
+      isStrictVeg: true,
+      isStrictNonVeg: false,
+      allowNonVeg: false,
+      uiDescription: 'Strict Veg rule active for Pournami. Non-veg items strictly excluded.',
+      recommendedTags: ['Sattvic'],
+      // Legacy compatibility
+      allowedCategory: 'veg',
+      ruleApplied: '🌕 Pournami Special',
+      ruleCode: 'pournami',
+      reason: 'Strict Veg rule active for Pournami. Non-veg items strictly excluded.',
+      festivalName: null,
+    };
+  }
+
+  // ─── PRIORITY 2: Wednesday Non-Veg Rule ──────────────────────────────────
+  // Only applies when NO religious observance is active
   if (dayIndex === WEDNESDAY) {
     return {
+      ruleType: 'NORMAL',
+      badgeTitle: '🍗 Wednesday Non-Veg Special',
+      isStrictVeg: false,
+      isStrictNonVeg: true,
+      allowNonVeg: true,
+      uiDescription: 'Wednesday Routine: Non-vegetarian menu prioritized today.',
+      recommendedTags: ['NonVeg'],
+      // Legacy compatibility
       allowedCategory: 'non-veg',
-      ruleApplied: 'Company Rule – Wednesday Non-Veg',
-      reason: '🍗 Wednesday detected. Non-Veg menu generated.',
+      ruleApplied: '🍗 Wednesday Non-Veg Special',
       ruleCode: 'wednesday',
+      reason: 'Wednesday Routine: Non-vegetarian menu prioritized today.',
       festivalName: null,
     };
   }
 
-  // ─── Priority 4: Normal Day ────────────────────────────────────────────────
+  // ─── PRIORITY 3: Normal Day ───────────────────────────────────────────────
   return {
+    ruleType: 'NORMAL',
+    badgeTitle: '🎲 Normal Day',
+    isStrictVeg: false,
+    isStrictNonVeg: false,
+    allowNonVeg: true,
+    uiDescription: 'No religious fasting or weekly rules today. Full recipe pool active.',
+    recommendedTags: [],
+    // Legacy compatibility
     allowedCategory: 'any',
-    ruleApplied: 'Normal Random',
-    reason: '🎲 Normal day. Random menu generated.',
+    ruleApplied: '🎲 Normal Day',
     ruleCode: 'normal',
+    reason: 'No religious fasting or weekly rules today. Full recipe pool active.',
     festivalName: null,
   };
 };
 
 /**
  * Returns the display label for a rule code.
- * Used by the frontend for badge rendering.
- *
  * @param {string} ruleCode
  * @returns {string}
  */
 export const getRuleLabel = (ruleCode) => {
   const labels = {
-    festival:  'Festival – Veg Only',
-    amavasai:  'Amavasai – Veg Only',
-    wednesday: 'Company Rule – Wednesday Non-Veg',
-    normal:    'Normal Random',
+    festival:  'Festival – Strict Veg Only',
+    viratham:  'Viratham – Strict Veg Only',
+    amavasai:  'Amavasai – Strict Veg Only',
+    pournami:  'Pournami – Strict Veg Only',
+    wednesday: 'Wednesday – Non-Veg Special',
+    normal:    'Normal Day – Full Menu',
   };
-  return labels[ruleCode] || 'Normal Random';
+  return labels[ruleCode] || 'Normal Day – Full Menu';
 };

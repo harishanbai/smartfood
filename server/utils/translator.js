@@ -97,7 +97,49 @@ const FESTIVALS_MAP = {
   "Tamil Festival": "தமிழ் பண்டிகை",
   "Deepavali": "தீபாவளி",
   "Pongal": "பொங்கல்",
-  "Tamil New Year": "தமிழ்ப்புத்தாண்டு"
+  "Tamil New Year": "தமிழ்ப்புத்தாண்டு",
+  "Vinayakar Chaturthi": "விநாயகர் சதுர்த்தி",
+  "Ayudha Pooja": "ஆயுத பூஜை",
+  "Thaipusam": "தைப்பூசம்"
+};
+
+const VIRATHAMS_MAP = {
+  "Pradosham": "பிரதோஷம்",
+  "Sashti": "சஷ்டி",
+  "Shashti": "சஷ்டி",
+  "Ekadashi": "ஏகாதசி",
+  "Ekadasi": "ஏகாதசி",
+  "Sankatahara": "சங்கடஹர சதுர்த்தி",
+  "Sankatahara Chaturthi": "சங்கடஹர சதுர்த்தி",
+  "Auspicious": "மங்களகரமான"
+};
+
+const translateRuleApplied = (applied) => {
+  if (!applied) return applied;
+  
+  if (applied.startsWith("🎉 ") && applied.endsWith(" Special")) {
+    const festName = applied.substring(2, applied.length - 8);
+    const translatedFest = translateText(festName, FESTIVALS_MAP);
+    return `🎉 ${translatedFest} சிறப்பு`;
+  }
+  
+  if (applied.startsWith("🪔 ") && applied.endsWith(" Viratham")) {
+    const virName = applied.substring(2, applied.length - 9);
+    const translatedVir = translateText(virName, VIRATHAMS_MAP);
+    return `🪔 ${translatedVir} விரதம்`;
+  }
+  
+  if (applied === "🌑 Amavasai Special") {
+    return "🌑 அமாவாசை சிறப்பு";
+  }
+  if (applied === "🌕 Pournami Special") {
+    return "🌕 பௌர்ணமி சிறப்பு";
+  }
+  if (applied === "🎲 Normal Day") {
+    return "🎲 சாதாரண நாள்";
+  }
+
+  return translateText(applied, RULES_MAP);
 };
 
 const CATEGORIES_MAP = {
@@ -163,6 +205,25 @@ const translateReason = (reason) => {
   if (!reason) return reason;
   if (REASONS_MAP[reason]) return REASONS_MAP[reason];
   
+  if (reason.includes("No religious fasting or festival rules today")) {
+    return "இன்று மத விரதங்கள் அல்லது பண்டிகை விதிகள் எதுவும் இல்லை. முழு செய்முறை தொகுப்பும் செயலில் உள்ளது.";
+  }
+  if (reason.includes("Lunar observation active")) {
+    return "சந்திர அவதானிப்பு செயலில் உள்ளது. கடுமையான சைவ உணவு மெனு செயல்படுத்தப்படுகிறது.";
+  }
+  if (reason.includes("Auspicious Viratham day")) {
+    return "மங்களகரமான விரத நாள். அசைவ உணவுகள் முடக்கப்பட்டுள்ளன.";
+  }
+  
+  if (reason.includes("Strict Veg rule active for")) {
+    const match = reason.match(/Strict Veg rule active for (.*?)\. Non-veg/);
+    if (match) {
+      const festName = match[1];
+      const translatedFest = translateText(festName, FESTIVALS_MAP);
+      return `${translatedFest}-க்கான கடுமையான சைவ உணவு விதி செயலில் உள்ளது. அசைவ உணவுகள் தவிர்க்கப்பட்டன. பாரம்பரிய பண்டிகை தாலி உணவுகளுக்கு முன்னுரிமை வழங்கப்படுகிறது.`;
+    }
+  }
+
   if (reason.includes("Amavasai detected")) {
     return "🌑 அமாவாசை கண்டறியப்பட்டது. சைவ உணவு மெனு தேர்ந்தெடுக்கப்பட்டது.";
   }
@@ -244,13 +305,16 @@ const translateMenu = (menu, lang) => {
   const menuObj = typeof menu.toObject === 'function' ? menu.toObject() : { ...menu };
 
   if (lang === 'ta') {
-    menuObj.ruleApplied = translateText(menuObj.ruleApplied, RULES_MAP);
+    menuObj.ruleApplied = translateRuleApplied(menuObj.ruleApplied);
     
     // Check nested rule if present
     if (menuObj.rule) {
-      menuObj.rule.ruleApplied = translateText(menuObj.rule.ruleApplied, RULES_MAP);
+      menuObj.rule.ruleApplied = translateRuleApplied(menuObj.rule.ruleApplied);
+      menuObj.rule.badgeTitle = translateRuleApplied(menuObj.rule.badgeTitle);
       menuObj.rule.reason = translateReason(menuObj.rule.reason);
+      menuObj.rule.uiDescription = translateReason(menuObj.rule.uiDescription);
       menuObj.rule.festivalName = translateText(menuObj.rule.festivalName, FESTIVALS_MAP);
+      menuObj.rule.virathamName = translateText(menuObj.rule.virathamName, VIRATHAMS_MAP);
     }
   }
 
@@ -312,9 +376,12 @@ export const translateResponse = (data, lang = 'en') => {
       obj.tamilCalendar = translateCalendar(obj.tamilCalendar, lang);
     }
     if (obj.rule) {
-      obj.rule.ruleApplied = translateText(obj.rule.ruleApplied, RULES_MAP);
+      obj.rule.ruleApplied = translateRuleApplied(obj.rule.ruleApplied);
+      obj.rule.badgeTitle = translateRuleApplied(obj.rule.badgeTitle);
       obj.rule.reason = translateReason(obj.rule.reason);
+      obj.rule.uiDescription = translateReason(obj.rule.uiDescription);
       obj.rule.festivalName = translateText(obj.rule.festivalName, FESTIVALS_MAP);
+      obj.rule.virathamName = translateText(obj.rule.virathamName, VIRATHAMS_MAP);
     }
     return obj;
   }

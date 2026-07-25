@@ -313,7 +313,7 @@ const Calendar = () => {
                     <div className="w-full h-32 rounded-xl overflow-hidden bg-black/20 border border-white/10">
                       {(selectedDayMenu.vegFoodId?.image || selectedDayMenu.foodId?.image) ? (
                         <img 
-                          src={getImageUrl(selectedDayMenu.vegFoodId?.image || selectedDayMenu.foodId?.image)} 
+                          src={getImageUrl(selectedDayMenu.vegFoodId || selectedDayMenu.foodId)} 
                           alt={selectedDayMenu.vegFoodId?.name || selectedDayMenu.foodId?.name || 'Food'} 
                           className="w-full h-full object-cover" 
                         />
@@ -337,7 +337,7 @@ const Calendar = () => {
                     <div className="w-full h-32 rounded-xl overflow-hidden bg-black/20 border border-white/10">
                       {selectedDayMenu.nonVegFoodId?.image ? (
                         <img 
-                          src={getImageUrl(selectedDayMenu.nonVegFoodId?.image)} 
+                          src={getImageUrl(selectedDayMenu.nonVegFoodId)} 
                           alt={selectedDayMenu.nonVegFoodId?.name || 'Food'} 
                           className="w-full h-full object-cover" 
                         />

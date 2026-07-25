@@ -155,7 +155,7 @@ const History = () => {
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
                               {vegFood.image ? (
-                                <img src={getImageUrl(vegFood.image)} alt={vegFood.name} className="w-full h-full object-cover" loading="lazy" />
+                                <img src={getImageUrl(vegFood)} alt={vegFood.name} className="w-full h-full object-cover" loading="lazy" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-[9px] text-gray-500">No Image</div>
                               )}
@@ -171,7 +171,7 @@ const History = () => {
                             <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/5">
                               <div className="h-10 w-10 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
                                 {nonVegFood.image ? (
-                                  <img src={getImageUrl(nonVegFood.image)} alt={nonVegFood.name} className="w-full h-full object-cover" loading="lazy" />
+                                  <img src={getImageUrl(nonVegFood)} alt={nonVegFood.name} className="w-full h-full object-cover" loading="lazy" />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center text-[9px] text-gray-500">No Image</div>
                                 )}
@@ -232,7 +232,7 @@ const History = () => {
                     <div className="flex flex-row items-center gap-4">
                       <div className="h-14 w-14 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
                         {vegFood.image ? (
-                          <img src={getImageUrl(vegFood.image)} alt={vegFood.name} className="w-full h-full object-cover" loading="lazy" />
+                          <img src={getImageUrl(vegFood)} alt={vegFood.name} className="w-full h-full object-cover" loading="lazy" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-[9px] text-gray-500">No Image</div>
                         )}
@@ -251,7 +251,7 @@ const History = () => {
                       <div className="flex flex-row items-center gap-4 pt-3 border-t border-white/5">
                         <div className="h-14 w-14 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
                           {nonVegFood.image ? (
-                            <img src={getImageUrl(nonVegFood.image)} alt={nonVegFood.name} className="w-full h-full object-cover" loading="lazy" />
+                            <img src={getImageUrl(nonVegFood)} alt={nonVegFood.name} className="w-full h-full object-cover" loading="lazy" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-[9px] text-gray-500">No Image</div>
                           )}

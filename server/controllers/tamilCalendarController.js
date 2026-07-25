@@ -36,10 +36,7 @@ const buildCalendarResponse = async (dateStr, lang = 'en') => {
     date: dateStr,
     tamilCalendar: tamilData,
     rule: {
-      ruleApplied: ruleResult.ruleApplied,
-      ruleCode: ruleResult.ruleCode,
-      allowedCategory: ruleResult.allowedCategory,
-      reason: ruleResult.reason,
+      ...ruleResult,
       festivalName: ruleResult.festivalName || null,
     },
     apiAvailable: tamilData !== null,

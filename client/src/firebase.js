@@ -12,7 +12,8 @@ import {
   updateProfile,
   fetchSignInMethodsForEmail,
   confirmPasswordReset,
-  verifyPasswordResetCode
+  verifyPasswordResetCode,
+  signInWithCustomToken
 } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -40,5 +41,6 @@ export {
   updateProfile,
   fetchSignInMethodsForEmail,
   confirmPasswordReset,
-  verifyPasswordResetCode
+  verifyPasswordResetCode,
+  signInWithCustomToken
 };

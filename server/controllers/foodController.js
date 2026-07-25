@@ -18,7 +18,7 @@ export const getFoods = async (req, res) => {
         ]
       };
     }
-    const foods = await Food.find(query).sort({ createdAt: -1 });
+    const foods = await Food.find(query).select('-image.data').sort({ createdAt: -1 });
     res.json(translateResponse(foods, lang));
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving food list', error: error.message });
@@ -34,11 +34,12 @@ export const addFood = async (req, res) => {
       return res.status(400).json({ message: 'Name, category, and description are required fields.' });
     }
 
-    let imageUrl = '';
+    let imageObj = null;
     if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`;
-    } else if (req.body.image) {
-      imageUrl = req.body.image;
+      imageObj = {
+        data: req.file.buffer,
+        contentType: req.file.mimetype
+      };
     }
 
     const foodData = {
@@ -46,10 +47,13 @@ export const addFood = async (req, res) => {
       name_ta: name_ta || '',
       category,
       description,
-      image: imageUrl,
       available: available === 'false' || available === false ? false : true,
       foodType: foodType === 'non-veg' ? 'non-veg' : 'veg'
     };
+
+    if (imageObj) {
+      foodData.image = imageObj;
+    }
 
     const food = new Food(foodData);
     await food.save();
@@ -65,11 +69,12 @@ export const updateFood = async (req, res) => {
     const { name, name_ta, category, description, available, foodType } = req.body;
     const lang = req.headers['accept-language'] || 'en';
 
-    let imageUrl = null;
+    let imageObj = null;
     if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`;
-    } else if (req.body.image) {
-      imageUrl = req.body.image;
+      imageObj = {
+        data: req.file.buffer,
+        contentType: req.file.mimetype
+      };
     }
 
     const food = await Food.findById(id);
@@ -87,7 +92,7 @@ export const updateFood = async (req, res) => {
     if (foodType) {
       food.foodType = foodType === 'non-veg' ? 'non-veg' : 'veg';
     }
-    if (imageUrl) food.image = imageUrl;
+    if (imageObj) food.image = imageObj;
 
     await food.save();
     res.json(translateResponse(food, lang));
@@ -131,3 +136,25 @@ export const patchAvailability = async (req, res) => {
     res.status(500).json({ message: 'Error patching food availability', error: error.message });
   }
 };
+
+/**
+ * Serves a food item's image directly from MongoDB as binary data.
+ * GET /api/foods/:id/image
+ */
+export const getFoodImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const food = await Food.findById(id);
+
+    if (!food || !food.image || !food.image.data) {
+      return res.status(404).json({ message: 'Image not found' });
+    }
+
+    res.set('Content-Type', food.image.contentType);
+    res.set('Cache-Control', 'public, max-age=86400'); // cache 24h
+    res.send(food.image.data);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving image', error: error.message });
+  }
+};
+

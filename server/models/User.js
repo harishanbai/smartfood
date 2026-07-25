@@ -25,10 +25,12 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: true,
+      required: false,
       unique: true,
+      sparse: true,
       lowercase: true,
-      trim: true
+      trim: true,
+      default: null
     },
     photo: {
       type: String,
@@ -36,7 +38,17 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
+      trim: true,
       default: ''
+    },
+    provider: {
+      type: String,
+      enum: ['email', 'google', 'whatsapp'],
+      default: 'email'
+    },
+    whatsappVerified: {
+      type: Boolean,
+      default: false
     },
     language: {
       type: String,

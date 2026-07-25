@@ -10,6 +10,7 @@ import {
   resetPassword
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { sendOtp, verifyOtp } from '../controllers/whatsappController.js';
 
 const router = express.Router();
 
@@ -20,6 +21,10 @@ router.post('/auth/google', googleAuth);
 router.post('/auth/logout', logoutUser);
 router.post('/auth/forgot-password', forgotPassword);
 router.post('/auth/reset-password', resetPassword);
+
+// WhatsApp Auth Endpoints
+router.post('/auth/whatsapp/send-otp', sendOtp);
+router.post('/auth/whatsapp/verify-otp', verifyOtp);
 
 // User Profile Endpoints
 router.get('/user/profile', protect, getUserProfile);

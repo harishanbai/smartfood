@@ -8,7 +8,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendEmailVerification,
-  updateProfile as updateFirebaseProfile
+  updateProfile as updateFirebaseProfile,
+  signInWithCustomToken
 } from '../firebase';
 import { authApi, userApi } from '../services/api';
 
@@ -234,6 +235,58 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // 3b. WhatsApp OTP Flow
+  const requestWhatsappOtp = async (phone) => {
+    try {
+      const res = await authApi.sendWhatsappOtp(phone);
+      if (res?.data?.success) {
+        return { success: true, message: res.data.message, phone: res.data.phone };
+      }
+      return { success: false, error: res?.data?.message || 'Failed to send OTP.' };
+    } catch (error) {
+      console.error("WhatsApp Send OTP Error:", error);
+      return { success: false, error: error?.response?.data?.message || error.message || 'Failed to send OTP.' };
+    }
+  };
+
+  const verifyWhatsappOtp = async (phone, otp) => {
+    try {
+      const res = await authApi.verifyWhatsappOtp(phone, otp);
+      if (res?.data?.success && res.data.user) {
+        const dbUser = res.data.user;
+        const customToken = res.data.token;
+
+        // Sign in via Firebase Custom Token if present
+        if (customToken) {
+          try {
+            await signInWithCustomToken(auth, customToken);
+          } catch (fbErr) {
+            console.warn("Firebase Custom Token sign-in warning:", fbErr);
+          }
+        }
+
+        const userData = {
+          uid: dbUser.uid,
+          displayName: dbUser.displayName || `User (${phone.slice(-4)})`,
+          email: dbUser.email || '',
+          photoURL: dbUser.photo || '',
+          emailVerified: true
+        };
+
+        setCurrentUser(userData);
+        setMongoUser(dbUser);
+        localStorage.setItem('smart_lunch_user', JSON.stringify(userData));
+        localStorage.setItem('smart_lunch_mongo_user', JSON.stringify(dbUser));
+
+        return { success: true, user: userData, dbUser };
+      }
+      return { success: false, error: res?.data?.message || 'Verification failed.' };
+    } catch (error) {
+      console.error("WhatsApp Verify OTP Error:", error);
+      return { success: false, error: error?.response?.data?.message || error.message || 'OTP Verification failed.' };
+    }
+  };
+
   // 4. Password Reset Flow — uses backend Nodemailer (not Firebase SDK directly)
   const sendPasswordReset = async (email) => {
     try {
@@ -330,6 +383,8 @@ export const AuthProvider = ({ children }) => {
         loginWithEmailPassword,
         registerWithEmailPassword,
         loginWithGoogle,
+        requestWhatsappOtp,
+        verifyWhatsappOtp,
         sendPasswordReset,
         resendVerificationEmail,
         updateUserProfile,

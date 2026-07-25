@@ -17,18 +17,21 @@ const RuleBadge = ({ ruleCode, ruleApplied }) => {
   if (!ruleCode) return null;
 
   const config = {
-    festival: { bg: 'bg-purple-500/15', border: 'border-purple-500/40', text: 'text-purple-300', icon: '🪔', label: ruleApplied || 'Festival – Veg Only' },
+    festival: { bg: 'bg-purple-500/15', border: 'border-purple-500/40', text: 'text-purple-300', icon: '🎉', label: ruleApplied || 'Festival – Veg Only' },
+    viratham: { bg: 'bg-pink-500/15', border: 'border-pink-500/40', text: 'text-pink-300', icon: '🪔', label: ruleApplied || 'Viratham – Veg Only' },
     amavasai: { bg: 'bg-indigo-500/15', border: 'border-indigo-500/40', text: 'text-indigo-300', icon: '🌑', label: ruleApplied || 'Amavasai – Veg Only' },
+    pournami: { bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', text: 'text-yellow-400', icon: '🌕', label: ruleApplied || 'Pournami – Veg Only' },
     wednesday: { bg: 'bg-orange-500/15', border: 'border-orange-500/40', text: 'text-orange-300', icon: '🍗', label: ruleApplied || 'Company Rule – Wednesday Non-Veg' },
-    normal: { bg: 'bg-emerald-500/15', border: 'border-emerald-500/40', text: 'text-emerald-300', icon: '🎲', label: ruleApplied || 'Normal Random' },
+    normal: { bg: 'bg-emerald-500/15', border: 'border-emerald-500/40', text: 'text-emerald-300', icon: '🎲', label: ruleApplied || 'Normal Day' },
   };
 
   const c = config[ruleCode] || config.normal;
+  const hasEmoji = typeof c.label === 'string' && /^[^\w\s\d]/.test(c.label);
 
   return (
     <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-semibold tracking-wide ${c.bg} ${c.border} ${c.text}`}>
-      <span>{c.icon}</span>
-      <span>Rule Applied: {c.label}</span>
+      {!hasEmoji && <span>{c.icon}</span>}
+      <span>{c.label}</span>
     </div>
   );
 };
@@ -83,13 +86,22 @@ const TamilCalendarCard = ({ data, loading }) => {
 
       {apiAvailable && tc ? (
         <>
-          {/* Festival / Amavasai / Pournami banners */}
+          {/* Festival / Viratham / Amavasai / Pournami banners */}
           {tc.isFestival && (
             <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-500/15 border border-purple-500/30">
-              <span className="text-base">🪔</span>
+              <span className="text-base">🎉</span>
               <div>
                 <p className="text-[10px] font-bold text-purple-300 uppercase tracking-wider">Festival Today</p>
                 <p className="text-xs text-white font-semibold">{tc.festivalName}</p>
+              </div>
+            </div>
+          )}
+          {tc.isViratham && (
+            <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-pink-500/15 border border-pink-500/30">
+              <span className="text-base">🪔</span>
+              <div>
+                <p className="text-[10px] font-bold text-pink-300 uppercase tracking-wider">Viratham Today</p>
+                <p className="text-xs text-white font-semibold">{tc.virathamName || 'Auspicious Fasting'}</p>
               </div>
             </div>
           )}
@@ -99,7 +111,7 @@ const TamilCalendarCard = ({ data, loading }) => {
               <p className="text-xs font-bold text-indigo-300">Amavasai (No Moon Day)</p>
             </div>
           )}
-          {tc.isPournami && !tc.isAmavasai && (
+          {tc.isPournami && (
             <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-yellow-500/10 border border-yellow-500/25">
               <span className="text-base">🌕</span>
               <p className="text-xs font-bold text-yellow-300">Pournami (Full Moon Day)</p>
@@ -221,10 +233,12 @@ const Dashboard = () => {
   const fireRuleNotification = (ruleCode, reason) => {
     if (!ruleCode) return;
     const typeMap = {
-      festival: 'info',
-      amavasai: 'info',
+      festival:  'info',
+      viratham:  'info',
+      amavasai:  'info',
+      pournami:  'info',
       wednesday: 'warning',
-      normal: 'success',
+      normal:    'success',
     };
     addNotification(reason || `Menu generated using rule: ${ruleCode}`, typeMap[ruleCode] || 'info');
   };
@@ -322,6 +336,36 @@ const Dashboard = () => {
   const tomorrowRuleCode = tomorrowMenu?.ruleCode || tamilTomorrow?.rule?.ruleCode || null;
   const tomorrowRuleApplied = tomorrowMenu?.ruleApplied || tamilTomorrow?.rule?.ruleApplied || null;
 
+  // ── Eligible Foods Filter ────────────────────────────────────────────────────
+  // Filter availableFoods based on tomorrow's rule so the wheel and dropdown
+  // only show dishes permitted under the current dietary rule.
+  const NON_VEG_KW = ['chicken','mutton','fish','prawn','egg','crab','lamb','biryani','kebab','tikka','keema','salmon','wings'];
+  const isVeg  = (f) => f.foodType ? f.foodType === 'veg'     : !NON_VEG_KW.some(kw => (f.name||'').toLowerCase().includes(kw));
+  const isNVeg = (f) => f.foodType ? f.foodType === 'non-veg' :  NON_VEG_KW.some(kw => (f.name||'').toLowerCase().includes(kw));
+
+  const eligibleFoods = React.useMemo(() => {
+    const rule = tamilTomorrow?.rule || {};
+    const code = tomorrowRuleCode;
+    if (rule.isStrictVeg || ['festival','viratham','amavasai','pournami'].includes(code)) {
+      // Strict Veg: only veg foods
+      const vegOnly = availableFoods.filter(isVeg);
+      return vegOnly.length > 0 ? vegOnly : availableFoods;
+    }
+    if (rule.isStrictNonVeg || code === 'wednesday') {
+      // Wednesday: prefer non-veg, fallback to all
+      const nonVeg = availableFoods.filter(isNVeg);
+      return nonVeg.length > 0 ? nonVeg : availableFoods;
+    }
+    return availableFoods; // Normal: all
+  }, [availableFoods, tomorrowRuleCode, tamilTomorrow?.rule]);
+
+  // Keep selectedFoodId in sync when eligible pool changes
+  useEffect(() => {
+    if (eligibleFoods.length > 0) {
+      setSelectedFoodId(prev => eligibleFoods.find(f => f._id === prev) ? prev : eligibleFoods[0]._id);
+    }
+  }, [eligibleFoods]);
+
   return (
     <div className="relative min-h-screen pb-12 w-full overflow-x-hidden">
       {/* Notification bell row */}
@@ -366,7 +410,7 @@ const Dashboard = () => {
                       <div className="w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
                         {todayFood.image ? (
                           <img
-                            src={getImageUrl(todayFood.image)}
+                            src={getImageUrl(todayFood)}
                             alt={todayFood.name}
                             className="w-full h-full object-cover transition-transform duration-500"
                             loading="lazy"
@@ -439,7 +483,7 @@ const Dashboard = () => {
                       <div className="w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
                         {tomorrowFood.image ? (
                           <img
-                            src={getImageUrl(tomorrowFood.image)}
+                            src={getImageUrl(tomorrowFood)}
                             alt={tomorrowFood.name}
                             className="w-full h-full object-cover transition-transform duration-500"
                             loading="lazy"
@@ -518,15 +562,17 @@ const Dashboard = () => {
                     {t('dashboard.btnRollSelect')}
                   </button>
 
-                  {availableFoods.length > 0 && (
+                  {eligibleFoods.length > 0 && (
                     <div className="w-full sm:w-auto flex items-center gap-2 mt-2 sm:mt-0">
                       <select
                         value={selectedFoodId}
                         onChange={(e) => setSelectedFoodId(e.target.value)}
                         className="glass-panel px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all [&>option]:bg-bgCard min-h-[44px] min-w-[150px]"
                       >
-                        {availableFoods.map(food => (
-                          <option key={food._id} value={food._id}>{food.name}</option>
+                        {eligibleFoods.map(food => (
+                          <option key={food._id} value={food._id}>
+                            {food.name}{food.foodType === 'non-veg' ? ' 🍗' : ' 🌿'}
+                          </option>
                         ))}
                       </select>
                       <button
@@ -563,7 +609,7 @@ const Dashboard = () => {
             {/* Carousel Container */}
             <div className="my-auto">
               <PremiumCarousel
-                foods={availableFoods}
+                foods={eligibleFoods}
                 onSelectionComplete={onCarouselFinished}
                 isSpinning={isSpinning}
                 setIsSpinning={setIsSpinning}
@@ -601,17 +647,32 @@ const Dashboard = () => {
 
               {tamilTomorrow.tamilCalendar.isFestival && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-500/15 border border-purple-500/30 mb-3">
-                  <span>🪔</span>
+                  <span>🎉</span>
                   <div>
                     <p className="text-[9px] font-bold text-purple-300 uppercase tracking-wider">Festival Tomorrow</p>
                     <p className="text-xs text-white font-semibold">{tamilTomorrow.tamilCalendar.festivalName}</p>
                   </div>
                 </div>
               )}
+              {tamilTomorrow.tamilCalendar.isViratham && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-pink-500/15 border border-pink-500/30 mb-3">
+                  <span>🪔</span>
+                  <div>
+                    <p className="text-[9px] font-bold text-pink-300 uppercase tracking-wider">Viratham Tomorrow</p>
+                    <p className="text-xs text-white font-semibold">{tamilTomorrow.tamilCalendar.virathamName || 'Auspicious Fasting'}</p>
+                  </div>
+                </div>
+              )}
               {tamilTomorrow.tamilCalendar.isAmavasai && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-500/15 border border-indigo-500/30 mb-3">
                   <span>🌑</span>
-                  <p className="text-xs font-bold text-indigo-300">Amavasai Tomorrow</p>
+                  <p className="text-xs font-bold text-indigo-300">Amavasai (New Moon) Tomorrow</p>
+                </div>
+              )}
+              {tamilTomorrow.tamilCalendar.isPournami && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-yellow-500/10 border border-yellow-500/25 mb-3">
+                  <span>🌕</span>
+                  <p className="text-xs font-bold text-yellow-300">Pournami (Full Moon) Tomorrow</p>
                 </div>
               )}
 

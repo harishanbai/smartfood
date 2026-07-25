@@ -1,7 +1,6 @@
 import './config/env.js'; // ← MUST be first: loads .env before any other module reads process.env
 import express from 'express';
 import cors from 'cors';
-import path from 'path';
 import cron from 'node-cron';
 import connectDB from './config/db.js';
 import foodRoutes from './routes/foodRoutes.js';
@@ -13,6 +12,7 @@ import { clearCache } from './services/tamilCalendarService.js';
 import Menu from './models/Menu.js';
 
 import authRoutes from './routes/authRoutes.js';
+import webhookRoutes from './routes/webhookRoutes.js';
 import { verifySmtpConnection } from './services/emailService.js';
 
 
@@ -36,10 +36,12 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+// Images are served from MongoDB via /api/foods/:id/image
 
 // Routes
 app.use('/api', authRoutes);
+app.use('/api', webhookRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/stats', statsRoutes);
