@@ -17,6 +17,8 @@ const Profile = () => {
   const [userLang, setUserLang] = useState('en');
   const [profilePhoto, setProfilePhoto] = useState('');
   const [saving, setSaving] = useState(false);
+  const [brandName, setBrandName] = useState(() => localStorage.getItem('profileName') || 'Smart Lunch');
+  const [designation, setDesignation] = useState(() => localStorage.getItem('profileDesignation') || 'MESS MASTER');
 
   useEffect(() => {
     if (mongoUser || currentUser) {
@@ -38,6 +40,14 @@ const Profile = () => {
     }
 
     setSaving(true);
+    
+    // Save local-only customizations immediately
+    localStorage.setItem('profileName', brandName.trim());
+    localStorage.setItem('profileDesignation', designation.trim());
+    localStorage.setItem('profilePhoto', profilePhoto);
+    localStorage.setItem('chefName', firstName.trim());
+    window.dispatchEvent(new Event('profile-change'));
+
     try {
       const displayName = `${firstName.trim()} ${lastName.trim()}`;
       const res = await updateUserProfile({
@@ -56,20 +66,25 @@ const Profile = () => {
         if (userLang !== currentLang) {
           setLanguage(userLang);
         }
-        
-        // Dispatch event for sidebar branding updates
-        localStorage.setItem('chefName', firstName.trim());
-        window.dispatchEvent(new Event('profile-change'));
 
-        addNotification('Profile updated successfully in MongoDB! 🎉', 'success');
+        addNotification('Profile updated successfully! 🎉', 'success');
         navigate('/');
       } else {
-        addNotification(res.error || 'Failed to update profile.', 'warning');
+        // Show sync warning but still acknowledge local changes
+        addNotification(`Local changes saved, but could not sync with database: ${res.error || 'Unauthorized'}`, 'warning');
+        
+        // Also sync local language preference anyway so it feels responsive
+        if (userLang !== currentLang) {
+          setLanguage(userLang);
+        }
+        
+        navigate('/');
       }
     } catch (err) {
       setSaving(false);
       console.error(err);
-      addNotification('An unexpected error occurred while saving profile.', 'warning');
+      addNotification('Local changes saved, but could not sync with database.', 'warning');
+      navigate('/');
     }
   };
 
@@ -287,6 +302,40 @@ const Profile = () => {
                   <option value="en">English (US)</option>
                   <option value="ta">தமிழ் (Tamil)</option>
                 </select>
+              </div>
+
+              {/* Sidebar Customization Section */}
+              <div className="sm:col-span-2 mt-4 pt-4 border-t border-white/5">
+                <h4 className="text-sm font-bold text-white mb-2">Sidebar Customization</h4>
+                <p className="text-xs text-gray-400">Customize the title and designation displayed at the top of the sidebar.</p>
+              </div>
+
+              {/* Sidebar Title (Brand) */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                  Sidebar Title (Brand)
+                </label>
+                <input
+                  type="text"
+                  value={brandName}
+                  onChange={(e) => setBrandName(e.target.value)}
+                  placeholder="Smart Lunch"
+                  className="w-full glass-panel px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accentPurple/50 transition-all"
+                />
+              </div>
+
+              {/* Sidebar Designation */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                  Sidebar Designation
+                </label>
+                <input
+                  type="text"
+                  value={designation}
+                  onChange={(e) => setDesignation(e.target.value)}
+                  placeholder="MESS MASTER"
+                  className="w-full glass-panel px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-accentPurple/50 transition-all"
+                />
               </div>
             </div>
 

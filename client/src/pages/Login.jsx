@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-  ChefHat, 
-  Calendar, 
-  HeartHandshake, 
-  Globe, 
-  Clock, 
-  CheckSquare, 
-  ShieldCheck, 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  AlertCircle, 
+import {
+  ChefHat,
+  Calendar,
+  HeartHandshake,
+  Globe,
+  Clock,
+  CheckSquare,
+  ShieldCheck,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
   ArrowRight,
   Phone,
   MessageSquare,
@@ -45,11 +45,11 @@ const Login = () => {
   const [whatsappSuccess, setWhatsappSuccess] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
 
-  const { 
-    loginWithEmailPassword, 
-    loginWithGoogle, 
-    requestWhatsappOtp, 
-    verifyWhatsappOtp 
+  const {
+    loginWithEmailPassword,
+    loginWithGoogle,
+    requestWhatsappOtp,
+    verifyWhatsappOtp
   } = useAuth();
   const { addNotification } = useNotifications();
   const { language, setLanguage } = useLanguage();
@@ -189,11 +189,15 @@ const Login = () => {
     } else {
       setWhatsappError(res.error || 'OTP verification failed. Please try again.');
     }
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    console.log(user.name);
+    console.log(user.email);
   };
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-900 overflow-x-hidden font-sans">
-      
+
       {/* LEFT PANEL: Branding & Feature Highlights */}
       <div className="w-full md:w-1/2 bg-gradient-to-br from-emerald-800 via-teal-900 to-slate-900 p-8 sm:p-12 text-white flex flex-col justify-between relative overflow-hidden">
         {/* Background Ambient Glows */}
@@ -258,9 +262,9 @@ const Login = () => {
         {/* Meal Display Image */}
         <div className="relative z-10 mt-4 flex justify-center items-center">
           <div className="relative group w-full max-w-sm">
-            <img 
-              src="https://images.unsplash.com/photo-1610192244261-3f33de3f55e4?auto=format&fit=crop&w=800&q=80" 
-              alt="Indian Thali Meal" 
+            <img
+              src="https://images.unsplash.com/photo-1610192244261-3f33de3f55e4?auto=format&fit=crop&w=800&q=80"
+              alt="Indian Thali Meal"
               className="w-full h-48 sm:h-56 object-cover rounded-3xl shadow-2xl border-2 border-emerald-500/30 group-hover:scale-[1.02] transition-all duration-500"
             />
             <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
@@ -276,7 +280,7 @@ const Login = () => {
 
       {/* RIGHT PANEL: Clean White Authentication Section */}
       <div className="w-full md:w-1/2 bg-white p-6 sm:p-10 md:p-12 flex flex-col justify-between relative min-h-screen md:min-h-0">
-        
+
         {/* Language Selector Top Right */}
         <div className="flex justify-end mb-4">
           <button
@@ -291,7 +295,7 @@ const Login = () => {
 
         {/* Main Form Area */}
         <div className="max-w-md w-full mx-auto my-auto space-y-5 text-center">
-          
+
           {/* Welcome Heading */}
           <div className="space-y-1">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center justify-center gap-2">
@@ -500,7 +504,7 @@ const Login = () => {
       {isWhatsappModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-fadeIn">
           <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden relative transform transition-all duration-300">
-            
+
             {/* Modal Header */}
             <div className="bg-gradient-to-r from-emerald-700 to-teal-800 p-6 text-white relative">
               <button
@@ -526,7 +530,7 @@ const Login = () => {
 
             {/* Modal Content */}
             <div className="p-6 space-y-4">
-              
+
               {/* Error Alert */}
               {whatsappError && (
                 <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold rounded-xl flex items-center gap-2">

@@ -46,7 +46,7 @@ const Settings = () => {
   return (
     <div className="min-h-screen pb-12 w-full max-w-3xl mx-auto">
       <div className="space-y-8">
-        
+
         {/* Language Selection Card */}
         <div className="glass-panel rounded-[24px] p-6 border border-white/5 relative overflow-hidden">
           <div className="absolute -right-20 -top-20 w-48 h-48 bg-accentPurple/10 rounded-full blur-[80px] pointer-events-none" />
@@ -61,11 +61,10 @@ const Settings = () => {
               <button
                 key={lang.code}
                 onClick={() => setLanguage(lang.code)}
-                className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all cursor-pointer ${
-                  language === lang.code
+                className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all cursor-pointer ${language === lang.code
                     ? 'bg-accentPurple/10 border-accentPurple/50 text-white shadow-lg shadow-purple-500/10 scale-103'
                     : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
-                }`}
+                  }`}
               >
                 <span className="text-2xl mb-2">{lang.flag}</span>
                 <span className="text-sm font-semibold">{lang.name}</span>
@@ -137,7 +136,7 @@ const Settings = () => {
                 {t('settings.cronActive')}
               </span>
             </div>
-            
+
             <div className="flex justify-between items-center text-xs pb-3 border-b border-white/5">
               <span className="text-gray-400">{t('settings.triggerFreq')}</span>
               <span className="text-white font-mono font-medium">{t('settings.triggerTime')}</span>
