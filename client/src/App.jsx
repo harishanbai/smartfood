@@ -54,7 +54,7 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-bgMain text-gray-200 antialiased font-sans overflow-x-hidden w-full">
+    <div className="flex flex-col min-h-screen bg-transparent text-gray-200 antialiased font-sans overflow-x-hidden w-full">
       <div className="flex flex-1 w-full">
         {/* Sidebar */}
         <Sidebar isCollapsed={isCollapsed} onToggle={toggleSidebar} />
@@ -126,6 +126,11 @@ function App() {
           <AuthProvider>
             <ConfirmProvider>
               <Router>
+                <div className="aurora-container">
+                  <div className="aurora-glow-purple" />
+                  <div className="aurora-glow-green" />
+                  <div className="aurora-glow-blue" />
+                </div>
                 <AppRoutes />
               </Router>
             </ConfirmProvider>
