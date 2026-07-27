@@ -54,14 +54,17 @@ export const AuthProvider = ({ children }) => {
         };
         setCurrentUser(userData);
         localStorage.setItem('smart_lunch_user', JSON.stringify(userData));
-        await syncMongoProfile(user.uid, user.email);
+        setLoading(false); // Let the UI render immediately using local cached details
+        
+        // Sync from MongoDB in the background
+        syncMongoProfile(user.uid, user.email);
       } else {
         setCurrentUser(null);
         setMongoUser(null);
         localStorage.removeItem('smart_lunch_user');
         localStorage.removeItem('smart_lunch_mongo_user');
+        setLoading(false);
       }
-      setLoading(false);
     }, (error) => {
       console.warn("Firebase Auth state notice:", error.message);
       setLoading(false);
