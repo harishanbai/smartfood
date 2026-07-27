@@ -21,11 +21,13 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
 
   const [profileName, setProfileName] = useState(() => localStorage.getItem('profileName') || 'Smart Lunch');
   const [profileDesignation, setProfileDesignation] = useState(() => localStorage.getItem('profileDesignation') || 'MESS MASTER');
+  const [profilePhoto, setProfilePhoto] = useState(() => localStorage.getItem('profilePhoto') || '');
 
   useEffect(() => {
     const handleProfileChange = () => {
       setProfileName(localStorage.getItem('profileName') || 'Smart Lunch');
       setProfileDesignation(localStorage.getItem('profileDesignation') || 'MESS MASTER');
+      setProfilePhoto(localStorage.getItem('profilePhoto') || '');
     };
     window.addEventListener('profile-change', handleProfileChange);
     return () => window.removeEventListener('profile-change', handleProfileChange);
@@ -61,7 +63,11 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
         className={`flex items-center gap-3 mb-10 px-2 group hover:opacity-90 transition-all cursor-pointer ${isCollapsed ? 'justify-center mb-8' : ''}`}
       >
         <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-accentPurple to-accentOrange flex items-center justify-center shadow-lg shadow-purple-500/25 overflow-hidden flex-shrink-0 border border-white/10 group-hover:border-accentPurple/45 transition-all duration-300">
-          <ChefHat className="h-5 w-5 text-white" />
+          {profilePhoto ? (
+            <img src={profilePhoto} alt={profileName} className="w-full h-full object-cover" />
+          ) : (
+            <ChefHat className="h-5 w-5 text-white" />
+          )}
         </div>
         <div className={`min-w-0 transition-all duration-300 ${isCollapsed ? 'w-0 h-0 overflow-hidden opacity-0' : 'w-auto opacity-100'}`}>
           <h1 className="font-extrabold text-base tracking-tight text-white transition-colors duration-300 truncate max-w-[140px]">{profileName}</h1>
