@@ -18,7 +18,7 @@ import { useAuth } from '../context/AuthContext';
 
 const Sidebar = ({ isCollapsed, onToggle }) => {
   const { language, t } = useLanguage();
-  const { currentUser, mongoUser, logout } = useAuth();
+  const { currentUser, logout } = useAuth();
 
   const [profileName, setProfileName] = useState(() => localStorage.getItem('profileName') || 'Smart Lunch');
   const [profileDesignation, setProfileDesignation] = useState(() => localStorage.getItem('profileDesignation') || 'MESS MASTER');
@@ -40,7 +40,7 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
     { name: t('common.history'), path: '/history', icon: History },
     { name: t('common.calendar'), path: '/calendar', icon: Calendar },
     { name: t('common.statistics'), path: '/statistics', icon: BarChart3 },
-    ...(mongoUser?.role === 'admin' ? [{ name: t('common.settings'), path: '/settings', icon: Settings }] : []),
+    { name: t('common.settings'), path: '/settings', icon: Settings },
     { name: t('common.payment'), path: '/payment', icon: CreditCard },
   ];
 

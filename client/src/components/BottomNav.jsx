@@ -9,11 +9,9 @@ import {
   Settings 
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { useAuth } from '../context/AuthContext';
 
 const BottomNav = () => {
   const { t } = useLanguage();
-  const { mongoUser } = useAuth();
 
   const menuItems = [
     { name: t('common.dashboard'), path: '/', icon: LayoutDashboard },
@@ -21,7 +19,7 @@ const BottomNav = () => {
     { name: t('common.history'), path: '/history', icon: History },
     { name: t('common.calendar'), path: '/calendar', icon: Calendar },
     { name: t('common.statistics'), path: '/statistics', icon: BarChart3 },
-    ...(mongoUser?.role === 'admin' ? [{ name: t('common.settings'), path: '/settings', icon: Settings }] : []),
+    { name: t('common.settings'), path: '/settings', icon: Settings },
   ];
 
   return (
