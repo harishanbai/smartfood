@@ -22,6 +22,7 @@ const Payment = () => {
   const [referenceNo, setReferenceNo] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [transactions, setTransactions] = useState([]);
+  const [selectedTx, setSelectedTx] = useState(null);
 
   useEffect(() => {
     // Load config from localStorage
@@ -397,7 +398,12 @@ const Payment = () => {
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
               {transactions.length > 0 ? (
                 transactions.map((tx) => (
-                  <div key={tx.id} className="p-3 bg-white/3 border border-white/5 rounded-xl hover:bg-white/5 transition-colors">
+                  <div
+                    key={tx.id}
+                    onClick={() => setSelectedTx(tx)}
+                    className="p-3 bg-white/3 border border-white/5 rounded-xl hover:bg-white/5 cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
+                    title={language === 'ta' ? 'ரசீதை பார்க்க கிளிக் செய்யவும்' : 'Click to view receipt'}
+                  >
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="text-xs font-bold text-white">{tx.desc}</p>
@@ -427,6 +433,70 @@ const Payment = () => {
         </div>
 
       </div>
+
+      {/* Transaction Receipt Modal */}
+      {selectedTx && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="glass-panel w-full max-w-sm rounded-[28px] p-6 border border-white/10 relative shadow-2xl overflow-hidden">
+            <div className="absolute -right-20 -top-20 w-40 h-40 bg-accentGreen/10 rounded-full blur-[60px] pointer-events-none" />
+            
+            <div className="flex flex-col items-center text-center space-y-4">
+              {/* Success Badge */}
+              <div className="h-12 w-12 rounded-full bg-accentGreen/20 flex items-center justify-center text-accentGreen border border-accentGreen/30">
+                <CheckCircle2 className="h-6 w-6" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest">{language === 'ta' ? 'பரிவர்த்தனை ரசீது' : 'Transaction Receipt'}</h4>
+                <p className="text-lg font-extrabold text-white mt-1">₹{selectedTx.amount}.00</p>
+                <span className="inline-block mt-1 text-[9px] uppercase tracking-wide font-extrabold text-accentGreen bg-accentGreen/15 border border-accentGreen/30 px-2.5 py-0.5 rounded-full">
+                  {selectedTx.status}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-6 border-t border-white/5 space-y-3.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-gray-500">{language === 'ta' ? 'விளக்கம்' : 'Description'}</span>
+                <span className="text-white font-bold">{selectedTx.desc}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">{language === 'ta' ? 'தேதி' : 'Date'}</span>
+                <span className="text-white font-semibold font-mono">{selectedTx.date}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">{language === 'ta' ? 'முறைமை' : 'Payment Type'}</span>
+                <span className="text-white font-semibold">{selectedTx.type}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">{language === 'ta' ? 'பரிவர்த்தனை எண்' : 'Transaction / UTR ID'}</span>
+                <span className="text-white font-mono font-bold tracking-tight">{selectedTx.id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Merchant</span>
+                <span className="text-white font-semibold">{upiName}</span>
+              </div>
+            </div>
+
+            <div className="mt-8 flex gap-2">
+              <button
+                onClick={() => {
+                  addNotification('Receipt downloaded successfully! 📄', 'success');
+                }}
+                className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center min-h-[38px]"
+              >
+                {language === 'ta' ? 'பதிவிறக்கு' : 'Download'}
+              </button>
+              <button
+                onClick={() => setSelectedTx(null)}
+                className="flex-1 py-2.5 bg-gradient-to-r from-accentPurple to-accentOrange text-white text-xs font-bold rounded-xl transition-all cursor-pointer text-center min-h-[38px]"
+              >
+                {language === 'ta' ? 'மூடு' : 'Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
