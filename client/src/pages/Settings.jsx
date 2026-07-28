@@ -4,11 +4,34 @@ import api from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useConfirm } from '../context/ConfirmContext';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Settings = () => {
   const { addNotification } = useNotifications();
   const { language, setLanguage, t } = useLanguage();
   const confirm = useConfirm();
+  const { mongoUser, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && (!mongoUser || mongoUser.role !== 'admin')) {
+      addNotification(language === 'ta' ? 'அணுகல் மறுக்கப்பட்டது: சமையல்காரர் மட்டுமே அமைப்புகளை அணுக முடியும்.' : 'Access Denied: Only Chef/Admin can access settings.', 'warning');
+      navigate('/');
+    }
+  }, [mongoUser, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-4 border-accentPurple border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!mongoUser || mongoUser.role !== 'admin') {
+    return null;
+  }
 
   const [chefName, setChefName] = useState(() => {
     const lang = localStorage.getItem('language') || 'en';
