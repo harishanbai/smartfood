@@ -10,6 +10,7 @@ import Calendar from './pages/Calendar';
 import Statistics from './pages/Statistics';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
+import Payment from './pages/Payment';
 import Login from './pages/Login';
 import { NotificationProvider } from './context/NotificationContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -77,6 +78,7 @@ const MainLayout = () => {
               <Route path="/statistics" element={<Statistics />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/payment" element={<Payment />} />
             </Routes>
           </div>
         </main>

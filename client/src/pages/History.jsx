@@ -87,7 +87,6 @@ const History = () => {
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
         {/* Search */}
         <div className="relative w-full md:max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"
             placeholder={t('history.searchPlaceholder')}
@@ -95,6 +94,7 @@ const History = () => {
             onChange={(e) => setSearch(e.target.value)}
             className="w-full glass-panel pl-12 pr-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-gray-400 text-sm focus:outline-none focus:border-accentPurple/50 transition-all"
           />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10 pointer-events-none" />
         </div>
 
         {/* Month Filter */}
@@ -223,7 +223,7 @@ const History = () => {
               const nonVegFood = menu.nonVegFoodId;
               if (!vegFood) return null;
               return (
-                <div 
+                <div
                   key={menu._id}
                   className="glass-panel rounded-2xl p-4 border border-white/5 flex flex-col items-stretch gap-4 hover:border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all"
                 >
@@ -280,7 +280,7 @@ const History = () => {
                         <span className="text-gray-200 font-semibold">{formatDateLabel(menu.date)}</span>
                       </div>
                     </div>
-                    
+
                     <div className="text-right">
                       <div className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">{t('history.generatedAt')}</div>
                       <span className="text-gray-300 font-mono font-medium">

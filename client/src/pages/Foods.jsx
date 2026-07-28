@@ -215,7 +215,6 @@ const Foods = () => {
         <div className="w-full md:max-w-2xl flex flex-col gap-3">
           {/* Search input */}
           <div className="relative w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
               placeholder={t('foods.searchPlaceholder')}
@@ -223,6 +222,7 @@ const Foods = () => {
               onChange={(e) => setSearch(e.target.value)}
               className="w-full glass-panel pl-12 pr-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-gray-400 text-sm focus:outline-none focus:border-accentPurple/50 focus:shadow-[0_0_15px_rgba(168,85,247,0.15)] transition-all"
             />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10 pointer-events-none" />
           </div>
           {/* Category display at bottom of search bar */}
           <div className="flex flex-wrap gap-2">

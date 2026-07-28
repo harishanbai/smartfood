@@ -384,8 +384,13 @@ export const resetPassword = async (req, res) => {
 
     // Update password in Firebase Authentication via Admin SDK
     try {
-      const { getAuth } = await import('firebase-admin/auth');
-      await getAuth().updateUser(user.uid, { password: newPassword });
+      const { getApps } = await import('firebase-admin/app');
+      if (getApps().length > 0) {
+        const { getAuth } = await import('firebase-admin/auth');
+        await getAuth().updateUser(user.uid, { password: newPassword });
+      } else {
+        console.warn('[MockAuth] Skipping Firebase password update in mock mode.');
+      }
     } catch (firebaseError) {
       console.error('[ResetPassword] Firebase password update error:', firebaseError.message);
       return res.status(500).json({

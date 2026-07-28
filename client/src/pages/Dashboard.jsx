@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Sparkles, RefreshCw, AlertCircle, CalendarRange, Bell, CheckCircle,
-  Sun, Moon, Star, Flame, Info, Calendar, MessageSquare
+  Sun, Moon, Star, Flame, Info, Calendar, MessageSquare, CreditCard
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { menuApi, foodApi, tamilCalendarApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { getImageUrl } from '../utils/imageUtils';
@@ -172,6 +173,7 @@ const Dashboard = () => {
   const [openDropdown, setOpenDropdown] = useState(null); // 'today' | 'tomorrow' | null
   const { addNotification } = useNotifications();
   const { language, t } = useLanguage();
+  const navigate = useNavigate();
   const carouselTriggerRef = useRef(null);
 
   useEffect(() => {
@@ -378,6 +380,25 @@ const Dashboard = () => {
           <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-accentPurple animate-pulse" />
         </button>
         <NotificationsPanel isOpen={notifOpen} onClose={() => setNotifOpen(false)} />
+      </div>
+
+      {/* Quick Billing Alert */}
+      <div className="mb-6 glass-panel rounded-2xl border border-white/5 bg-gradient-to-r from-accentPurple/10 via-accentOrange/5 to-transparent p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-xl bg-accentPurple/20 flex items-center justify-center text-accentPurple">
+            <CreditCard className="h-5 w-5" />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-white">{language === 'ta' ? 'மதிய உணவு சந்தா கணக்கு' : 'Active Meal Subscription Account'}</h4>
+            <p className="text-xs text-gray-400 mt-0.5">{language === 'ta' ? 'கட்டண விவரங்களை சரிபார்த்து, UPI QR அல்லது வங்கிப் பரிமாற்றம் மூலம் தொகையைச் செலுத்தவும்.' : 'Check payment details or scan UPI QR code to keep your meal subscription active.'}</p>
+          </div>
+        </div>
+        <button
+          onClick={() => navigate('/payment')}
+          className="w-full sm:w-auto px-4 py-2 bg-white/10 hover:bg-white/15 text-white border border-white/10 text-xs font-bold rounded-xl transition-all cursor-pointer min-h-[38px] text-center"
+        >
+          {language === 'ta' ? 'பணம் செலுத்து' : 'Pay Now'}
+        </button>
       </div>
 
       {/* Main Dashboard Layout */}

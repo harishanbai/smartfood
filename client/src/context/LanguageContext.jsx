@@ -13,6 +13,7 @@ const translations = {
       calendar: "Calendar",
       statistics: "Statistics",
       settings: "Settings",
+      payment: "Payments",
       save: "Save",
       cancel: "Cancel",
       delete: "Delete",
@@ -172,7 +173,17 @@ const translations = {
       chefNamePlaceholder: "e.g. Ramu",
       chefPhonePlaceholder: "e.g. +919876543210",
       btnSaveChef: "Save Chef Config",
-      chefConfigSaved: "Chef settings saved successfully!"
+      chefConfigSaved: "Chef settings saved successfully!",
+      paymentConfig: "Payment & QR Configuration",
+      paymentConfigSub: "Configure UPI and Bank details for customer billing.",
+      upiId: "UPI ID",
+      upiName: "Display Name (UPI Account)",
+      upiAmount: "Default Billing Amount (₹)",
+      bankName: "Bank Name",
+      bankAcc: "Bank Account Number",
+      bankIfsc: "Bank IFSC Code",
+      btnSavePayment: "Save Payment Config",
+      paymentConfigSaved: "Payment configuration saved successfully!"
     }
   },
   ta: {
@@ -183,6 +194,7 @@ const translations = {
       calendar: "நாட்காட்டி",
       statistics: "புள்ளிவிவரங்கள்",
       settings: "அமைப்புகள்",
+      payment: "பணம் செலுத்துதல்",
       save: "சேமி",
       cancel: "ரத்துசெய்",
       delete: "அழி",
@@ -342,7 +354,17 @@ const translations = {
       chefNamePlaceholder: "எ.கா. ராமு",
       chefPhonePlaceholder: "எ.கா. +919876543210",
       btnSaveChef: "அமைப்புகளைச் சேமி",
-      chefConfigSaved: "சமையல்காரர் அமைப்புகள் வெற்றிகரமாகச் சேமிக்கப்பட்டன!"
+      chefConfigSaved: "சமையல்காரர் அமைப்புகள் வெற்றிகரமாகச் சேமிக்கப்பட்டன!",
+      paymentConfig: "பணம் மற்றும் QR குறியீடு அமைப்புகள்",
+      paymentConfigSub: "வாடிக்கையாளர் கட்டணத்திற்கான UPI மற்றும் வங்கி விவரங்களை உள்ளமைக்கவும்.",
+      upiId: "UPI முகவரி (UPI ID)",
+      upiName: "கணக்கு பெயர் (UPI Account Name)",
+      upiAmount: "கட்டணத் தொகை (₹)",
+      bankName: "வங்கி பெயர்",
+      bankAcc: "வங்கி கணக்கு எண்",
+      bankIfsc: "IFSC குறியீடு",
+      btnSavePayment: "கட்டண அமைப்புகளைச் சேமி",
+      paymentConfigSaved: "கட்டண அமைப்புகள் வெற்றிகரமாகச் சேமிக்கப்பட்டன!"
     }
   }
 };

@@ -10,7 +10,8 @@ import {
   ChefHat,
   LogOut,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  CreditCard
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -40,6 +41,7 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
     { name: t('common.calendar'), path: '/calendar', icon: Calendar },
     { name: t('common.statistics'), path: '/statistics', icon: BarChart3 },
     { name: t('common.settings'), path: '/settings', icon: Settings },
+    { name: t('common.payment'), path: '/payment', icon: CreditCard },
   ];
 
   return (
