@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, QrCode, ClipboardCheck, ArrowLeft, RefreshCw, CheckCircle2, IndianRupee, Landmark, History, Clock, Settings } from 'lucide-react';
+import { CreditCard, QrCode, ClipboardCheck, ArrowLeft, RefreshCw, CheckCircle2, IndianRupee, Landmark, History, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -22,7 +22,6 @@ const Payment = () => {
   const [referenceNo, setReferenceNo] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [transactions, setTransactions] = useState([]);
-  const [isConfigOpen, setIsConfigOpen] = useState(false);
 
   useEffect(() => {
     // Load config from localStorage
@@ -106,20 +105,6 @@ const Payment = () => {
     setCustomAmount(String(val));
   };
 
-  const handleSaveConfig = (e) => {
-    e.preventDefault();
-    localStorage.setItem('payment_upiId', upiId.trim());
-    localStorage.setItem('payment_upiName', upiName.trim());
-    localStorage.setItem('payment_upiAmount', amount.trim());
-    localStorage.setItem('payment_bankName', bankName.trim());
-    localStorage.setItem('payment_bankAcc', bankAcc.trim());
-    localStorage.setItem('payment_bankIfsc', bankIfsc.trim());
-    
-    window.dispatchEvent(new Event('payment-config-change'));
-    addNotification(t('settings.paymentConfigSaved') || 'Payment configuration saved successfully!', 'success');
-    setIsConfigOpen(false);
-  };
-
   return (
     <div className="min-h-screen pb-12 w-full overflow-x-hidden">
       {/* Header Back button */}
@@ -139,155 +124,18 @@ const Payment = () => {
           <div className="glass-panel rounded-[24px] p-6 border border-white/5 relative overflow-hidden">
             <div className="absolute -right-20 -top-20 w-48 h-48 bg-accentPurple/10 rounded-full blur-[80px] pointer-events-none" />
             
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <CreditCard className="h-6 w-6 text-accentPurple" />
-                  {isConfigOpen 
-                    ? (language === 'ta' ? 'பணம் செலுத்தும் கட்டமைப்பு' : 'Configure Payments') 
-                    : (language === 'ta' ? 'பணம் செலுத்துதல்' : 'Payments & Billing')
-                  }
-                </h2>
-                {!isConfigOpen && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    {language === 'ta' 
-                      ? 'உங்கள் மதிய உணவுத் தொகையைச் செலுத்த UPI QR குறியீட்டை ஸ்கேன் செய்யவும் அல்லது வங்கி விவரங்களைப் பயன்படுத்தவும்.' 
-                      : 'Scan the UPI QR code or utilize the bank transfer details below to settle your meal invoices.'}
-                  </p>
-                )}
-              </div>
-              <button
-                onClick={() => setIsConfigOpen(!isConfigOpen)}
-                className={`p-2.5 rounded-xl border transition-all cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center ${
-                  isConfigOpen 
-                    ? 'bg-accentPurple/25 border-accentPurple text-white' 
-                    : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
-                }`}
-                title={language === 'ta' ? 'வடிவமைக்கவும்' : 'Configure Payment Details'}
-              >
-                <Settings className="h-4 w-4" />
-              </button>
-            </div>
+            <h2 className="text-xl font-bold text-white mb-1 flex items-center gap-2">
+              <CreditCard className="h-6 w-6 text-accentPurple" />
+              {language === 'ta' ? 'பணம் செலுத்துதல்' : 'Payments & Billing'}
+            </h2>
+            <p className="text-xs text-gray-400 mb-6">
+              {language === 'ta' 
+                ? 'உங்கள் மதிய உணவுத் தொகையைச் செலுத்த UPI QR குறியீட்டை ஸ்கேன் செய்யவும் அல்லது வங்கி விவரங்களைப் பயன்படுத்தவும்.' 
+                : 'Scan the UPI QR code or utilize the bank transfer details below to settle your meal invoices.'}
+            </p>
 
-            {isConfigOpen ? (
-              <form onSubmit={handleSaveConfig} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('settings.upiId') || 'UPI ID'}</label>
-                    <input
-                      type="text"
-                      required
-                      value={upiId}
-                      onChange={(e) => setUpiId(e.target.value)}
-                      placeholder="e.g. name@okaxis"
-                      className="w-full glass-panel px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('settings.upiName') || 'Payee Name'}</label>
-                    <input
-                      type="text"
-                      required
-                      value={upiName}
-                      onChange={(e) => setUpiName(e.target.value)}
-                      placeholder="e.g. Vaseegrah Veda Catering"
-                      className="w-full glass-panel px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('settings.upiAmount') || 'Default Amount'}</label>
-                    <input
-                      type="number"
-                      required
-                      value={amount}
-                      onChange={(e) => {
-                        setAmount(e.target.value);
-                        setCustomAmount(e.target.value);
-                      }}
-                      placeholder="120"
-                      className="w-full glass-panel px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('settings.bankName') || 'Bank Name'}</label>
-                    <select
-                      value={bankName}
-                      onChange={(e) => setBankName(e.target.value)}
-                      className="w-full glass-panel px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all [&>option]:bg-bgCard"
-                    >
-                      <option value="State Bank of India">State Bank of India</option>
-                      <option value="HDFC Bank">HDFC Bank</option>
-                      <option value="ICICI Bank">ICICI Bank</option>
-                      <option value="Axis Bank">Axis Bank</option>
-                      <option value="Kotak Mahindra Bank">Kotak Mahindra Bank</option>
-                      <option value="Punjab National Bank">Punjab National Bank</option>
-                      <option value="Bank of Baroda">Bank of Baroda</option>
-                      <option value="Canara Bank">Canara Bank</option>
-                      <option value="Indian Bank">Indian Bank</option>
-                      <option value="Union Bank of India">Union Bank of India</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('settings.bankAcc') || 'Account Number'}</label>
-                    <input
-                      type="text"
-                      required
-                      value={bankAcc}
-                      onChange={(e) => setBankAcc(e.target.value)}
-                      placeholder="e.g. 34567890123"
-                      className="w-full glass-panel px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('settings.bankIfsc') || 'IFSC Code'}</label>
-                    <input
-                      type="text"
-                      required
-                      value={bankIfsc}
-                      onChange={(e) => setBankIfsc(e.target.value)}
-                      placeholder="e.g. SBIN0001234"
-                      className="w-full glass-panel px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-4 border-t border-white/5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // Reload original values
-                      setUpiId(localStorage.getItem('payment_upiId') || 'vaseegrahveda@okaxis');
-                      setUpiName(localStorage.getItem('payment_upiName') || 'Vaseegrah Veda Catering');
-                      const amt = localStorage.getItem('payment_upiAmount') || '120';
-                      setAmount(amt);
-                      setCustomAmount(amt);
-                      setBankName(localStorage.getItem('payment_bankName') || 'State Bank of India');
-                      setBankAcc(localStorage.getItem('payment_bankAcc') || '34567890123');
-                      setBankIfsc(localStorage.getItem('payment_bankIfsc') || 'SBIN0001234');
-                      setIsConfigOpen(false);
-                    }}
-                    className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-semibold rounded-xl transition-all cursor-pointer min-h-[36px]"
-                  >
-                    {language === 'ta' ? 'ரத்து செய்' : 'Cancel'}
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2 bg-gradient-to-r from-accentPurple to-accentOrange text-white text-xs font-bold rounded-xl shadow-lg transition-all cursor-pointer min-h-[36px]"
-                  >
-                    {language === 'ta' ? 'சேமி' : 'Save Changes'}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <>
-                {/* Tab Selectors */}
-                <div className="flex border-b border-white/10 mb-6">
+            {/* Tab Selectors */}
+            <div className="flex border-b border-white/10 mb-6">
               <button
                 onClick={() => setActiveTab('upi')}
                 className={`flex-1 pb-3 text-sm font-semibold transition-all border-b-2 cursor-pointer flex items-center justify-center gap-2 ${
@@ -498,8 +346,6 @@ const Payment = () => {
                 )}
               </button>
             </div>
-              </>
-            )}
           </div>
         </div>
 
