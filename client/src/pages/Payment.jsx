@@ -19,6 +19,7 @@ const Payment = () => {
   
   const [customAmount, setCustomAmount] = useState('120');
   const [isCopied, setIsCopied] = useState('');
+  const [referenceNo, setReferenceNo] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [transactions, setTransactions] = useState([]);
 
@@ -83,7 +84,7 @@ const Payment = () => {
 
     setTimeout(() => {
       const newTx = {
-        id: `TXN${Math.floor(10000 + Math.random() * 90000)}`,
+        id: referenceNo.trim() || `TXN${Math.floor(10000 + Math.random() * 90000)}`,
         date: new Date().toLocaleDateString(),
         desc: customAmount === amount ? 'Daily Lunch Subscription' : 'Custom Meal Payment',
         amount: customAmount,
@@ -94,6 +95,7 @@ const Payment = () => {
       const updated = [newTx, ...transactions];
       setTransactions(updated);
       localStorage.setItem('payment_transactions', JSON.stringify(updated));
+      setReferenceNo('');
       setSubmitting(false);
       addNotification('Payment successfully settled and recorded! 🎉', 'success');
     }, 1500);
@@ -208,9 +210,25 @@ const Payment = () => {
                 </div>
 
                 {/* UPI Account name / ID */}
-                <div className="w-full p-4 rounded-2xl bg-white/3 border border-white/5 text-center text-xs space-y-1 relative">
-                  <p className="text-gray-400">{language === 'ta' ? 'UPI கணக்கு பெயர்' : 'UPI Payee Name'}: <span className="text-white font-bold">{upiName}</span></p>
-                  <p className="text-gray-500 font-mono text-[11px]">{upiId}</p>
+                <div className="w-full p-4 rounded-2xl bg-white/3 border border-white/5 text-center text-xs space-y-2 relative flex flex-col items-center">
+                  <div>
+                    <p className="text-gray-400">{language === 'ta' ? 'UPI கணக்கு பெயர்' : 'UPI Payee Name'}: <span className="text-white font-bold">{upiName}</span></p>
+                    <p className="text-gray-500 font-mono text-[11px] mt-0.5">{upiId}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleCopy(upiId, 'UPI ID')}
+                      className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] font-semibold text-gray-300 hover:text-white hover:bg-white/10 cursor-pointer transition-all"
+                    >
+                      {isCopied === 'UPI ID' ? 'Copied ID' : 'Copy UPI ID'}
+                    </button>
+                    <button
+                      onClick={() => handleCopy(upiUrl, 'Payment Link')}
+                      className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] font-semibold text-gray-300 hover:text-white hover:bg-white/10 cursor-pointer transition-all"
+                    >
+                      {isCopied === 'Payment Link' ? 'Copied Link' : 'Copy Pay Link'}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -225,6 +243,12 @@ const Payment = () => {
                       <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Bank Name</p>
                       <p className="text-sm font-bold text-white mt-0.5">{bankName}</p>
                     </div>
+                    <button
+                      onClick={() => handleCopy(bankName, 'Bank Name')}
+                      className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/10 cursor-pointer flex items-center gap-1.5 transition-all"
+                    >
+                      {isCopied === 'Bank Name' ? 'Copied' : 'Copy'}
+                    </button>
                   </div>
 
                   {/* Account Holder Name */}
@@ -233,6 +257,12 @@ const Payment = () => {
                       <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Account Holder Name</p>
                       <p className="text-sm font-bold text-white mt-0.5">{upiName}</p>
                     </div>
+                    <button
+                      onClick={() => handleCopy(upiName, 'Account Holder Name')}
+                      className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/10 cursor-pointer flex items-center gap-1.5 transition-all"
+                    >
+                      {isCopied === 'Account Holder Name' ? 'Copied' : 'Copy'}
+                    </button>
                   </div>
 
                   {/* Account Number */}
@@ -281,6 +311,23 @@ const Payment = () => {
                 </div>
               </div>
             )}
+
+            {/* Reference Number Input */}
+            <div className="mt-4 pt-4 border-t border-white/5">
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+                {activeTab === 'upi' 
+                  ? (language === 'ta' ? 'பரிவர்த்தனை குறிப்பு எண் (Transaction ID)' : 'Transaction ID / Reference Number')
+                  : (language === 'ta' ? 'வங்கி பரிமாற்ற குறிப்பு எண் (UTR / Ref)' : 'Bank Transfer Reference / UTR Number')
+                }
+              </label>
+              <input
+                type="text"
+                value={referenceNo}
+                onChange={(e) => setReferenceNo(e.target.value)}
+                placeholder={activeTab === 'upi' ? "e.g. UPI1234567890" : "e.g. UTR9876543210"}
+                className="w-full glass-panel px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all font-mono"
+              />
+            </div>
 
             {/* Settle Action Button */}
             <div className="mt-6 pt-6 border-t border-white/5">
