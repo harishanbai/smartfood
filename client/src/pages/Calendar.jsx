@@ -53,6 +53,7 @@ const Calendar = () => {
       }
     } catch (err) {
       console.error(err);
+      addNotification(t('calendar.failedFetchFoods'), 'warning');
     }
   };
 

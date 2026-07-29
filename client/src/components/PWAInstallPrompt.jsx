@@ -2,23 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Download, X, Sparkles } from 'lucide-react';
 
 const PWAInstallPrompt = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(window.deferredPrompt || null);
+  const [isVisible, setIsVisible] = useState(!!window.deferredPrompt && !sessionStorage.getItem('pwa_dismissed'));
 
   useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      // Prevent the mini-infobar from appearing on mobile
-      e.preventDefault();
-      // Save the event so it can be triggered later
-      setDeferredPrompt(e);
-      // Check if user has previously dismissed this session
+    const handlePromptAvailable = () => {
+      setDeferredPrompt(window.deferredPrompt);
       const dismissed = sessionStorage.getItem('pwa_dismissed');
       if (!dismissed) {
         setIsVisible(true);
       }
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('pwa-prompt-available', handlePromptAvailable);
 
     // Check if app is already installed or running as standalone
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
@@ -28,14 +24,25 @@ const PWAInstallPrompt = () => {
 
     window.addEventListener('appinstalled', () => {
       console.log('PWA was installed successfully');
+      window.deferredPrompt = null;
       setDeferredPrompt(null);
       setIsVisible(false);
     });
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('pwa-prompt-available', handlePromptAvailable);
     };
   }, []);
+
+  // Auto-hide the popup after 10 seconds of visibility
+  useEffect(() => {
+    if (isVisible) {
+      const timer = setTimeout(() => {
+        setIsVisible(false);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible]);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
@@ -81,7 +88,7 @@ const PWAInstallPrompt = () => {
         </div>
 
         {/* Close Button */}
-        <button 
+        <button
           onClick={handleDismiss}
           className="h-6 w-6 flex items-center justify-center rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-all cursor-pointer flex-shrink-0"
         >

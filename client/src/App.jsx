@@ -48,12 +48,15 @@ const ProtectedRoute = ({ children }) => {
 // Main Layout Wrapper
 const MainLayout = () => {
   const [isCollapsed, setIsCollapsed] = React.useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
+  const location = useLocation();
 
   const toggleSidebar = () => {
     const newVal = !isCollapsed;
     setIsCollapsed(newVal);
     localStorage.setItem('sidebarCollapsed', String(newVal));
   };
+
+  const isDashboard = location.pathname === '/';
 
   return (
     <div className="flex flex-col min-h-screen bg-bgMain text-gray-200 antialiased font-sans overflow-x-hidden w-full">
@@ -63,6 +66,8 @@ const MainLayout = () => {
         
         {/* Floating mobile bottom navigation */}
         <BottomNav />
+
+        {isDashboard && <PWAInstallPrompt />}
 
         {/* Main Content Area */}
         <main className={`flex-1 ml-0 ${isCollapsed ? 'lg:ml-24' : 'lg:ml-72'} p-3 sm:p-5 lg:p-6 pb-24 lg:pb-8 transition-all duration-300 w-full overflow-x-hidden`}>
@@ -122,6 +127,18 @@ function AppRoutes() {
 }
 
 function App() {
+  React.useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      window.deferredPrompt = e;
+      window.dispatchEvent(new Event('pwa-prompt-available'));
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
   return (
     <LanguageProvider>
       <ThemeProvider>
@@ -130,7 +147,6 @@ function App() {
             <ConfirmProvider>
               <Router>
                 <AppRoutes />
-                <PWAInstallPrompt />
               </Router>
             </ConfirmProvider>
           </AuthProvider>

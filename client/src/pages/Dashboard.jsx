@@ -210,6 +210,7 @@ const Dashboard = () => {
       setTodayMenu(null);
       setTomorrowMenu(null);
       setAvailableFoods([]);
+      addNotification(t('dashboard.failedFetch'), 'warning');
     }
   };
 

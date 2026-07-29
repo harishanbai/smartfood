@@ -58,7 +58,8 @@ const translations = {
       skipAlert: "Lunch skipped. Selecting next available menu item...",
       initAlert: "Tomorrow's Lunch menu generation initiated...",
       noAvailableFoods: "No Available Foods Found",
-      noAvailableFoodsSub: "Please add some dishes in the Foods tab and make sure they are toggled as \"Available\" to start generating menus."
+      noAvailableFoodsSub: "Please add some dishes in the Foods tab and make sure they are toggled as \"Available\" to start generating menus.",
+      failedFetch: "Failed to fetch dashboard data"
     },
     foods: {
       title: "Food Items Directory",
@@ -112,6 +113,7 @@ const translations = {
       selectedMenuDetails: "Selected Menu Details",
       noSelectedMenu: "No Menu Generated",
       clickAnyDay: "Click any highlighted day to see details.",
+      failedFetchFoods: "Failed to fetch available food items",
       Sunday: "Sun",
       Monday: "Mon",
       Tuesday: "Tue",
@@ -239,7 +241,8 @@ const translations = {
       skipAlert: "மதிய உணவு தவிர்க்கப்பட்டது. அடுத்த உணவு தேர்ந்தெடுக்கப்படுகிறது...",
       initAlert: "நாளைய மதிய உணவு மெனு உருவாக்கம் தொடங்கப்பட்டது...",
       noAvailableFoods: "கிடைக்கக்கூடிய உணவுகள் எதுவும் இல்லை",
-      noAvailableFoodsSub: "மெனுக்களை உருவாக்கத் தொடங்க தயவுசெய்து 'உணவுகள்' தாவலில் சில உணவுகளைச் சேர்த்து, அவை 'கிடைக்கும்' நிலையில் இருப்பதை உறுதிசெய்யவும்."
+      noAvailableFoodsSub: "மெனுக்களை உருவாக்கத் தொடங்க தயவுசெய்து 'உணவுகள்' தாவலில் சில உணவுகளைச் சேர்த்து, அவை 'கிடைக்கும்' நிலையில் இருப்பதை உறுதிசெய்யவும்.",
+      failedFetch: "டாஷ்போர்டு தரவைப் பெறுவதில் தோல்வி"
     },
     foods: {
       title: "உணவுப் பொருட்களின் கோப்புத்தொகுப்பு",
@@ -293,6 +296,7 @@ const translations = {
       selectedMenuDetails: "தேர்ந்தெடுக்கப்பட்ட மெனு விவரங்கள்",
       noSelectedMenu: "மெனு எதுவும் உருவாக்கப்படவில்லை",
       clickAnyDay: "விவரங்களைக் காண தனிப்படுத்தப்பட்ட எந்த நாளையும் கிளிக் செய்யவும்.",
+      failedFetchFoods: "கிடைக்கக்கூடிய உணவுகளைப் பெறுவதில் தோல்வி",
       Sunday: "ஞாயிறு",
       Monday: "திங்கள்",
       Tuesday: "செவ்வாய்",

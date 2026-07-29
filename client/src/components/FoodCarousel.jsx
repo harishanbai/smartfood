@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Utensils } from 'lucide-react';
+import { foodApi } from '../services/api';
+import { getImageUrl } from '../utils/imageUtils';
 
 const FOOD_ITEMS = [
   {
@@ -46,11 +48,49 @@ const FOOD_ITEMS = [
 ];
 
 const FoodCarousel = () => {
+  const [carouselItems, setCarouselItems] = useState(FOOD_ITEMS);
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [orbitRotation, setOrbitRotation] = useState(0);
+  const [loading, setLoading] = useState(true);
   const shouldReduceMotion = useReducedMotion();
-  const total = FOOD_ITEMS.length;
+  const total = carouselItems.length;
+
+  // Fetch actual food items from backend database on mount
+  useEffect(() => {
+    let active = true;
+    const loadItems = async () => {
+      try {
+        const res = await foodApi.getFoods();
+        if (!active) return;
+        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+          // Map MongoDB food documents to match Carousel items structure
+          const mapped = res.data.slice(0, 6).map((food, index) => ({
+            id: food._id || index,
+            name: food.name,
+            category: food.category || 'Special',
+            description: food.description,
+            image: getImageUrl(food),
+            badge: food.foodType === 'non-veg' ? '🍗 Non-Veg' : '🌿 Pure Veg'
+          }));
+          setCarouselItems(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to fetch food items for carousel, falling back to mock data:', err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    loadItems();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Clamping activeIndex on items list change to avoid index out of bounds
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [carouselItems.length]);
 
   // Continuous smooth orbit rotation
   useEffect(() => {
@@ -63,6 +103,7 @@ const FoodCarousel = () => {
 
   // Auto-advance featured dish every 5s
   useEffect(() => {
+    if (total <= 1) return;
     const timer = setInterval(() => {
       setDirection(1);
       setActiveIndex(prev => (prev + 1) % total);
@@ -71,11 +112,13 @@ const FoodCarousel = () => {
   }, [total]);
 
   const handleNext = useCallback(() => {
+    if (total <= 1) return;
     setDirection(1);
     setActiveIndex(prev => (prev + 1) % total);
   }, [total]);
 
   const handlePrev = useCallback(() => {
+    if (total <= 1) return;
     setDirection(-1);
     setActiveIndex(prev => (prev - 1 + total) % total);
   }, [total]);
@@ -86,7 +129,7 @@ const FoodCarousel = () => {
     setActiveIndex(index);
   };
 
-  const currentFood = FOOD_ITEMS[activeIndex];
+  const currentFood = carouselItems[activeIndex] || carouselItems[0] || FOOD_ITEMS[0];
   const orbitRadius = 148;
 
   return (
@@ -126,7 +169,7 @@ const FoodCarousel = () => {
           className="absolute inset-0"
           style={{ transform: `rotate(${orbitRotation}deg)` }}
         >
-          {FOOD_ITEMS.map((food, idx) => {
+          {carouselItems.map((food, idx) => {
             const angleDeg = (idx * 360) / total;
             const angleRad = (angleDeg * Math.PI) / 180;
             const x = Math.cos(angleRad) * orbitRadius;
@@ -296,7 +339,7 @@ const FoodCarousel = () => {
         </motion.button>
 
         <div className="flex items-center gap-1.5">
-          {FOOD_ITEMS.map((_, i) => (
+          {carouselItems.map((_, i) => (
             <button
               key={i}
               onClick={() => handleSelect(i)}

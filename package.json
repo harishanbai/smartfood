@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "npm run dev --prefix client",
+    "dev": "node dev.js",
     "start": "npm start --prefix server",
     "install:all": "npm install --prefix client && npm install --prefix server"
   }
