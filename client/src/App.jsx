@@ -65,7 +65,7 @@ const MainLayout = () => {
         <BottomNav />
 
         {/* Main Content Area */}
-        <main className={`flex-1 ml-0 ${isCollapsed ? 'lg:ml-24' : 'lg:ml-72'} p-4 sm:p-6 md:p-8 pb-24 lg:pb-8 transition-all duration-300 w-full overflow-x-hidden`}>
+        <main className={`flex-1 ml-0 ${isCollapsed ? 'lg:ml-24' : 'lg:ml-72'} p-3 sm:p-5 lg:p-6 pb-24 lg:pb-8 transition-all duration-300 w-full overflow-x-hidden`}>
           {/* Top digital date/clock, and greet bar */}
           <TopSection />
 

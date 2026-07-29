@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { 
   ChefHat, 
   Calendar, 
   HeartHandshake, 
   Globe, 
   Clock, 
-  ShieldCheck, 
   Lock, 
   Eye, 
   EyeOff, 
@@ -16,14 +16,11 @@ import {
 } from 'lucide-react';
 import { auth, confirmPasswordReset, verifyPasswordResetCode } from '../firebase';
 import { authApi } from '../services/api';
-import { useLanguage } from '../context/LanguageContext';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { language, setLanguage } = useLanguage();
 
-  // Extract params
   const oobCode = searchParams.get('oobCode');
   const token = searchParams.get('token');
   const emailParam = searchParams.get('email') || '';
@@ -40,10 +37,8 @@ const ResetPassword = () => {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
-  // Check code or token validity on mount
   useEffect(() => {
     const verifyResetParams = async () => {
-      // 1. Firebase standard oobCode flow
       if (oobCode) {
         try {
           const emailFromCode = await verifyPasswordResetCode(auth, oobCode);
@@ -66,7 +61,6 @@ const ResetPassword = () => {
         return;
       }
 
-      // 2. Custom backend token flow
       if (token && emailParam) {
         setValidCode(true);
         setUserEmail(emailParam);
@@ -74,7 +68,6 @@ const ResetPassword = () => {
         return;
       }
 
-      // 3. No parameters provided
       setValidCode(false);
       setError('No reset code or token found in the URL link. Please request a new password reset link.');
       setVerifying(false);
@@ -83,7 +76,6 @@ const ResetPassword = () => {
     verifyResetParams();
   }, [oobCode, token, emailParam]);
 
-  // Password rules validation
   const rules = {
     length: newPassword.length >= 8,
     upper: /[A-Z]/.test(newPassword),
@@ -103,10 +95,8 @@ const ResetPassword = () => {
 
     try {
       if (oobCode) {
-        // Reset via Firebase Auth Client SDK
         await confirmPasswordReset(auth, oobCode, newPassword);
       } else if (token && emailParam) {
-        // Reset via Backend Nodemailer / MongoDB Token API
         const res = await authApi.resetPassword(token, emailParam, newPassword);
         if (!res?.data?.success) {
           throw new Error(res?.data?.message || 'Failed to reset password.');
@@ -132,15 +122,13 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-slate-900 overflow-x-hidden font-sans">
+    <div className="min-h-screen flex flex-col md:flex-row bg-slate-900 overflow-x-hidden font-sans relative">
       
-      {/* LEFT PANEL: Branding & Feature Highlights */}
-      <div className="w-full md:w-1/2 bg-gradient-to-br from-emerald-800 via-teal-900 to-slate-900 p-8 sm:p-12 text-white flex flex-col justify-between relative overflow-hidden">
-        {/* Background Ambient Glows */}
+      {/* LEFT PANEL */}
+      <div className="w-full md:w-[55%] bg-gradient-to-br from-emerald-800 via-teal-900 to-slate-900 p-8 sm:p-12 md:pr-16 text-white flex flex-col justify-between relative overflow-visible">
         <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Top Branding Logo */}
         <div className="relative z-10 flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shadow-inner">
             <ChefHat className="h-7 w-7" />
@@ -151,7 +139,6 @@ const ResetPassword = () => {
           </div>
         </div>
 
-        {/* Center Slogan & Features */}
         <div className="relative z-10 my-8 space-y-6">
           <div className="space-y-2">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
@@ -163,7 +150,6 @@ const ResetPassword = () => {
             </p>
           </div>
 
-          {/* Feature Highlights */}
           <div className="space-y-3 pt-2">
             <div className="flex items-center gap-3 text-sm font-medium text-emerald-100/90">
               <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 flex-shrink-0">
@@ -195,7 +181,6 @@ const ResetPassword = () => {
           </div>
         </div>
 
-        {/* Meal Display Image */}
         <div className="relative z-10 mt-4 flex justify-center items-center">
           <div className="relative group w-full max-w-sm">
             <img 
@@ -214,25 +199,46 @@ const ResetPassword = () => {
 
       </div>
 
-      {/* RIGHT PANEL: Clean White Authentication Section */}
-      <div className="w-full md:w-1/2 bg-white p-6 sm:p-10 md:p-12 flex flex-col justify-between relative min-h-screen md:min-h-0">
-        
-        {/* Language Selector Top Right */}
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={() => setLanguage(language === 'en' ? 'ta' : 'en')}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-100 transition-all cursor-pointer shadow-sm"
-          >
-            <Globe className="h-4 w-4 text-emerald-600" />
-            <span>{language === 'en' ? 'English' : 'தமிழ்'}</span>
-            <span className="text-[10px] text-slate-400 font-mono">▼</span>
-          </button>
-        </div>
+      {/* ANIMATED FLOWING CURVE DIVIDER */}
+      <div className="hidden md:block absolute top-0 bottom-0 left-[55%] w-[80px] z-30 pointer-events-none" style={{ transform: 'translateX(-50%)' }}>
+        <motion.svg
+          viewBox="0 0 80 900"
+          preserveAspectRatio="none"
+          className="w-full h-full drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+          animate={{ y: [0, -12, 12, 0] }}
+          transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <defs>
+            <linearGradient id="rpWaveFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#064e3b" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#0d9488" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#064e3b" stopOpacity="0.6" />
+            </linearGradient>
+          </defs>
+          <path d="M 80 0 C 30 120, 10 200, 35 320 C 60 440, 5 520, 25 640 C 45 760, 15 840, 80 900 L 80 0 Z" fill="white" />
+          <path d="M 0 0 C 50 120, 70 200, 45 320 C 20 440, 75 520, 55 640 C 35 760, 65 840, 0 900 L 0 0 Z" fill="url(#rpWaveFill)" />
+        </motion.svg>
+      </div>
 
+      {/* MOBILE HORIZONTAL WAVE */}
+      <div className="md:hidden relative -mt-3 w-full h-10 z-30 pointer-events-none">
+        <motion.svg
+          viewBox="0 0 1440 120"
+          preserveAspectRatio="none"
+          className="w-full h-full"
+          animate={{ x: [0, -15, 0] }}
+          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <path d="M0,40 C240,100 480,0 720,60 C960,120 1200,20 1440,80 L1440,120 L0,120 Z" fill="white" />
+        </motion.svg>
+      </div>
+
+      {/* RIGHT PANEL */}
+      <div className="w-full md:w-[45%] bg-white p-6 sm:p-10 md:p-12 flex items-center justify-center relative min-h-screen md:min-h-0">
+        
         {/* Main Form Area */}
-        <div className="max-w-md w-full mx-auto my-auto space-y-5 text-center">
+        <div className="max-w-md w-full my-auto space-y-5 text-center">
           
-          {/* Heading */}
           <div className="space-y-1">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               Create New Password 🔒
@@ -244,14 +250,6 @@ const ResetPassword = () => {
                 'Enter a strong new password to update your account'
               )}
             </p>
-          </div>
-
-          {/* Section Tab Header */}
-          <div className="flex flex-col items-center justify-center pb-1">
-            <span className="text-emerald-700 font-bold text-xs tracking-wide uppercase">
-              Secure Account Update
-            </span>
-            <div className="w-12 h-1 bg-emerald-600 rounded-full mt-1 shadow-sm" />
           </div>
 
           {verifying ? (
@@ -317,7 +315,6 @@ const ResetPassword = () => {
                 </div>
               )}
 
-              {/* New Password Input */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                   New Password
@@ -342,7 +339,6 @@ const ResetPassword = () => {
                 </div>
               </div>
 
-              {/* Confirm Password Input */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                   Confirm New Password
@@ -367,7 +363,6 @@ const ResetPassword = () => {
                 </div>
               </div>
 
-              {/* Password Requirements List */}
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs text-slate-600">
                 <div className="flex items-center gap-2">
                   <span className={rules.length ? 'text-emerald-600 font-bold' : 'text-slate-400'}>
@@ -415,23 +410,6 @@ const ResetPassword = () => {
             </form>
           )}
 
-        </div>
-
-        {/* BOTTOM SECURITY CARD */}
-        <div className="mt-6 pt-4">
-          <div className="max-w-md mx-auto bg-emerald-50/80 border border-emerald-100 p-3.5 rounded-2xl flex items-center gap-3 text-left">
-            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700 flex-shrink-0">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="text-[11px] font-bold text-emerald-950 uppercase tracking-wider">
-                Secure • Simple • Always Free
-              </h4>
-              <p className="text-xs text-emerald-700 font-medium">
-                Your data is safe with us.
-              </p>
-            </div>
-          </div>
         </div>
 
       </div>

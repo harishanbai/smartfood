@@ -89,11 +89,21 @@ const TopSection = () => {
   };
 
   return (
-    <header className="header-container mb-8 w-full relative">
+    <header className="header-container mb-4 w-full relative">
       {/* Left Section */}
       <div className="left-section">
         <h2 className="greeting-title text-white tracking-tight">
-          {getGreeting()}, {chefName || (currentUser?.displayName ? currentUser.displayName.split(' ')[0] : t('topSection.master'))} 👋
+          {(() => {
+            let name = currentUser?.displayName || chefName || '';
+            // If the name is essentially a phone number (digits and optional + or dashes), treat it as empty
+            if (/^\+?[\d\s-]+$/.test(name)) name = '';
+            name = name ? name.trim().split(' ')[0] : '';
+            
+            if (name && !['undefined', 'null', 'user'].includes(name.toLowerCase())) {
+              return `${getGreeting()}, ${name} 👋`;
+            }
+            return `${getGreeting()} 👋`;
+          })()}
         </h2>
         <p className="subtitle-text text-gray-500">
           {t('topSection.subtitle')}
