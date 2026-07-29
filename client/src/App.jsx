@@ -21,6 +21,7 @@ import { ConfirmProvider } from './context/ConfirmContext';
 import SignUp from './pages/SignUp';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -129,6 +130,7 @@ function App() {
             <ConfirmProvider>
               <Router>
                 <AppRoutes />
+                <PWAInstallPrompt />
               </Router>
             </ConfirmProvider>
           </AuthProvider>

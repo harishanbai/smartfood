@@ -1,0 +1,30 @@
+{
+  "short_name": "Veda Catering",
+  "name": "Vaseegrah Veda Catering - Smart Lunch",
+  "description": "Premium lunch scheduling and smart recipe recommendation manager.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#10b981",
+  "display": "standalone",
+  "orientation": "portrait"
+}
