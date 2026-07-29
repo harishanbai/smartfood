@@ -603,14 +603,14 @@ const Login = () => {
 
         {/* ── RIGHT PANEL (White Background with Login Card) ── */}
         <div
-          className="w-[45%] flex items-center justify-center relative px-8 py-6 h-full z-10"
+          className="w-[45%] flex items-center justify-center px-8 py-6 h-full"
           style={{ background: 'white' }}
         >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
-            className="w-full max-w-[370px] relative"
+            className="w-full max-w-[370px] relative z-30"
           >
             {/* Floating Login Card */}
             <div
