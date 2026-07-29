@@ -1,683 +1,828 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-  ChefHat, 
-  Calendar, 
-  HeartHandshake, 
-  Globe, 
-  Clock, 
-  CheckSquare, 
-  ShieldCheck, 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  AlertCircle, 
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ChefHat,
+  Calendar,
+  HeartHandshake,
+  Globe,
+  Clock,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
   ArrowRight,
   Phone,
   MessageSquare,
   CheckCircle2,
   X,
   RefreshCw,
-  ArrowLeft
+  ArrowLeft,
+  ShieldCheck,
+  ChevronsRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
-import { useLanguage } from '../context/LanguageContext';
+import FoodCarousel from '../components/FoodCarousel';
 
+/* ─── Green palette tokens (exact match to reference image) ─── */
+const C = {
+  greenPrimary: '#00c853',
+  greenLight:   '#00e676',
+  greenDeep:    '#008537',
+  darkBg:       '#021b0e',
+  darkMid:      '#052c17',
+  darkSoft:     '#073b1e',
+  cream:        '#ffffff',
+  creamOff:     '#f7fbf8',
+  textDark:     '#0f172a',
+  textMuted:    '#64748b',
+};
+
+/* ─── feature list ─── */
+const FEATURES = [
+  { icon: <Calendar className="h-4 w-4" />, title: 'Auto Generate Menu',      desc: 'Fresh menu everyday at 8:00 PM' },
+  { icon: <Globe className="h-4 w-4" />,    title: 'Tamil & English Support', desc: 'Use in your language, your way.' },
+  { icon: <HeartHandshake className="h-4 w-4" />, title: 'Veg & Non-Veg Rules', desc: 'Balanced. Flexible. Hassle-free.' },
+  { icon: <Clock className="h-4 w-4" />,    title: 'Saves Time & Effort',     desc: 'Less planning. More happiness.' },
+];
+
+/* ══════════════════════════════════════════════════════════════════
+   LOGIN COMPONENT
+══════════════════════════════════════════════════════════════════ */
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail]             = useState('');
+  const [password, setPassword]       = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe]   = useState(true);
+  const [loading, setLoading]         = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError]             = useState('');
 
-  // WhatsApp Auth Modal State
+  // WhatsApp
   const [isWhatsappModalOpen, setIsWhatsappModalOpen] = useState(false);
   const [countryCode, setCountryCode] = useState('+91');
-  const [phoneInput, setPhoneInput] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [otpStep, setOtpStep] = useState('phone'); // 'phone' | 'otp'
+  const [phoneInput, setPhoneInput]   = useState('');
+  const [otpCode, setOtpCode]         = useState('');
+  const [otpStep, setOtpStep]         = useState('phone');
   const [whatsappLoading, setWhatsappLoading] = useState(false);
-  const [whatsappError, setWhatsappError] = useState('');
+  const [whatsappError, setWhatsappError]     = useState('');
   const [whatsappSuccess, setWhatsappSuccess] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
 
-  const { 
-    loginWithEmailPassword, 
-    loginWithGoogle, 
-    requestWhatsappOtp, 
-    verifyWhatsappOtp 
-  } = useAuth();
+  const { loginWithEmailPassword, loginWithGoogle, requestWhatsappOtp, verifyWhatsappOtp } = useAuth();
   const { addNotification } = useNotifications();
-  const { language, setLanguage } = useLanguage();
   const navigate = useNavigate();
 
-  // Resend Timer Countdown
   useEffect(() => {
-    let interval = null;
-    if (resendTimer > 0) {
-      interval = setInterval(() => {
-        setResendTimer((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
+    let t = null;
+    if (resendTimer > 0) t = setInterval(() => setResendTimer(p => p - 1), 1000);
+    return () => clearInterval(t);
   }, [resendTimer]);
 
   const validateForm = () => {
-    if (!email.trim()) {
-      setError('Email address is required.');
-      return false;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      setError('Please enter a valid email address.');
-      return false;
-    }
-    if (!password) {
-      setError('Password is required.');
-      return false;
-    }
-    setError('');
-    return true;
+    if (!email.trim())                                    { setError('Email address is required.');           return false; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError('Please enter a valid email address.');  return false; }
+    if (!password)                                        { setError('Password is required.');                 return false; }
+    setError(''); return true;
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!validateForm() || loading) return;
-
-    setLoading(true);
-    setError('');
-
+    setLoading(true); setError('');
     const res = await loginWithEmailPassword(email.trim(), password);
     setLoading(false);
-
-    if (res.success) {
-      addNotification('Login Successful! Welcome back 🎉', 'success');
-      navigate('/');
-    } else {
-      setError(res.error || 'Failed to sign in. Please check your credentials.');
-    }
+    if (res.success) { addNotification('Login Successful! Welcome back 🎉', 'success'); navigate('/'); }
+    else setError(res.error || 'Failed to sign in. Please check your credentials.');
   };
 
   const handleGoogleSignIn = async () => {
     if (googleLoading) return;
-    setGoogleLoading(true);
-    setError('');
-
+    setGoogleLoading(true); setError('');
     const res = await loginWithGoogle();
     setGoogleLoading(false);
-
-    if (res.success) {
-      addNotification('Google Sign-In Successful! Welcome 🎉', 'success');
-      navigate('/');
-    } else {
-      setError(res.error || 'Google Sign-In failed.');
-    }
+    if (res.success) { addNotification('Google Sign-In Successful! Welcome 🎉', 'success'); navigate('/'); }
+    else setError(res.error || 'Google Sign-In failed.');
   };
-
-  // ── WhatsApp Auth Handlers ─────────────────────────────────────────
 
   const openWhatsappModal = () => {
-    setIsWhatsappModalOpen(true);
-    setOtpStep('phone');
-    setPhoneInput('');
-    setOtpCode('');
-    setWhatsappError('');
-    setWhatsappSuccess('');
+    setIsWhatsappModalOpen(true); setOtpStep('phone');
+    setPhoneInput(''); setOtpCode(''); setWhatsappError(''); setWhatsappSuccess('');
   };
-
   const closeWhatsappModal = () => {
-    setIsWhatsappModalOpen(false);
-    setWhatsappError('');
-    setWhatsappSuccess('');
-    setWhatsappLoading(false);
+    setIsWhatsappModalOpen(false); setWhatsappError(''); setWhatsappSuccess(''); setWhatsappLoading(false);
   };
 
   const handleSendWhatsappOtp = async (e) => {
     if (e) e.preventDefault();
-
-    const rawPhone = phoneInput.trim().replace(/\D/g, '');
-    if (!rawPhone || rawPhone.length < 7) {
-      setWhatsappError('Please enter a valid mobile number.');
-      return;
-    }
-
-    const fullPhone = `${countryCode}${rawPhone}`;
-    setWhatsappLoading(true);
-    setWhatsappError('');
-    setWhatsappSuccess('');
-
-    const res = await requestWhatsappOtp(fullPhone);
+    const raw = phoneInput.trim().replace(/\D/g, '');
+    if (!raw || raw.length < 7) { setWhatsappError('Please enter a valid mobile number.'); return; }
+    const full = `${countryCode}${raw}`;
+    setWhatsappLoading(true); setWhatsappError(''); setWhatsappSuccess('');
+    const res = await requestWhatsappOtp(full);
     setWhatsappLoading(false);
-
-    if (res.success) {
-      setOtpStep('otp');
-      setResendTimer(30); // 30s resend cooldown
-      setWhatsappSuccess(res.message || `OTP sent to ${fullPhone} via WhatsApp.`);
-    } else {
-      setWhatsappError(res.error || 'Failed to send OTP to your WhatsApp number.');
-    }
+    if (res.success) { setOtpStep('otp'); setResendTimer(30); setWhatsappSuccess(res.message || `OTP sent to ${full}.`); }
+    else setWhatsappError(res.error || 'Failed to send OTP.');
   };
 
   const handleVerifyWhatsappOtp = async (e) => {
     if (e) e.preventDefault();
-
-    const cleanOtp = otpCode.trim();
-    if (cleanOtp.length !== 6 || !/^\d{6}$/.test(cleanOtp)) {
-      setWhatsappError('Please enter a valid 6-digit OTP code.');
-      return;
-    }
-
-    const fullPhone = `${countryCode}${phoneInput.trim().replace(/\D/g, '')}`;
-    setWhatsappLoading(true);
-    setWhatsappError('');
-    setWhatsappSuccess('');
-
-    const res = await verifyWhatsappOtp(fullPhone, cleanOtp);
+    const clean = otpCode.trim();
+    if (clean.length !== 6 || !/^\d{6}$/.test(clean)) { setWhatsappError('Please enter a valid 6-digit OTP.'); return; }
+    const full = `${countryCode}${phoneInput.trim().replace(/\D/g, '')}`;
+    setWhatsappLoading(true); setWhatsappError(''); setWhatsappSuccess('');
+    const res = await verifyWhatsappOtp(full, clean);
     setWhatsappLoading(false);
-
     if (res.success) {
       setWhatsappSuccess('WhatsApp Authentication Successful! Redirecting...');
       addNotification('WhatsApp Sign-In Successful! Welcome 🎉', 'success');
-      setTimeout(() => {
-        closeWhatsappModal();
-        navigate('/');
-      }, 800);
-    } else {
-      setWhatsappError(res.error || 'OTP verification failed. Please try again.');
-    }
+      setTimeout(() => { closeWhatsappModal(); navigate('/'); }, 800);
+    } else setWhatsappError(res.error || 'OTP verification failed. Please try again.');
   };
 
-  return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-slate-900 overflow-x-hidden font-sans">
-      
-      {/* LEFT PANEL: Branding & Feature Highlights */}
-      <div className="w-full md:w-1/2 bg-gradient-to-br from-emerald-800 via-teal-900 to-slate-900 p-8 sm:p-12 text-white flex flex-col justify-between relative overflow-hidden">
-        {/* Background Ambient Glows */}
-        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        {/* Top Branding Logo */}
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shadow-inner">
-            <ChefHat className="h-7 w-7" />
-          </div>
-          <div>
-            <h1 className="font-black text-xl tracking-tight text-white">Smart Lunch Generator</h1>
-            <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest block">Automated Daily Menus</span>
-          </div>
+  /* ── reusable login form content ── */
+  const LoginFormContent = ({ isMobile = false }) => (
+    <div className={`space-y-3.5 ${isMobile ? 'w-full' : ''}`}>
+      {/* Chef hat badge flanked by leaves */}
+      <div className="text-center space-y-1">
+        <div className="flex items-center justify-center gap-2 mb-1">
+          <span className="text-xs opacity-50 select-none">🍃</span>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2, type: 'spring' }}
+            className="w-12 h-12 rounded-full flex items-center justify-center"
+            style={{
+              background: '#e6f4ea',
+              border: `2px solid rgba(0,200,83,0.3)`,
+              boxShadow: '0 4px 14px rgba(0,200,83,0.15)',
+            }}
+          >
+            <ChefHat className="h-6 w-6" style={{ color: C.greenPrimary }} />
+          </motion.div>
+          <span className="text-xs opacity-50 select-none">🍃</span>
         </div>
-
-        {/* Center Slogan & Features */}
-        <div className="relative z-10 my-8 space-y-6">
-          <div className="space-y-2">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
-              Plan Smarter. <br />
-              <span className="text-emerald-400">Serve Better.</span>
-            </h2>
-            <p className="text-emerald-300 font-semibold text-base sm:text-lg">
-              Every Lunch, Perfect!
-            </p>
-          </div>
-
-          {/* Feature Highlights */}
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center gap-3 text-sm font-medium text-emerald-100/90">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 flex-shrink-0">
-                <Calendar className="h-4 w-4" />
-              </div>
-              <span>Auto Generate Menu</span>
-            </div>
-
-            <div className="flex items-center gap-3 text-sm font-medium text-emerald-100/90">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 flex-shrink-0">
-                <HeartHandshake className="h-4 w-4" />
-              </div>
-              <span>Veg &amp; Non-Veg Rules</span>
-            </div>
-
-            <div className="flex items-center gap-3 text-sm font-medium text-emerald-100/90">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 flex-shrink-0">
-                <Globe className="h-4 w-4" />
-              </div>
-              <span>Tamil &amp; English Support</span>
-            </div>
-
-            <div className="flex items-center gap-3 text-sm font-medium text-emerald-100/90">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 flex-shrink-0">
-                <Clock className="h-4 w-4" />
-              </div>
-              <span>Saves Time &amp; Effort</span>
-            </div>
-          </div>
+        <div>
+          <h2
+            className="text-[22px] sm:text-[24px] font-extrabold tracking-tight font-['Outfit',sans-serif] leading-tight"
+            style={{ color: C.textDark }}
+          >
+            Welcome Back! 👋
+          </h2>
+          <p className="text-[11.5px] font-medium mt-0.5" style={{ color: C.textMuted }}>
+            Login to manage your smart lunch menus
+          </p>
         </div>
+      </div>
 
-        {/* Meal Display Image */}
-        <div className="relative z-10 mt-4 flex justify-center items-center">
-          <div className="relative group w-full max-w-sm">
-            <img 
-              src="https://images.unsplash.com/photo-1610192244261-3f33de3f55e4?auto=format&fit=crop&w=800&q=80" 
-              alt="Indian Thali Meal" 
-              className="w-full h-48 sm:h-56 object-cover rounded-3xl shadow-2xl border-2 border-emerald-500/30 group-hover:scale-[1.02] transition-all duration-500"
+      {/* Error */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="p-2 text-xs font-semibold rounded-xl flex items-center gap-2 overflow-hidden"
+            style={{ background: '#fff1f0', border: '1px solid #fecaca', color: '#dc2626' }}
+          >
+            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+            <span>{error}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Form */}
+      <form onSubmit={handleLogin} className="space-y-2.5 text-left">
+        {/* Email */}
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-[0.12em] mb-1" style={{ color: '#475569' }}>
+            EMAIL ADDRESS
+          </label>
+          <div className="relative group">
+            <Mail
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors duration-200"
+              style={{ color: '#94a3b8' }}
             />
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
-            <div className="absolute bottom-3 left-3 right-3 text-center">
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-emerald-300 bg-black/60 backdrop-blur-md px-3.5 py-1 rounded-full border border-emerald-400/30 inline-block">
-                🌿 Fresh &amp; Balanced Daily Meals
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="name@example.com"
+              required
+              className="w-full pl-10 pr-3.5 py-2.5 rounded-xl text-[12.5px] font-medium transition-all duration-200 outline-none font-['Plus_Jakarta_Sans',sans-serif]"
+              style={{
+                background: '#f8fafc',
+                border: '1.5px solid #e2e8f0',
+                color: C.textDark,
+              }}
+              onFocus={e => { e.target.style.borderColor = C.greenPrimary; e.target.style.background = '#fff'; e.target.style.boxShadow = '0 0 0 3px rgba(0,200,83,0.1)'; }}
+              onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.background = '#f8fafc'; e.target.style.boxShadow = 'none'; }}
+            />
+          </div>
+        </div>
+
+        {/* Password */}
+        <div>
+          <label className="block text-[10px] font-bold uppercase tracking-[0.12em] mb-1" style={{ color: '#475569' }}>
+            PASSWORD
+          </label>
+          <div className="relative group">
+            <Lock
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors duration-200"
+              style={{ color: '#94a3b8' }}
+            />
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              className="w-full pl-10 pr-10 py-2.5 rounded-xl text-[12.5px] font-medium transition-all duration-200 outline-none font-['Plus_Jakarta_Sans',sans-serif]"
+              style={{
+                background: '#f8fafc',
+                border: '1.5px solid #e2e8f0',
+                color: C.textDark,
+              }}
+              onFocus={e => { e.target.style.borderColor = C.greenPrimary; e.target.style.background = '#fff'; e.target.style.boxShadow = '0 0 0 3px rgba(0,200,83,0.1)'; }}
+              onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.background = '#f8fafc'; e.target.style.boxShadow = 'none'; }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer transition-colors p-0.5"
+              style={{ color: '#94a3b8' }}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Remember + Forgot */}
+        <div className="flex items-center justify-between text-[11px] pt-0.5">
+          <label className="flex items-center gap-1.5 cursor-pointer select-none" style={{ color: '#64748b' }}>
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={e => setRememberMe(e.target.checked)}
+              className="rounded cursor-pointer w-3.5 h-3.5"
+              style={{ accentColor: C.greenPrimary }}
+            />
+            <span className="font-medium">Remember Me</span>
+          </label>
+          <Link
+            to="/forgot-password"
+            className="font-bold transition-colors hover:underline"
+            style={{ color: C.greenPrimary }}
+          >
+            Forgot Password?
+          </Link>
+        </div>
+
+        {/* Sign In Button */}
+        <motion.button
+          whileHover={{ scale: 1.015 }}
+          whileTap={{ scale: 0.985 }}
+          type="submit"
+          disabled={loading || googleLoading || whatsappLoading}
+          className="w-full py-2.5 px-5 text-white font-bold text-xs tracking-wide rounded-xl flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 min-h-[42px] transition-all duration-200"
+          style={{
+            background: `linear-gradient(135deg, ${C.greenPrimary} 0%, ${C.greenDeep} 100%)`,
+            boxShadow: '0 4px 16px rgba(0,200,83,0.35)',
+          }}
+          onMouseEnter={e => { if (!loading) e.currentTarget.style.boxShadow = '0 6px 22px rgba(0,200,83,0.5)'; }}
+          onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,200,83,0.35)'; }}
+        >
+          {loading
+            ? <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            : <><span>Sign In</span><ArrowRight className="h-4 w-4" /></>
+          }
+        </motion.button>
+      </form>
+
+      {/* Divider */}
+      <div className="flex items-center gap-2.5 py-0.5">
+        <div className="flex-1 h-px" style={{ background: '#e2e8f0' }} />
+        <span className="text-[9px] uppercase font-bold tracking-[0.15em]" style={{ color: '#94a3b8' }}>OR</span>
+        <div className="flex-1 h-px" style={{ background: '#e2e8f0' }} />
+      </div>
+
+      {/* SSO Buttons */}
+      <div className="space-y-2">
+        {/* Google */}
+        <motion.button
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.985 }}
+          onClick={handleGoogleSignIn}
+          disabled={loading || googleLoading || whatsappLoading}
+          className="w-full py-2 px-4 font-bold text-[12px] rounded-xl flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-60 min-h-[40px] transition-all duration-200"
+          style={{
+            background: 'white',
+            border: '1.5px solid #e2e8f0',
+            color: '#1e293b',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
+          }}
+        >
+          {googleLoading
+            ? <div className="h-4 w-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${C.greenPrimary} transparent transparent transparent` }} />
+            : <>
+                <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                </svg>
+                <span>Continue with Google</span>
+              </>
+          }
+        </motion.button>
+
+        {/* WhatsApp */}
+        <motion.button
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.985 }}
+          type="button"
+          onClick={openWhatsappModal}
+          disabled={loading || googleLoading || whatsappLoading}
+          className="w-full py-2 px-4 text-white font-bold text-[12px] rounded-xl flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-60 min-h-[40px] transition-all duration-200"
+          style={{ background: C.greenPrimary, boxShadow: '0 2px 10px rgba(0,200,83,0.25)' }}
+        >
+          <svg className="w-4 h-4 flex-shrink-0 fill-current" viewBox="0 0 24 24">
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+          </svg>
+          <span>Continue with WhatsApp</span>
+        </motion.button>
+      </div>
+
+      {/* Sign up */}
+      <p className="text-center text-[11px] font-medium pt-1" style={{ color: C.textMuted }}>
+        Don't have an account yet?{' '}
+        <Link to="/signup" className="font-bold transition-colors hover:underline" style={{ color: C.greenPrimary }}>
+          Create Account
+        </Link>
+      </p>
+    </div>
+  );
+
+  /* ══════════════════════════════════════════════
+     RENDER
+  ══════════════════════════════════════════════ */
+  return (
+    <div
+      className="font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col"
+      style={{ background: C.cream }}
+    >
+
+      {/* ╔══════════════════════════════════════════╗
+          ║  MOBILE LAYOUT  (hidden on md+)          ║
+          ╚══════════════════════════════════════════╝ */}
+      <div className="md:hidden min-h-screen flex flex-col" style={{ background: C.creamOff }}>
+
+        {/* Mobile top header strip */}
+        <div
+          className="relative px-5 pt-8 pb-14 overflow-hidden"
+          style={{ background: `linear-gradient(160deg, ${C.darkBg} 0%, ${C.darkMid} 60%, ${C.darkSoft} 100%)` }}
+        >
+          {/* Soft green glow */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse at 50% 120%, rgba(0,200,83,0.18) 0%, transparent 65%)' }}
+          />
+
+          {/* Logo row */}
+          <div className="relative z-10 flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{
+                background: 'rgba(0,200,83,0.15)',
+                border: '1px solid rgba(0,200,83,0.3)',
+              }}
+            >
+              <ChefHat className="h-5 w-5" style={{ color: C.greenLight }} />
+            </div>
+            <div>
+              <h1 className="font-extrabold text-[16px] text-white tracking-tight font-['Outfit',sans-serif]">Smart Lunch Generator</h1>
+              <span className="text-[9px] font-bold uppercase tracking-[0.22em] block mt-0.5" style={{ color: 'rgba(0,230,118,0.7)' }}>
+                AUTOMATED DAILY MENUS
               </span>
             </div>
           </div>
+
+          <div className="absolute top-8 right-6 text-lg opacity-20">🍃</div>
         </div>
 
-      </div>
+        {/* Wavy separator */}
+        <div className="relative -mt-5 z-10 pointer-events-none overflow-hidden" style={{ height: '36px' }}>
+          <svg viewBox="0 0 1440 80" preserveAspectRatio="none" className="w-full h-full" style={{ fill: C.creamOff }}>
+            <path d="M0,40 C240,80 480,0 720,40 C960,80 1200,10 1440,40 L1440,80 L0,80 Z" />
+          </svg>
+        </div>
 
-      {/* RIGHT PANEL: Clean White Authentication Section */}
-      <div className="w-full md:w-1/2 bg-white p-6 sm:p-10 md:p-12 flex flex-col justify-between relative min-h-screen md:min-h-0">
-        
-        {/* Language Selector Top Right */}
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={() => setLanguage(language === 'en' ? 'ta' : 'en')}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-100 transition-all cursor-pointer shadow-sm"
+        {/* Mobile login card */}
+        <div className="flex-1 px-4 pb-8 -mt-1">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, ease: 'easeOut' }}
+            className="rounded-3xl p-5 sm:p-7"
+            style={{
+              background: 'white',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)',
+              border: '1px solid rgba(0,200,83,0.08)',
+            }}
           >
-            <Globe className="h-4 w-4 text-emerald-600" />
-            <span>{language === 'en' ? 'English' : 'தமிழ்'}</span>
-            <span className="text-[10px] text-slate-400 font-mono">▼</span>
-          </button>
+            <LoginFormContent isMobile />
+          </motion.div>
         </div>
-
-        {/* Main Form Area */}
-        <div className="max-w-md w-full mx-auto my-auto space-y-5 text-center">
-          
-          {/* Welcome Heading */}
-          <div className="space-y-1">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center justify-center gap-2">
-              Welcome 👋
-            </h2>
-            <p className="text-slate-500 text-xs sm:text-sm font-medium">
-              Login to manage your smart lunch menus
-            </p>
-          </div>
-
-          {/* Graphic Illustration */}
-          <div className="py-1 flex justify-center">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-emerald-50 border-4 border-emerald-100 flex items-center justify-center shadow-inner relative">
-              <div className="bg-white p-2.5 rounded-2xl shadow-md border border-slate-100 flex items-center gap-2">
-                <CheckSquare className="h-7 w-7 text-emerald-600" />
-                <span className="text-xl">🍲</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Login Tab Header */}
-          <div className="flex flex-col items-center justify-center pb-2">
-            <span className="text-emerald-700 font-bold text-sm tracking-wide uppercase">
-              Secure Login
-            </span>
-            <div className="w-14 h-1 bg-emerald-600 rounded-full mt-1 shadow-sm" />
-          </div>
-
-          {/* Error Message Alert */}
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold rounded-xl text-left flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* Email/Password Form */}
-          <form onSubmit={handleLogin} className="space-y-3.5 text-left">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  required
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  className="w-full pl-10 pr-11 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between text-xs pt-1">
-              <label className="flex items-center gap-2 text-slate-600 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                />
-                <span>Remember Me</span>
-              </label>
-
-              <Link
-                to="/forgot-password"
-                className="text-emerald-600 hover:text-emerald-700 font-bold transition-colors"
-              >
-                Forgot Password?
-              </Link>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading || googleLoading || whatsappLoading}
-              className="w-full py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 min-h-[46px]"
-            >
-              {loading ? (
-                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <span>Sign In</span>
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </button>
-          </form>
-
-          {/* Divider */}
-          <div className="flex items-center my-4">
-            <div className="flex-1 border-t border-slate-200" />
-            <span className="px-3 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-              OR
-            </span>
-            <div className="flex-1 border-t border-slate-200" />
-          </div>
-
-          {/* SSO Buttons Container */}
-          <div className="space-y-2.5">
-            {/* Google SSO Button */}
-            <button
-              onClick={handleGoogleSignIn}
-              disabled={loading || googleLoading || whatsappLoading}
-              className="w-full py-3 px-6 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold text-sm rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-3 cursor-pointer disabled:opacity-60 min-h-[44px]"
-            >
-              {googleLoading ? (
-                <div className="h-4 w-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
-                  </svg>
-                  <span>Continue with Google</span>
-                </>
-              )}
-            </button>
-
-            {/* WhatsApp Login Button (Positioned Below Google Sign-In) */}
-            <button
-              type="button"
-              onClick={openWhatsappModal}
-              disabled={loading || googleLoading || whatsappLoading}
-              className="w-full py-3 px-6 bg-[#25D366] hover:bg-[#20bd5a] border-2 border-[#20bd5a] text-white font-bold text-sm rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-3 cursor-pointer disabled:opacity-60 min-h-[44px]"
-            >
-              {/* WhatsApp SVG Icon */}
-              <svg className="w-5 h-5 flex-shrink-0 fill-current text-white" viewBox="0 0 24 24">
-                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
-              </svg>
-              <span>Continue with WhatsApp</span>
-            </button>
-          </div>
-
-          {/* Link to Sign Up */}
-          <p className="text-center text-xs text-slate-500 pt-2">
-            Don't have an account yet?{' '}
-            <Link to="/signup" className="text-emerald-600 hover:text-emerald-700 font-bold transition-colors">
-              Create Account
-            </Link>
-          </p>
-
-        </div>
-
-        {/* BOTTOM SECURITY CARD */}
-        <div className="mt-6 pt-4">
-          <div className="max-w-md mx-auto bg-emerald-50/80 border border-emerald-100 p-3.5 rounded-2xl flex items-center gap-3 text-left">
-            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700 flex-shrink-0">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="text-[11px] font-bold text-emerald-950 uppercase tracking-wider">
-                Secure • Simple • Always Free
-              </h4>
-              <p className="text-xs text-emerald-700 font-medium">
-                Your data is safe with us.
-              </p>
-            </div>
-          </div>
-        </div>
-
       </div>
 
-      {/* ── WHATSAPP AUTH MODAL DIALOG ────────────────────────────────────── */}
-      {isWhatsappModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden relative transform transition-all duration-300">
-            
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-emerald-700 to-teal-800 p-6 text-white relative">
-              <button
-                type="button"
-                onClick={closeWhatsappModal}
-                className="absolute top-4 right-4 p-2 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </button>
+      {/* ╔══════════════════════════════════════════╗
+          ║  DESKTOP LAYOUT  (hidden on mobile)      ║
+          ╚══════════════════════════════════════════╝ */}
+      <div className="hidden md:flex flex-1 relative overflow-hidden h-screen max-h-screen">
 
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-[#25D366] flex items-center justify-center text-white shadow-lg">
-                  <svg className="w-7 h-7 fill-current" viewBox="0 0 24 24">
-                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-lg text-white">Continue with WhatsApp</h3>
-                  <p className="text-xs text-emerald-200 font-medium">Instant OTP verification via WhatsApp</p>
+        {/* ── LEFT PANEL (Dark Green) ── */}
+        <div
+          className="w-[58%] flex flex-col relative overflow-hidden h-full py-4 justify-between"
+          style={{
+            background: `linear-gradient(150deg, ${C.darkBg} 0%, ${C.darkMid} 55%, ${C.darkSoft} 100%)`,
+          }}
+        >
+          {/* Ambient glows */}
+          <motion.div
+            animate={{ scale: [1, 1.18, 1], opacity: [0.1, 0.22, 0.1] }}
+            transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute top-[-10%] right-[-8%] rounded-full pointer-events-none"
+            style={{ width: '450px', height: '450px', background: 'radial-gradient(circle, rgba(0,230,118,0.2), transparent 65%)', filter: 'blur(30px)' }}
+          />
+          <motion.div
+            animate={{ scale: [1, 1.12, 1], opacity: [0.06, 0.14, 0.06] }}
+            transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+            className="absolute bottom-[-8%] left-[-6%] rounded-full pointer-events-none"
+            style={{ width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(0,200,83,0.18), transparent 65%)', filter: 'blur(28px)' }}
+          />
+
+          {/* Leaf particles */}
+          <motion.div
+            animate={{ y: [0, -8, 0], rotate: [0, 8, 0], opacity: [0.18, 0.32, 0.18] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute top-12 right-12 text-xl pointer-events-none"
+          >🌿</motion.div>
+          <motion.div
+            animate={{ y: [0, -6, 0], rotate: [0, -10, 0], opacity: [0.12, 0.26, 0.12] }}
+            transition={{ duration: 6.5, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+            className="absolute top-24 right-[42%] text-base pointer-events-none"
+          >🍃</motion.div>
+
+          {/* Top Header section */}
+          <div>
+            {/* Logo */}
+            <motion.div
+              initial={{ opacity: 0, y: -15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="relative z-10 flex items-center gap-2.5 px-6 pt-2 sm:px-8"
+            >
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(0,200,83,0.15)', border: '1px solid rgba(0,200,83,0.3)', color: C.greenLight }}
+              >
+                <ChefHat className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="font-extrabold text-base tracking-tight text-white font-['Outfit',sans-serif]">Smart Lunch Generator</h1>
+                <span className="text-[8.5px] font-bold uppercase tracking-[0.22em] block" style={{ color: 'rgba(0,230,118,0.7)' }}>AUTOMATED DAILY MENUS</span>
+              </div>
+            </motion.div>
+
+            {/* Main Headline */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="relative z-10 px-6 sm:px-8 mt-3 space-y-0.5"
+            >
+              <h2 className="text-2xl sm:text-3xl lg:text-[36px] font-extrabold tracking-tight leading-[1.08] font-['Outfit',sans-serif]">
+                <span className="text-white block">Plan Smarter.</span>
+                <span style={{ color: C.greenLight, textShadow: '0 0 20px rgba(0,230,118,0.4)' }}>
+                  Serve Better.
+                </span>
+              </h2>
+              <p className="font-semibold text-xs tracking-wide" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                Every Lunch, Perfect!
+              </p>
+            </motion.div>
+
+            {/* Features Grid */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              className="relative z-10 px-6 sm:px-8 mt-3"
+            >
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 max-w-md">
+                {FEATURES.map((f, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.35, delay: 0.2 + i * 0.05 }}
+                    className="flex items-center gap-2"
+                  >
+                    <div
+                      className="w-5.5 h-5.5 rounded-md flex items-center justify-center flex-shrink-0"
+                      style={{ background: 'rgba(0,200,83,0.15)', border: '1px solid rgba(0,200,83,0.25)', color: C.greenLight }}
+                    >
+                      {f.icon}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[11px] font-bold leading-tight block truncate text-white">{f.title}</span>
+                      <span className="text-[9.5px] font-medium leading-tight block truncate" style={{ color: 'rgba(255,255,255,0.5)' }}>{f.desc}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Orbit Food Showcase */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7, delay: 0.25 }}
+            className="relative z-10 flex-1 flex items-center justify-center px-4 my-auto"
+            style={{ minHeight: 0 }}
+          >
+            <div style={{ transform: 'scale(0.82)', transformOrigin: 'center center' }}>
+              <FoodCarousel />
+            </div>
+          </motion.div>
+        </div>
+
+        {/* ── CENTER ORGANIC WAVE TRANSITION DIVIDER (Exact Match to Picture) ── */}
+        <div
+          className="absolute top-0 bottom-0 z-20 pointer-events-none h-full"
+          style={{ left: 'calc(58% - 130px)', width: '260px' }}
+        >
+          <svg
+            viewBox="0 0 260 1000"
+            preserveAspectRatio="none"
+            className="w-full h-full"
+          >
+            <defs>
+              {/* Glowing ribbon gradients matching the image */}
+              <linearGradient id="glowRibbonGold" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%"   stopColor="#86efac" stopOpacity="0.9" />
+                <stop offset="45%"  stopColor="#facc15" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#00e676" stopOpacity="0.8" />
+              </linearGradient>
+
+              <linearGradient id="glowRibbonGreen" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stopColor="#00c853" stopOpacity="0.9" />
+                <stop offset="50%"  stopColor="#69f0ae" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#021b0e" stopOpacity="0.95" />
+              </linearGradient>
+
+              <filter id="ribbonGlowFilter">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* White overlay for the right side creating the S-curve boundary */}
+            <path
+              d="M 260 0 
+                 L 260 1000 
+                 L 140 1000 
+                 C 200 850, 50 700, 125 500 
+                 C 200 300, 60 150, 160 0 
+                 Z"
+              fill="white"
+            />
+
+            {/* Layered fluid wave ribbon 1 (Gold/Lime bright glow line) */}
+            <path
+              d="M 155 0 
+                 C 55 150, 195 300, 120 500 
+                 C 45 700, 195 850, 135 1000"
+              fill="none"
+              stroke="url(#glowRibbonGold)"
+              strokeWidth="5"
+              filter="url(#ribbonGlowFilter)"
+            />
+
+            {/* Layered fluid wave ribbon 2 (Inner bright green line) */}
+            <path
+              d="M 146 0 
+                 C 46 150, 186 300, 111 500 
+                 C 36 700, 186 850, 126 1000"
+              fill="none"
+              stroke="#00e676"
+              strokeWidth="2.5"
+              strokeOpacity="0.8"
+            />
+
+            {/* Layered fluid wave ribbon 3 (Secondary accent line) */}
+            <path
+              d="M 168 0 
+                 C 68 150, 208 300, 133 500 
+                 C 58 700, 208 850, 148 1000"
+              fill="none"
+              stroke="#facc15"
+              strokeWidth="1.5"
+              strokeOpacity="0.7"
+            />
+
+            {/* Sparkling ambient particles on wave curve */}
+            <circle cx="118" cy="220" r="2.5" fill="#facc15" opacity="0.8" filter="url(#ribbonGlowFilter)" />
+            <circle cx="108" cy="520" r="2" fill="#00e676" opacity="0.9" filter="url(#ribbonGlowFilter)" />
+            <circle cx="132" cy="780" r="2.5" fill="#86efac" opacity="0.8" filter="url(#ribbonGlowFilter)" />
+          </svg>
+        </div>
+
+        {/* ── CENTER CIRCULAR ">>" BADGE ON THE CURVE (Exact Match to Picture) ── */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 z-30 flex items-center justify-center rounded-full pointer-events-none select-none"
+          style={{
+            left: 'calc(58% - 24px)',
+            width: '48px',
+            height: '48px',
+            background: 'radial-gradient(circle at 35% 35%, #053b1e 0%, #021b0e 100%)',
+            border: '2px solid #00e676',
+            boxShadow: '0 0 20px rgba(0,230,118,0.5), 0 0 10px rgba(0,0,0,0.5)',
+          }}
+        >
+          <ChevronsRight className="h-5 w-5 text-[#00e676] animate-pulse" />
+        </div>
+
+        {/* ── RIGHT PANEL (White with Login Card) ── */}
+        <div
+          className="w-[42%] flex items-center justify-center relative px-6 py-4 h-full"
+          style={{ background: 'white' }}
+        >
+          {/* Subtle leaf outline watermark on top right background */}
+          <div className="absolute top-6 right-8 opacity-10 pointer-events-none text-emerald-800 select-none">
+            <svg width="110" height="110" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M50 10 C30 30 20 60 50 90 C80 60 70 30 50 10 Z" />
+              <path d="M50 10 L50 90" />
+              <path d="M50 30 C40 38 35 45 35 45" />
+              <path d="M50 50 C60 58 65 65 65 65" />
+              <path d="M50 40 C60 48 65 55 65 55" />
+              <path d="M50 60 C40 68 35 75 35 75" />
+            </svg>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
+            className="w-full relative z-10"
+            style={{ maxWidth: '370px' }}
+          >
+            {/* Floating login card */}
+            <div
+              className="rounded-3xl px-6 py-5 sm:px-7 sm:py-6"
+              style={{
+                background: 'white',
+                boxShadow: '0 10px 45px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.03)',
+                border: '1px solid rgba(0,200,83,0.1)',
+              }}
+            >
+              <LoginFormContent />
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════
+          WHATSAPP OTP MODAL
+      ══════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {isWhatsappModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(2,27,14,0.6)', backdropFilter: 'blur(6px)' }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 10 }}
+              className="w-full max-w-md rounded-3xl overflow-hidden shadow-2xl"
+              style={{ background: 'white', border: '1px solid rgba(0,200,83,0.08)' }}
+            >
+              {/* Modal header */}
+              <div
+                className="p-5 text-white relative"
+                style={{ background: `linear-gradient(135deg, ${C.darkBg} 0%, ${C.darkMid} 100%)` }}
+              >
+                <button type="button" onClick={closeWhatsappModal}
+                  className="absolute top-4 right-4 p-1.5 rounded-full transition-all cursor-pointer"
+                  style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-[#25D366] flex items-center justify-center text-white shadow-lg">
+                    <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base text-white font-['Outfit',sans-serif]">Continue with WhatsApp</h3>
+                    <p className="text-[11px] font-medium" style={{ color: 'rgba(0,230,118,0.7)' }}>Instant OTP verification via WhatsApp</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Modal Content */}
-            <div className="p-6 space-y-4">
-              
-              {/* Error Alert */}
-              {whatsappError && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs font-semibold rounded-xl flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                  <span>{whatsappError}</span>
-                </div>
-              )}
+              <div className="p-5 space-y-3.5">
+                {whatsappError && (
+                  <div className="p-2.5 text-xs font-semibold rounded-xl flex items-center gap-2" style={{ background: '#fff1f0', border: '1px solid #fecaca', color: '#dc2626' }}>
+                    <AlertCircle className="h-4 w-4 flex-shrink-0" /><span>{whatsappError}</span>
+                  </div>
+                )}
+                {whatsappSuccess && (
+                  <div className="p-2.5 text-xs font-semibold rounded-xl flex items-center gap-2" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#16a34a' }}>
+                    <CheckCircle2 className="h-4 w-4 flex-shrink-0" /><span>{whatsappSuccess}</span>
+                  </div>
+                )}
 
-              {/* Success Alert */}
-              {whatsappSuccess && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-xl flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-600" />
-                  <span>{whatsappSuccess}</span>
-                </div>
-              )}
-
-              {/* STEP 1: Enter Phone Number */}
-              {otpStep === 'phone' && (
-                <form onSubmit={handleSendWhatsappOtp} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                      WhatsApp Mobile Number
-                    </label>
-                    <div className="flex gap-2">
-                      <select
-                        value={countryCode}
-                        onChange={(e) => setCountryCode(e.target.value)}
-                        className="px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold focus:outline-none focus:border-emerald-500"
-                      >
-                        <option value="+91">🇮🇳 +91</option>
-                        <option value="+1">🇺🇸 +1</option>
-                        <option value="+44">🇬🇧 +44</option>
-                        <option value="+971">🇦🇪 +971</option>
-                        <option value="+65">🇸🇬 +65</option>
-                        <option value="+60">🇲🇾 +60</option>
-                        <option value="+61">🇦🇺 +61</option>
-                      </select>
-                      <div className="relative flex-1">
-                        <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <input
-                          type="tel"
-                          value={phoneInput}
-                          onChange={(e) => setPhoneInput(e.target.value)}
-                          placeholder="98765 43210"
-                          required
-                          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm font-semibold placeholder-slate-400 focus:outline-none focus:border-emerald-500"
-                        />
+                {otpStep === 'phone' && (
+                  <form onSubmit={handleSendWhatsappOtp} className="space-y-3.5">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: '#475569' }}>WhatsApp Mobile Number</label>
+                      <div className="flex gap-2">
+                        <select value={countryCode} onChange={e => setCountryCode(e.target.value)}
+                          className="px-2.5 py-2 rounded-xl text-xs font-bold outline-none"
+                          style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', color: C.textDark }}
+                        >
+                          <option value="+91">🇮🇳 +91</option>
+                          <option value="+1">🇺🇸 +1</option>
+                          <option value="+44">🇬🇧 +44</option>
+                          <option value="+971">🇦🇪 +971</option>
+                          <option value="+65">🇸🇬 +65</option>
+                          <option value="+60">🇲🇾 +60</option>
+                          <option value="+61">🇦🇺 +61</option>
+                        </select>
+                        <div className="relative flex-1">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: '#94a3b8' }} />
+                          <input type="tel" value={phoneInput} onChange={e => setPhoneInput(e.target.value)} placeholder="98765 43210" required
+                            className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-semibold outline-none"
+                            style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', color: C.textDark }}
+                          />
+                        </div>
                       </div>
+                      <p className="text-[10.5px] mt-1 font-medium" style={{ color: C.textMuted }}>We will send a 6-digit verification code to your WhatsApp.</p>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-1.5 font-medium">
-                      We will send a 6-digit verification code to your WhatsApp account.
-                    </p>
-                  </div>
+                    <button type="submit" disabled={whatsappLoading}
+                      className="w-full py-3 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 transition-all"
+                      style={{ background: '#25D366' }}
+                    >
+                      {whatsappLoading ? <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><MessageSquare className="h-3.5 w-3.5" /><span>Send OTP via WhatsApp</span></>}
+                    </button>
+                  </form>
+                )}
 
-                  <button
-                    type="submit"
-                    disabled={whatsappLoading}
-                    className="w-full py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-                  >
-                    {whatsappLoading ? (
-                      <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <MessageSquare className="h-4 w-4" />
-                        <span>Send OTP via WhatsApp</span>
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
-
-              {/* STEP 2: Enter OTP Code */}
-              {otpStep === 'otp' && (
-                <form onSubmit={handleVerifyWhatsappOtp} className="space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                        Enter 6-Digit OTP
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOtpStep('phone');
-                          setOtpCode('');
-                          setWhatsappError('');
-                        }}
-                        className="text-[11px] text-emerald-600 hover:text-emerald-700 font-bold flex items-center gap-1 cursor-pointer"
-                      >
-                        <ArrowLeft className="h-3 w-3" />
-                        <span>Change Number</span>
-                      </button>
+                {otpStep === 'otp' && (
+                  <form onSubmit={handleVerifyWhatsappOtp} className="space-y-3.5">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#475569' }}>Enter 6-Digit OTP</label>
+                        <button type="button" onClick={() => { setOtpStep('phone'); setOtpCode(''); setWhatsappError(''); }}
+                          className="text-[10.5px] font-bold flex items-center gap-1 cursor-pointer" style={{ color: C.greenPrimary }}
+                        >
+                          <ArrowLeft className="h-3 w-3" /><span>Change Number</span>
+                        </button>
+                      </div>
+                      <input type="text" maxLength={6} value={otpCode} onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))} placeholder="• • • • • •" autoFocus required
+                        className="w-full text-center py-2.5 text-xl font-extrabold tracking-widest rounded-xl outline-none font-mono"
+                        style={{ background: '#f8fafc', border: `2px solid rgba(0,200,83,0.25)`, color: C.textDark }}
+                      />
+                      <p className="text-[10.5px] mt-1 font-medium text-center" style={{ color: C.textMuted }}>Code sent to <strong style={{ color: C.textDark }}>{countryCode} {phoneInput}</strong></p>
                     </div>
-
-                    <input
-                      type="text"
-                      maxLength={6}
-                      value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                      placeholder="• • • • • •"
-                      autoFocus
-                      required
-                      className="w-full text-center py-3 text-2xl font-black tracking-widest rounded-xl bg-slate-50 border-2 border-slate-200 text-slate-900 placeholder-slate-300 focus:outline-none focus:border-emerald-500"
-                    />
-
-                    <p className="text-[11px] text-slate-500 mt-1.5 font-medium text-center">
-                      Code sent to <span className="font-bold text-slate-800">{countryCode} {phoneInput}</span>
-                    </p>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={whatsappLoading || otpCode.length !== 6}
-                    className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-                  >
-                    {whatsappLoading ? (
-                      <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <ShieldCheck className="h-4 w-4" />
-                        <span>Verify &amp; Sign In</span>
-                      </>
-                    )}
-                  </button>
-
-                  {/* Resend Timer */}
-                  <div className="text-center pt-1">
-                    {resendTimer > 0 ? (
-                      <span className="text-xs text-slate-400 font-medium">
-                        Resend code in <strong className="text-slate-600">{resendTimer}s</strong>
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={handleSendWhatsappOtp}
-                        disabled={whatsappLoading}
-                        className="text-xs text-emerald-600 hover:text-emerald-700 font-bold flex items-center justify-center gap-1 mx-auto cursor-pointer"
-                      >
-                        <RefreshCw className="h-3.5 w-3.5" />
-                        <span>Resend OTP via WhatsApp</span>
-                      </button>
-                    )}
-                  </div>
-                </form>
-              )}
-
-            </div>
-
+                    <button type="submit" disabled={whatsappLoading || otpCode.length !== 6}
+                      className="w-full py-3 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 transition-all"
+                      style={{ background: `linear-gradient(135deg, ${C.greenPrimary}, ${C.greenDeep})` }}
+                    >
+                      {whatsappLoading ? <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><ShieldCheck className="h-3.5 w-3.5" /><span>Verify & Sign In</span></>}
+                    </button>
+                    <div className="text-center pt-0.5">
+                      {resendTimer > 0
+                        ? <span className="text-[11px] font-medium" style={{ color: C.textMuted }}>Resend code in <strong style={{ color: C.textDark }}>{resendTimer}s</strong></span>
+                        : <button type="button" onClick={handleSendWhatsappOtp} disabled={whatsappLoading}
+                            className="text-[11px] font-bold flex items-center justify-center gap-1 mx-auto cursor-pointer" style={{ color: C.greenPrimary }}
+                          >
+                            <RefreshCw className="h-3 w-3" /><span>Resend OTP via WhatsApp</span>
+                          </button>
+                      }
+                    </div>
+                  </form>
+                )}
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
-
+        )}
+      </AnimatePresence>
     </div>
   );
 };

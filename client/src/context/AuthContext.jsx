@@ -101,16 +101,16 @@ export const AuthProvider = ({ children }) => {
 
   // 1. Email & Password Registration Flow
   const registerWithEmailPassword = async (data) => {
-    const { firstName, lastName, email, password, phone, language } = data;
+    const { name, email, password, phone, language } = data;
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      const displayName = `${firstName || ''} ${lastName || ''}`.trim() || email.split('@')[0];
+      const userName = (name || email.split('@')[0]).trim();
 
       // Update Firebase Profile displayName
       try {
-        await updateFirebaseProfile(user, { displayName });
+        await updateFirebaseProfile(user, { displayName: userName });
       } catch (e) {
         console.warn("Firebase updateProfile notice:", e);
       }
@@ -125,9 +125,8 @@ export const AuthProvider = ({ children }) => {
       // Create/Sync user in MongoDB
       const mongoPayload = {
         uid: user.uid,
-        firstName,
-        lastName,
-        displayName,
+        name: userName,
+        displayName: userName,
         email: user.email,
         phone: phone || '',
         language: language || 'en',
