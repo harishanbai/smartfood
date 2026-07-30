@@ -1,4 +1,4 @@
-const API_BASE = 'https://doorbell-spry-judgingly.ngrok-free.dev';
+const API_BASE = '';
 
 /**
  * Get a displayable image URL for a food item.

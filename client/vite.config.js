@@ -8,11 +8,26 @@ export default defineConfig({
     host: true,
     port: 5000,
     allowedHosts: ['doorbell-spry-judgingly.ngrok-free.dev'],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+        secure: false,
+      }
+    },
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
     },
   },
   preview: {
+    allowedHosts: ['doorbell-spry-judgingly.ngrok-free.dev'],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+        secure: false,
+      }
+    },
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
     },
