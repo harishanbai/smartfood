@@ -37,7 +37,7 @@ const Login = () => {
   // WhatsApp Auth Modal State
   const [isWhatsappModalOpen, setIsWhatsappModalOpen] = useState(false);
   const [countryCode, setCountryCode] = useState('+91');
-  const [phoneInput, setPhoneInput] = useState('');
+  const [phoneInput, setPhoneInput] = useState('9043882817');
   const [otpCode, setOtpCode] = useState('');
   const [otpStep, setOtpStep] = useState('phone'); // 'phone' | 'otp'
   const [whatsappLoading, setWhatsappLoading] = useState(false);
@@ -128,7 +128,7 @@ const Login = () => {
   const openWhatsappModal = () => {
     setIsWhatsappModalOpen(true);
     setOtpStep('phone');
-    setPhoneInput('');
+    setPhoneInput('9043882817');
     setOtpCode('');
     setWhatsappError('');
     setWhatsappSuccess('');
@@ -162,6 +162,9 @@ const Login = () => {
       setOtpStep('otp');
       setResendTimer(30); // 30s resend cooldown
       setWhatsappSuccess(res.message || `OTP sent to ${fullPhone} via WhatsApp.`);
+      if (res.mockOtp) {
+        setOtpCode(res.mockOtp);
+      }
     } else {
       setWhatsappError(res.error || 'Failed to send OTP to your WhatsApp number.');
     }

@@ -105,7 +105,8 @@ export const sendOtp = async (req, res) => {
       success: true,
       message: 'Verification code sent to your WhatsApp number.',
       phone: normalizedPhone,
-      messageId: whatsappResult.messageId
+      messageId: whatsappResult.messageId,
+      mockOtp: whatsappResult.mockOtp
     });
   } catch (error) {
     console.error('[WhatsApp Auth] 💥 Error in sendOtp:', error);

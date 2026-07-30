@@ -4,7 +4,10 @@ import { auth } from '../firebase';
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const api = axios.create({
-  baseURL: API_BASE_URL
+  baseURL: API_BASE_URL,
+  headers: {
+    'ngrok-skip-browser-warning': 'true'
+  }
 });
 
 api.interceptors.request.use(async (config) => {

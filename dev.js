@@ -1,4 +1,11 @@
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
+
+console.log('\n🧹 Checking and cleaning ports 5000 and 5001...');
+try {
+  execSync('powershell -Command "Stop-Process -Id (Get-NetTCPConnection -LocalPort 5000,5001 -ErrorAction SilentlyContinue).OwningProcess -Force -ErrorAction SilentlyContinue"', { stdio: 'ignore' });
+} catch (e) {
+  // Ignore errors if no processes are bound to these ports
+}
 
 console.log('\n🚀 Starting SmartFood Frontend & Backend concurrently...\n');
 
