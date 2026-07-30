@@ -394,12 +394,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await authApi.sendWhatsappOtp(phone);
       if (res?.data?.success) {
-        return { 
-          success: true, 
-          message: res.data.message, 
-          phone: res.data.phone,
-          mockOtp: res.data.mockOtp 
-        };
+        return { success: true, message: res.data.message, phone: res.data.phone };
       }
       return { success: false, error: res?.data?.message || 'Failed to send OTP.' };
     } catch (error) {

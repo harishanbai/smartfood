@@ -162,9 +162,6 @@ const Login = () => {
       setOtpStep('otp');
       setResendTimer(30); // 30s resend cooldown
       setWhatsappSuccess(res.message || `OTP sent to ${fullPhone} via WhatsApp.`);
-      if (res.mockOtp) {
-        setOtpCode(res.mockOtp);
-      }
     } else {
       setWhatsappError(res.error || 'Failed to send OTP to your WhatsApp number.');
     }
