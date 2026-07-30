@@ -93,49 +93,6 @@ const Settings = () => {
           </div>
         </div>
 
-        {/* Chef Config Card */}
-        <div className="glass-panel rounded-[24px] p-6 border border-white/5">
-          <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-accentPurple" />
-            {t('settings.chefConfig')}
-          </h3>
-          <p className="text-xs text-gray-400 mb-6">{t('settings.chefConfigSub')}</p>
-
-          <form onSubmit={handleSaveChef} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('settings.chefName')}</label>
-                <input
-                  type="text"
-                  required
-                  value={chefName}
-                  onChange={(e) => setChefName(e.target.value)}
-                  placeholder={t('settings.chefNamePlaceholder')}
-                  className="w-full glass-panel px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{t('settings.chefPhone')}</label>
-                <input
-                  type="text"
-                  value={chefPhone}
-                  onChange={(e) => setChefPhone(e.target.value)}
-                  placeholder={t('settings.chefPhonePlaceholder')}
-                  className="w-full glass-panel px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                className="px-5 py-2.5 bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold rounded-xl shadow-lg transition-all cursor-pointer min-h-[44px]"
-              >
-                {t('settings.btnSaveChef')}
-              </button>
-            </div>
-          </form>
-        </div>
-
         {/* Payment Config Card */}
         <div className="glass-panel rounded-[24px] p-6 border border-white/5">
           <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
@@ -238,35 +195,6 @@ const Settings = () => {
 
 
 
-
-        {/* Automated Scheduler Details */}
-        <div className="glass-panel rounded-[24px] p-6 border border-white/5">
-          <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-accentGreen" />
-            {t('settings.schedulerConfig')}
-          </h3>
-          <p className="text-xs text-gray-400 mb-6">{t('settings.schedulerSub')}</p>
-
-          <div className="space-y-4">
-            <div className="flex justify-between items-center text-xs pb-3 border-b border-white/5">
-              <span className="text-gray-400">{t('settings.cronStatus')}</span>
-              <span className="text-accentGreen font-bold flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-accentGreen animate-pulse" />
-                {t('settings.cronActive')}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center text-xs pb-3 border-b border-white/5">
-              <span className="text-gray-400">{t('settings.triggerFreq')}</span>
-              <span className="text-white font-mono font-medium">{t('settings.triggerTime')}</span>
-            </div>
-
-            <div className="flex justify-between items-center text-xs pb-3 border-b border-white/5">
-              <span className="text-gray-400">{t('settings.targetAction')}</span>
-              <span className="text-white font-medium">{t('settings.targetActionDesc')}</span>
-            </div>
-          </div>
-        </div>
 
         {/* Warning Section */}
         <div className="glass-panel rounded-[24px] p-6 border border-accentOrange/20 bg-accentOrange/5 relative overflow-hidden">
