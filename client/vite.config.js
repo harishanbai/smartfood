@@ -5,6 +5,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: true,
+    port: 5000,
+    allowedHosts: ['doorbell-spry-judgingly.ngrok-free.dev'],
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
     },

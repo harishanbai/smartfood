@@ -14,7 +14,15 @@ const PWAInstallPrompt = () => {
       }
     };
 
+    const handleAppInstalled = () => {
+      console.log('PWA was installed successfully');
+      window.deferredPrompt = null;
+      setDeferredPrompt(null);
+      setIsVisible(false);
+    };
+
     window.addEventListener('pwa-prompt-available', handlePromptAvailable);
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     // Check if app is already installed or running as standalone
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
@@ -22,15 +30,9 @@ const PWAInstallPrompt = () => {
       setIsVisible(false);
     }
 
-    window.addEventListener('appinstalled', () => {
-      console.log('PWA was installed successfully');
-      window.deferredPrompt = null;
-      setDeferredPrompt(null);
-      setIsVisible(false);
-    });
-
     return () => {
       window.removeEventListener('pwa-prompt-available', handlePromptAvailable);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
@@ -55,6 +57,7 @@ const PWAInstallPrompt = () => {
     console.log(`User response to install prompt: ${outcome}`);
 
     // We no longer need the prompt, clear it
+    window.deferredPrompt = null;
     setDeferredPrompt(null);
     setIsVisible(false);
   };

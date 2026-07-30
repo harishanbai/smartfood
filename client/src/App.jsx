@@ -127,18 +127,6 @@ function AppRoutes() {
 }
 
 function App() {
-  React.useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      window.deferredPrompt = e;
-      window.dispatchEvent(new Event('pwa-prompt-available'));
-    };
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
-  }, []);
-
   return (
     <LanguageProvider>
       <ThemeProvider>

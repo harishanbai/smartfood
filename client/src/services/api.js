@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { auth } from '../firebase';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://doorbell-spry-judgingly.ngrok-free.dev/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL
@@ -10,7 +10,7 @@ const api = axios.create({
 api.interceptors.request.use(async (config) => {
   const lang = localStorage.getItem('language') || 'en';
   config.headers['Accept-Language'] = lang;
-  
+
   if (auth.currentUser) {
     try {
       const token = await auth.currentUser.getIdToken();
@@ -30,7 +30,7 @@ api.interceptors.request.use(async (config) => {
           config.headers['x-user-uid'] = parsed.uid;
           config.headers['x-user-email'] = parsed.email || '';
           if (parsed.token) {
-             config.headers['Authorization'] = `Bearer ${parsed.token}`;
+            config.headers['Authorization'] = `Bearer ${parsed.token}`;
           }
         }
       } catch (e) {

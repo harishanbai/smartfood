@@ -9,7 +9,9 @@ import {
   signInWithEmailAndPassword,
   sendEmailVerification,
   updateProfile as updateFirebaseProfile,
-  signInWithCustomToken
+  signInWithCustomToken,
+  signInWithRedirect,
+  getRedirectResult
 } from '../firebase';
 import { authApi, userApi } from '../services/api';
 
@@ -43,6 +45,48 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    // Process redirect result if any
+    const handleRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          const user = result.user;
+          const googlePayload = {
+            uid: user.uid,
+            displayName: user.displayName || user.email?.split('@')[0],
+            email: user.email,
+            photoURL: user.photoURL || '',
+            language: localStorage.getItem('language') || 'en'
+          };
+
+          let dbUser = null;
+          try {
+            const res = await authApi.google(googlePayload);
+            dbUser = res?.data?.user || null;
+          } catch (e) {
+            console.warn("Google redirect backend sync notice:", e);
+          }
+
+          const userData = {
+            uid: user.uid,
+            displayName: user.displayName || googlePayload.displayName,
+            email: user.email,
+            photoURL: user.photoURL,
+            emailVerified: true
+          };
+
+          setCurrentUser(userData);
+          if (dbUser) setMongoUser(dbUser);
+          localStorage.setItem('smart_lunch_user', JSON.stringify(userData));
+          if (dbUser) localStorage.setItem('smart_lunch_mongo_user', JSON.stringify(dbUser));
+        }
+      } catch (err) {
+        console.error("Google Redirect Result handling error:", err);
+      }
+    };
+
+    handleRedirect();
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userData = {
@@ -198,39 +242,53 @@ export const AuthProvider = ({ children }) => {
   // 3. Google Sign-In Flow
   const loginWithGoogle = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-
-      const googlePayload = {
-        uid: user.uid,
-        displayName: user.displayName || user.email?.split('@')[0],
-        email: user.email,
-        photoURL: user.photoURL || '',
-        language: localStorage.getItem('language') || 'en'
-      };
-
-      let dbUser = null;
-      try {
-        const res = await authApi.google(googlePayload);
-        dbUser = res?.data?.user || null;
-      } catch (e) {
-        console.warn("Google backend sync notice:", e);
+      // Check if user is on a mobile device
+      const isMobile = /Mobi|Android|iPhone|iPad|Windows Phone/i.test(navigator.userAgent);
+      if (isMobile) {
+        console.log("Mobile device detected, using signInWithRedirect");
+        await signInWithRedirect(auth, googleProvider);
+        return { success: true, redirecting: true };
       }
 
-      const userData = {
-        uid: user.uid,
-        displayName: user.displayName,
-        email: user.email,
-        photoURL: user.photoURL,
-        emailVerified: true
-      };
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
 
-      setCurrentUser(userData);
-      if (dbUser) setMongoUser(dbUser);
-      localStorage.setItem('smart_lunch_user', JSON.stringify(userData));
-      if (dbUser) localStorage.setItem('smart_lunch_mongo_user', JSON.stringify(dbUser));
+        const googlePayload = {
+          uid: user.uid,
+          displayName: user.displayName || user.email?.split('@')[0],
+          email: user.email,
+          photoURL: user.photoURL || '',
+          language: localStorage.getItem('language') || 'en'
+        };
 
-      return { success: true, user: userData, dbUser };
+        let dbUser = null;
+        try {
+          const res = await authApi.google(googlePayload);
+          dbUser = res?.data?.user || null;
+        } catch (e) {
+          console.warn("Google backend sync notice:", e);
+        }
+
+        const userData = {
+          uid: user.uid,
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+          emailVerified: true
+        };
+
+        setCurrentUser(userData);
+        if (dbUser) setMongoUser(dbUser);
+        localStorage.setItem('smart_lunch_user', JSON.stringify(userData));
+        if (dbUser) localStorage.setItem('smart_lunch_mongo_user', JSON.stringify(dbUser));
+
+        return { success: true, user: userData, dbUser };
+      } catch (popupErr) {
+        console.warn("Google Popup failed/blocked, falling back to Redirect:", popupErr);
+        await signInWithRedirect(auth, googleProvider);
+        return { success: true, redirecting: true };
+      }
     } catch (error) {
       console.error("Google Sign-In Error:", error);
       return { success: false, error: getFriendlyError(error) };
