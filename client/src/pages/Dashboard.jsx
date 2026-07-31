@@ -9,7 +9,7 @@ import { useNotifications } from '../context/NotificationContext';
 import { getImageUrl } from '../utils/imageUtils';
 import PremiumCarousel from '../components/PremiumCarousel';
 import NotificationsPanel from '../components/NotificationsPanel';
-import { useLanguage } from '../context/LanguageContext';
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Rule Badge — displays which rule was applied for menu generation
@@ -172,15 +172,13 @@ const Dashboard = () => {
   const [assigning, setAssigning] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null); // 'today' | 'tomorrow' | null
   const { addNotification } = useNotifications();
-  const { language, t } = useLanguage();
   const navigate = useNavigate();
   const carouselTriggerRef = useRef(null);
 
   useEffect(() => {
     fetchData();
     fetchTamilCalendar();
-  }, [language]);
-
+  },);
   useEffect(() => {
     const handleGlobalClick = (event) => {
       if (openDropdown && !event.target.closest('.relative')) {
@@ -236,12 +234,12 @@ const Dashboard = () => {
   const fireRuleNotification = (ruleCode, reason) => {
     if (!ruleCode) return;
     const typeMap = {
-      festival:  'info',
-      viratham:  'info',
-      amavasai:  'info',
-      pournami:  'info',
+      festival: 'info',
+      viratham: 'info',
+      amavasai: 'info',
+      pournami: 'info',
       wednesday: 'warning',
-      normal:    'success',
+      normal: 'success',
     };
     addNotification(reason || `Menu generated using rule: ${ruleCode}`, typeMap[ruleCode] || 'info');
   };
@@ -342,14 +340,14 @@ const Dashboard = () => {
   // ── Eligible Foods Filter ────────────────────────────────────────────────────
   // Filter availableFoods based on tomorrow's rule so the wheel and dropdown
   // only show dishes permitted under the current dietary rule.
-  const NON_VEG_KW = ['chicken','mutton','fish','prawn','egg','crab','lamb','biryani','kebab','tikka','keema','salmon','wings'];
-  const isVeg  = (f) => f.foodType ? f.foodType === 'veg'     : !NON_VEG_KW.some(kw => (f.name||'').toLowerCase().includes(kw));
-  const isNVeg = (f) => f.foodType ? f.foodType === 'non-veg' :  NON_VEG_KW.some(kw => (f.name||'').toLowerCase().includes(kw));
+  const NON_VEG_KW = ['chicken', 'mutton', 'fish', 'prawn', 'egg', 'crab', 'lamb', 'biryani', 'kebab', 'tikka', 'keema', 'salmon', 'wings'];
+  const isVeg = (f) => f.foodType ? f.foodType === 'veg' : !NON_VEG_KW.some(kw => (f.name || '').toLowerCase().includes(kw));
+  const isNVeg = (f) => f.foodType ? f.foodType === 'non-veg' : NON_VEG_KW.some(kw => (f.name || '').toLowerCase().includes(kw));
 
   const eligibleFoods = React.useMemo(() => {
     const rule = tamilTomorrow?.rule || {};
     const code = tomorrowRuleCode;
-    if (rule.isStrictVeg || ['festival','viratham','amavasai','pournami'].includes(code)) {
+    if (rule.isStrictVeg || ['festival', 'viratham', 'amavasai', 'pournami'].includes(code)) {
       // Strict Veg: only veg foods
       const vegOnly = availableFoods.filter(isVeg);
       return vegOnly.length > 0 ? vegOnly : availableFoods;
@@ -442,11 +440,10 @@ const Dashboard = () => {
                         )}
                       </div>
                       <div className="flex-1 text-center sm:text-left">
-                        <span className={`inline-flex items-center gap-1.5 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                          isNonVeg
-                            ? 'bg-red-500/15 border border-red-500/30 text-red-400'
-                            : 'bg-accentGreen/15 border border-accentGreen/30 text-accentGreen'
-                        }`}>
+                        <span className={`inline-flex items-center gap-1.5 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${isNonVeg
+                          ? 'bg-red-500/15 border border-red-500/30 text-red-400'
+                          : 'bg-accentGreen/15 border border-accentGreen/30 text-accentGreen'
+                          }`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${isNonVeg ? 'bg-red-400' : 'bg-accentGreen animate-pulse'}`} />
                           {isNonVeg ? 'NON-VEG' : 'VEG'} • {todayFood.category}
                         </span>
@@ -515,11 +512,10 @@ const Dashboard = () => {
                         )}
                       </div>
                       <div className="flex-1 text-center sm:text-left">
-                        <span className={`inline-flex items-center gap-1.5 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                          isNonVeg
-                            ? 'bg-red-500/15 border border-red-500/30 text-red-400'
-                            : 'bg-accentGreen/15 border border-accentGreen/30 text-accentGreen'
-                        }`}>
+                        <span className={`inline-flex items-center gap-1.5 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${isNonVeg
+                          ? 'bg-red-500/15 border border-red-500/30 text-red-400'
+                          : 'bg-accentGreen/15 border border-accentGreen/30 text-accentGreen'
+                          }`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${isNonVeg ? 'bg-red-400' : 'bg-accentGreen'}`} />
                           {isNonVeg ? 'NON-VEG' : 'VEG'} • {tomorrowFood.category}
                         </span>

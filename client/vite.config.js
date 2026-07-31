@@ -20,6 +20,7 @@ export default defineConfig({
     },
   },
   preview: {
+    port: 5000,
     allowedHosts: ['doorbell-spry-judgingly.ngrok-free.dev'],
     proxy: {
       '/api': {

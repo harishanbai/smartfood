@@ -24,7 +24,7 @@ export const getStats = async (req, res) => {
 
     let mostGeneratedFood = null;
     if (mostGeneratedAggregation.length > 0) {
-      const food = await Food.findById(mostGeneratedAggregation[0]._id);
+      const food = await Food.findById(mostGeneratedAggregation[0]._id).select('-image.data');
       if (food) {
         mostGeneratedFood = {
           name: food.name,
@@ -46,7 +46,7 @@ export const getStats = async (req, res) => {
 
     // Get weekly generation statistics (last 7 menus)
     const recentMenus = await Menu.find({ status: 'active' })
-      .populate('foodId')
+      .populate('foodId', '-image.data')
       .sort({ date: -1 })
       .limit(7);
     

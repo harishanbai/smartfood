@@ -31,9 +31,9 @@ export const getTodayMenu = async (req, res) => {
     const todayStr = getTodayStr();
 
     let menu = await Menu.findOne({ date: todayStr, status: 'active' })
-      .populate('foodId')
-      .populate('vegFoodId')
-      .populate('nonVegFoodId');
+      .populate('foodId', '-image.data')
+      .populate('vegFoodId', '-image.data')
+      .populate('nonVegFoodId', '-image.data');
     
     if (!menu) {
       try {
@@ -53,9 +53,9 @@ export const getTomorrowMenu = async (req, res) => {
     const lang = req.headers['accept-language'] || 'en';
     const tomorrowStr = getTomorrowStr();
     const menu = await Menu.findOne({ date: tomorrowStr, status: 'active' })
-      .populate('foodId')
-      .populate('vegFoodId')
-      .populate('nonVegFoodId');
+      .populate('foodId', '-image.data')
+      .populate('vegFoodId', '-image.data')
+      .populate('nonVegFoodId', '-image.data');
     if (!menu) {
       return res.status(200).json(null);
     }
@@ -125,9 +125,9 @@ export const getMenuHistory = async (req, res) => {
     }
 
     let menus = await Menu.find(query)
-      .populate('foodId')
-      .populate('vegFoodId')
-      .populate('nonVegFoodId')
+      .populate('foodId', '-image.data')
+      .populate('vegFoodId', '-image.data')
+      .populate('nonVegFoodId', '-image.data')
       .sort({ date: -1 });
 
     if (search) {
@@ -187,9 +187,9 @@ export const assignMenu = async (req, res) => {
     }
 
     const populated = await Menu.findById(menu._id)
-      .populate('foodId')
-      .populate('vegFoodId')
-      .populate('nonVegFoodId');
+      .populate('foodId', '-image.data')
+      .populate('vegFoodId', '-image.data')
+      .populate('nonVegFoodId', '-image.data');
 
     res.status(201).json(translateResponse(populated, lang));
   } catch (error) {

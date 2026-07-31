@@ -8,7 +8,16 @@ import { useConfirm } from '../context/ConfirmContext';
 
 const History = () => {
   const [history, setHistory] = useState([]);
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
+
+  // Debounce search input to avoid spamming requests
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearch(searchInput);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchInput]);
   const [month, setMonth] = useState(''); // YYYY-MM
   const [loading, setLoading] = useState(false);
   const { addNotification } = useNotifications();
@@ -90,8 +99,8 @@ const History = () => {
           <input
             type="text"
             placeholder={t('history.searchPlaceholder')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="w-full glass-panel pl-12 pr-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-gray-400 text-sm focus:outline-none focus:border-accentPurple/50 transition-all"
           />
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10 pointer-events-none" />

@@ -59,9 +59,9 @@ export const generateLunchForDate = async (dateStr, generationType = 'automatic'
 
   // 6. Populate and return
   const populated = await Menu.findById(newMenu._id)
-    .populate('foodId')
-    .populate('vegFoodId')
-    .populate('nonVegFoodId');
+    .populate('foodId', '-image.data')
+    .populate('vegFoodId', '-image.data')
+    .populate('nonVegFoodId', '-image.data');
 
   console.log(`[GeneratorService] Single Menu generated for ${dateStr}: "${selectedFood.name}" (${generationType})`);
   return populated;

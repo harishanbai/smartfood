@@ -96,22 +96,23 @@ const Calendar = () => {
         }
       });
 
-      // Also try fetching tomorrow's menu if current month matches tomorrow
+      // Try fetching today/tomorrow in parallel, but only if they are not already in the history response
       const tomorrowStr = getTomorrowStr();
-      if (tomorrowStr.startsWith(`${year}-${month}`)) {
-        const tomorrowRes = await menuApi.getTomorrow();
-        if (tomorrowRes.data) {
-          menuMap[tomorrowStr] = tomorrowRes.data;
-        }
-      }
-
-      // Try fetching today's menu
       const todayStr = getTodayStr();
-      if (todayStr.startsWith(`${year}-${month}`)) {
-        const todayRes = await menuApi.getToday();
-        if (todayRes.data) {
-          menuMap[todayStr] = todayRes.data;
-        }
+      
+      const fetchTmrw = tomorrowStr.startsWith(`${year}-${month}`) && !menuMap[tomorrowStr];
+      const fetchToday = todayStr.startsWith(`${year}-${month}`) && !menuMap[todayStr];
+
+      const [tomorrowRes, todayRes] = await Promise.all([
+        fetchTmrw ? menuApi.getTomorrow() : Promise.resolve(null),
+        fetchToday ? menuApi.getToday() : Promise.resolve(null)
+      ]);
+
+      if (tomorrowRes?.data) {
+        menuMap[tomorrowStr] = tomorrowRes.data;
+      }
+      if (todayRes?.data) {
+        menuMap[todayStr] = todayRes.data;
       }
 
       setMenus(menuMap);
