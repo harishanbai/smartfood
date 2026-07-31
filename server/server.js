@@ -24,8 +24,32 @@ connectDB().catch(err => {
 
 const app = express();
 
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5000',
+  'http://192.168.1.91:5000',
+  'https://doorbell-spry-judgingly.ngrok-free.dev',
+  process.env.CLIENT_URL // Vercel URL
+].filter(Boolean);
+
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      // If the origin isn't found in allowedOrigins, check if we're in dev mode.
+      // If we are, we can be a bit more permissive, else block it.
+      if (process.env.NODE_ENV !== 'production') {
+        return callback(null, true);
+      }
+      var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 app.use((req, res, next) => {
