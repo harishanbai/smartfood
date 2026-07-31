@@ -8,7 +8,7 @@ const TopSection = () => {
   const [time, setTime] = useState(new Date());
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
-  const { currentUser, logout } = useAuth();
+  const { currentUser, mongoUser, logout } = useAuth();
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -221,28 +221,37 @@ const TopSection = () => {
               <div className="absolute right-0 mt-3 w-64 glass-panel rounded-2xl border border-white/10 bg-bgCard/95 p-4 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="flex items-center gap-3 pb-3 mb-3 border-b border-white/10">
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center flex-shrink-0 shadow-md">
-                    {currentUser.photoURL && !imgError ? (
+                    {currentUser?.photoURL && !imgError ? (
                       <img
                         src={currentUser.photoURL}
-                        alt={currentUser.displayName || 'Gmail User'}
+                        alt={currentUser.displayName || 'User'}
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <span className="text-sm font-bold text-emerald-400">
-                        {getUserInitials(currentUser.displayName)}
+                        {getUserInitials(currentUser?.displayName || mongoUser?.displayName)}
                       </span>
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <h4 className="text-sm font-bold text-white truncate">
-                      {currentUser.displayName || 'Google User'}
+                      {currentUser?.displayName || mongoUser?.displayName || 'SmartFood User'}
                     </h4>
                     <p className="text-xs text-gray-400 truncate">
-                      {currentUser.email || 'Gmail Account'}
+                      {currentUser?.email || mongoUser?.email || currentUser?.phone || mongoUser?.phone || 'Connected'}
                     </p>
-                    <span className="inline-block mt-1 text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                      ✓ Gmail Connected
-                    </span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {(mongoUser?.provider === 'google' || currentUser?.email) && (
+                        <span className="inline-block text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                          ✓ Gmail Connected
+                        </span>
+                      )}
+                      {(mongoUser?.provider === 'whatsapp' || mongoUser?.phone || mongoUser?.whatsappVerified) && (
+                        <span className="inline-block text-[9px] font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full">
+                          ✓ WhatsApp Connected
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 

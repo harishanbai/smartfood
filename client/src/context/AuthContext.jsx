@@ -256,7 +256,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // 3. Google Sign-In Flow
-  const loginWithGoogle = async () => {
+  const loginWithGoogle = async (fallbackEmail = '') => {
     const isMockBypassError = (err) => {
       const code = err?.code || '';
       return (
@@ -270,10 +270,12 @@ export const AuthProvider = ({ children }) => {
     const loginWithMockGoogle = async () => {
       try {
         console.log("Initiating Mock Google Login Bypass...");
+        const emailVal = fallbackEmail || "user@gmail.com";
+        const nameVal = emailVal.split('@')[0];
         const mockPayload = {
           uid: "mock_google_uid_123",
-          email: "",
-          displayName: "",
+          email: emailVal,
+          displayName: nameVal.charAt(0).toUpperCase() + nameVal.slice(1),
           photoURL: "https://lh3.googleusercontent.com/a/default-user",
           language: localStorage.getItem('language') || 'en'
         };

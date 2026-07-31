@@ -133,7 +133,7 @@ const Login = () => {
     setGoogleLoading(true);
     setError('');
 
-    const res = await loginWithGoogle();
+    const res = await loginWithGoogle(email);
 
     if (res.success) {
       if (res.redirecting) {

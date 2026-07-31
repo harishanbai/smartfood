@@ -9,8 +9,7 @@ import { useNotifications } from '../context/NotificationContext';
 import { getImageUrl } from '../utils/imageUtils';
 import PremiumCarousel from '../components/PremiumCarousel';
 import NotificationsPanel from '../components/NotificationsPanel';
-
-
+import { useLanguage } from '../context/LanguageContext';
 // ─────────────────────────────────────────────────────────────────────────────
 // Rule Badge — displays which rule was applied for menu generation
 // ─────────────────────────────────────────────────────────────────────────────
@@ -172,13 +171,14 @@ const Dashboard = () => {
   const [assigning, setAssigning] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null); // 'today' | 'tomorrow' | null
   const { addNotification } = useNotifications();
+  const { language, t } = useLanguage();
   const navigate = useNavigate();
   const carouselTriggerRef = useRef(null);
 
   useEffect(() => {
     fetchData();
     fetchTamilCalendar();
-  },);
+  }, [language]);
   useEffect(() => {
     const handleGlobalClick = (event) => {
       if (openDropdown && !event.target.closest('.relative')) {
