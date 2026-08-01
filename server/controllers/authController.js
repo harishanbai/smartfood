@@ -260,7 +260,7 @@ export const logoutUser = async (req, res) => {
  */
 export const forgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, senderEmail } = req.body;
 
     if (!email || !email.trim()) {
       return res.status(400).json({ success: false, message: 'Email address is required.' });
@@ -284,7 +284,7 @@ export const forgotPassword = async (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
     const resetLink = `${frontendUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
 
-    const emailResult = await sendPasswordResetEmail(user.email, resetLink);
+    const emailResult = await sendPasswordResetEmail(user.email, resetLink, senderEmail);
 
     if (emailResult.mode === 'console') {
       return res.status(200).json({
@@ -369,5 +369,20 @@ export const resetPassword = async (req, res) => {
   } catch (error) {
     console.error('Reset Password API Error:', error);
     return res.status(500).json({ success: false, message: 'Server error during password reset.' });
+  }
+};
+
+/**
+ * @desc    Get configured sender emails
+ * @route   GET /api/auth/sender-emails
+ * @access  Public
+ */
+export const getSenderEmails = async (req, res) => {
+  try {
+    const users = (process.env.EMAIL_USER || '').split(',').map(s => s.trim()).filter(Boolean);
+    return res.status(200).json({ success: true, emails: users });
+  } catch (error) {
+    console.error('Get Sender Emails Error:', error);
+    return res.status(500).json({ success: false, message: 'Server error retrieving sender emails.' });
   }
 };

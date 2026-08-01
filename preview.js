@@ -1,0 +1,24 @@
+const { spawn, execSync } = require('child_process');
+
+console.log('\n🧹 Checking and cleaning ports 5000 and 5001...');
+try {
+  execSync('powershell -Command "Stop-Process -Id (Get-NetTCPConnection -LocalPort 5000,5001 -ErrorAction SilentlyContinue).OwningProcess -Force -ErrorAction SilentlyContinue"', { stdio: 'ignore' });
+} catch (e) {
+  // Ignore errors if no processes are bound to these ports
+}
+
+console.log('\n🚀 Starting SmartFood Frontend (Production Preview) & Backend concurrently...\n');
+
+// We use shell: true to execute npm script correctly on Windows, but stdio: 'ignore' prevents visible window popups
+const client = spawn('npm', ['run', 'preview', '--prefix', 'client'], { stdio: 'ignore', shell: true });
+const server = spawn('npm', ['start', '--prefix', 'server'], { stdio: 'ignore', shell: true });
+
+client.on('close', (code) => {
+  server.kill();
+  process.exit(code);
+});
+
+server.on('close', (code) => {
+  client.kill();
+  process.exit(code);
+});

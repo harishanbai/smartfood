@@ -4,18 +4,41 @@ import nodemailer from 'nodemailer';
 // Always read inside functions so the values are resolved at call time.
 
 /**
+ * Resolves credentials for a given sender email from the comma-separated EMAIL_USER/EMAIL_PASS config.
+ */
+export const getEmailCredentials = (selectedSender = null) => {
+  const users = (process.env.EMAIL_USER || '').split(',').map(s => s.trim()).filter(Boolean);
+  const passes = (process.env.EMAIL_PASS || '').split(',').map(s => s.trim()).filter(Boolean);
+
+  if (users.length === 0) {
+    return null;
+  }
+
+  let index = 0;
+  if (selectedSender) {
+    const foundIndex = users.indexOf(selectedSender.trim());
+    if (foundIndex !== -1) {
+      index = foundIndex;
+    }
+  }
+
+  const user = users[index];
+  const pass = passes[index] || passes[0];
+
+  return { user, pass, allUsers: users };
+};
+
+/**
  * Creates a Nodemailer transporter using Gmail SMTP.
  */
-const createTransporter = () => {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS;
-
-  if (!user || !pass) {
+const createTransporter = (selectedSender = null) => {
+  const creds = getEmailCredentials(selectedSender);
+  if (!creds || !creds.user || !creds.pass) {
     return null;
   }
   return nodemailer.createTransport({
     service: 'gmail',
-    auth: { user, pass }
+    auth: { user: creds.user, pass: creds.pass }
   });
 };
 
@@ -24,54 +47,69 @@ const createTransporter = () => {
  * Logs a clear pass/fail to the console.
  */
 export const verifySmtpConnection = async () => {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS;
+  const creds = getEmailCredentials();
 
   console.log('\n[EmailService] 🔌 Verifying SMTP connection...');
 
-  if (!user || !pass) {
+  if (!creds) {
     console.warn('[EmailService] ⚠️  EMAIL_USER or EMAIL_PASS is not set in .env');
     console.warn('[EmailService] ⚠️  Emails will NOT be sent. Reset links will only appear in the console.\n');
     return;
   }
 
-  const transporter = createTransporter();
+  const { allUsers } = creds;
+  const passes = (process.env.EMAIL_PASS || '').split(',').map(s => s.trim()).filter(Boolean);
 
-  try {
-    await transporter.verify();
-    console.log(`[EmailService] ✅ SMTP connection verified. Ready to send emails from: ${user}\n`);
-  } catch (error) {
-    console.error('[EmailService] ❌ SMTP verification FAILED:', error.message);
-    console.error('[EmailService] 💡 Common causes:');
-    console.error('   • Wrong EMAIL_USER or EMAIL_PASS in .env');
-    console.error('   • Gmail 2FA not enabled (required for App Passwords)');
-    console.error('   • Using your real Gmail password instead of an App Password');
-    console.error('   • Less Secure App access blocked by Google');
-    console.error('   ➜  Fix: https://myaccount.google.com/apppasswords\n');
+  for (let i = 0; i < allUsers.length; i++) {
+    const user = allUsers[i];
+    const pass = passes[i] || passes[0];
+
+    if (!user || !pass) continue;
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user, pass }
+    });
+
+    try {
+      await transporter.verify();
+      console.log(`[EmailService] ✅ SMTP connection verified for index ${i}. Ready to send emails from: ${user}`);
+    } catch (error) {
+      console.error(`[EmailService] ❌ SMTP verification FAILED for ${user}:`, error.message);
+      console.error('[EmailService] 💡 Common causes:');
+      console.error('   • Wrong EMAIL_USER or EMAIL_PASS in .env');
+      console.error('   • Gmail 2FA not enabled (required for App Passwords)');
+      console.error('   • Using your real Gmail password instead of an App Password');
+      console.error('   • Less Secure App access blocked by Google');
+      console.error('   ➜  Fix: https://myaccount.google.com/apppasswords');
+    }
   }
+  console.log('');
 };
 
 /**
  * Sends a styled password reset email via Gmail SMTP.
  * Always prints the reset link to the console for local testing.
  *
- * @param {string} toEmail   - Recipient email address
- * @param {string} resetLink - Full reset URL with token
+ * @param {string} toEmail      - Recipient email address
+ * @param {string} resetLink    - Full reset URL with token
+ * @param {string} senderEmail  - Optional selected sender email
  * @returns {{ success: boolean, mode?: string, error?: string }}
  */
-export const sendPasswordResetEmail = async (toEmail, resetLink) => {
-  const emailUser = process.env.EMAIL_USER;
-  const emailPass = process.env.EMAIL_PASS;
+export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = null) => {
+  const creds = getEmailCredentials(senderEmail);
   // ── Always log the link so you can copy-paste it for local testing ──
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(`🔗 TEST RESET LINK for ${toEmail}:`);
   console.log(`   ${resetLink}`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-  if (!emailUser || !emailPass) {
+  if (!creds || !creds.user || !creds.pass) {
     console.warn('[EmailService] ⚠️  SMTP not configured. Running in console-only mode.');
     return { success: true, mode: 'console' };
   }
+
+  const { user: emailUser, pass: emailPass } = creds;
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',

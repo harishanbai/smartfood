@@ -49,8 +49,9 @@ export const authApi = {
   login: (credentials) => api.post('/auth/login', credentials),
   google: (googleData) => api.post('/auth/google', googleData),
   logout: () => api.post('/auth/logout'),
-  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  forgotPassword: (email, senderEmail) => api.post('/auth/forgot-password', { email, senderEmail }),
   resetPassword: (token, email, newPassword) => api.post('/auth/reset-password', { token, email, newPassword }),
+  getSenderEmails: () => api.get('/auth/sender-emails'),
   sendWhatsappOtp: (phone) => api.post('/auth/whatsapp/send-otp', { phone }),
   verifyWhatsappOtp: (phone, otp) => api.post('/auth/whatsapp/verify-otp', { phone, otp })
 };

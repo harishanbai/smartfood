@@ -7,7 +7,8 @@ import {
   updateUserProfile,
   logoutUser,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  getSenderEmails
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { sendOtp, verifyOtp } from '../controllers/whatsappController.js';
@@ -21,6 +22,7 @@ router.post('/auth/google', googleAuth);
 router.post('/auth/logout', logoutUser);
 router.post('/auth/forgot-password', forgotPassword);
 router.post('/auth/reset-password', resetPassword);
+router.get('/auth/sender-emails', getSenderEmails);
 
 // WhatsApp Auth Endpoints
 router.post('/auth/whatsapp/send-otp', sendOtp);

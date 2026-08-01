@@ -29,10 +29,13 @@ try {
 }
 
 const getAuthMock = () => {
-  if (getApps().length === 0) {
-    return {
-      verifyIdToken: async (token) => {
-        console.log('[MockAuth] Verifying ID token locally...');
+  const realAuth = getApps().length > 0 ? getAuth() : null;
+
+  return {
+    verifyIdToken: async (token) => {
+      // Check if it is a mock token (ends with .mock_signature or starts with mock_)
+      if (token && (token.endsWith('.mock_signature') || token.startsWith('mock_'))) {
+        console.log('[MockAuth] Verifying ID token locally (Mock/Bypass detected)...');
         try {
           const parts = token.split('.');
           if (parts.length === 3) {
@@ -49,20 +52,46 @@ const getAuthMock = () => {
         } catch (decodeErr) {
           console.error('[MockAuth] Failed to decode token payload:', decodeErr.message);
         }
-        throw new Error('Firebase app not initialized and token has an invalid format');
-      },
-      getUser: async (uid) => {
-        return { uid, displayName: `WhatsApp User (${uid})` };
-      },
-      createUser: async (properties) => {
-        return { uid: properties.uid, ...properties };
-      },
-      createCustomToken: async (uid) => {
-        return `mock_custom_token_${uid}`;
       }
-    };
-  }
-  return getAuth();
+
+      // If we have real firebase auth initialized, use it
+      if (realAuth) {
+        return realAuth.verifyIdToken(token);
+      }
+
+      throw new Error('Firebase app not initialized and token is not a valid mock token');
+    },
+    getUser: async (uid) => {
+      if (realAuth) {
+        try {
+          return await realAuth.getUser(uid);
+        } catch (err) {
+          // If not found in real firebase, fall back to mock
+        }
+      }
+      return { uid, displayName: `User (${uid})` };
+    },
+    createUser: async (properties) => {
+      if (realAuth) {
+        try {
+          return await realAuth.createUser(properties);
+        } catch (err) {
+          // Fall back
+        }
+      }
+      return { uid: properties.uid, ...properties };
+    },
+    createCustomToken: async (uid) => {
+      if (realAuth) {
+        try {
+          return await realAuth.createCustomToken(uid);
+        } catch (err) {
+          // Fall back
+        }
+      }
+      return `mock_custom_token_${uid}`;
+    }
+  };
 };
 
 // Export an object compatible with the existing admin.auth() usages
