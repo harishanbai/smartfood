@@ -21,28 +21,9 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
-  const [senderEmails, setSenderEmails] = useState([]);
-  const [selectedSender, setSelectedSender] = useState('');
 
   const { sendPasswordReset } = useAuth();
   const { language, setLanguage } = useLanguage();
-
-  useEffect(() => {
-    const fetchSenderEmails = async () => {
-      try {
-        const res = await authApi.getSenderEmails();
-        if (res?.data?.success && Array.isArray(res.data.emails)) {
-          setSenderEmails(res.data.emails);
-          if (res.data.emails.length > 0) {
-            setSelectedSender(res.data.emails[0]);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching sender emails:', err);
-      }
-    };
-    fetchSenderEmails();
-  }, []);
 
   const validateForm = () => {
     if (!email.trim()) {
@@ -65,7 +46,7 @@ const ForgotPassword = () => {
     setLoading(true);
     setError('');
 
-    const res = await sendPasswordReset(email.trim(), selectedSender);
+    const res = await sendPasswordReset(email.trim());
     setLoading(false);
 
     if (res.success) {
@@ -253,33 +234,6 @@ const ForgotPassword = () => {
                   />
                 </div>
               </div>
-
-              {senderEmails.length > 0 && (
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                    Choose Sender Email
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <select
-                      value={selectedSender}
-                      onChange={(e) => setSelectedSender(e.target.value)}
-                      className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm focus:outline-none focus:border-emerald-500 focus:bg-white transition-all appearance-none cursor-pointer"
-                    >
-                      {senderEmails.map((sender) => (
-                        <option key={sender} value={sender}>
-                          {sender}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               <button
                 type="submit"

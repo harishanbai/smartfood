@@ -463,9 +463,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   // 4. Password Reset Flow — uses backend Nodemailer (not Firebase SDK directly)
-  const sendPasswordReset = async (email, senderEmail) => {
+  const sendPasswordReset = async (email) => {
     try {
-      const res = await authApi.forgotPassword(email.trim(), senderEmail);
+      const res = await authApi.forgotPassword(email.trim());
       if (res?.data?.success) {
         return { success: true };
       }
