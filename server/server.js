@@ -72,6 +72,16 @@ app.use('/api/stats', statsRoutes);
 app.use('/api/calendar', tamilCalendarRoutes);
 app.use('/api/tamil-calendar', tamilCalendarRoutes);
 
+// Health Check Endpoints
+app.get(['/api/health', '/health'], (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    success: true,
+    message: 'Smart Lunch Generator API is healthy and operational.',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Root route
 app.get('/', (req, res) => {
   res.send('Smart Lunch Generator API is running...');

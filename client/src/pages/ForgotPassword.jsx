@@ -46,13 +46,18 @@ const ForgotPassword = () => {
     setLoading(true);
     setError('');
 
-    const res = await sendPasswordReset(email.trim());
-    setLoading(false);
-
-    if (res.success) {
-      setSubmitted(true);
-    } else {
-      setError(res.error || 'Failed to send password reset email.');
+    try {
+      const res = await sendPasswordReset(email.trim());
+      if (res.success) {
+        setSubmitted(true);
+      } else {
+        setError(res.error || 'Failed to send password reset email.');
+      }
+    } catch (err) {
+      console.error('[ForgotPassword] Form Submit Error:', err);
+      setError(err?.message || 'An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 

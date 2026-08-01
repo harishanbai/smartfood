@@ -41,6 +41,15 @@ router.post('/reset-password', resetPassword);
 router.get('/auth/sender-emails', getSenderEmails);
 router.get('/sender-emails', getSenderEmails);
 
+// Auth Health / Test Endpoints
+router.get(['/auth/test', '/test'], (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Auth routes are working and reachable.',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // WhatsApp Auth Endpoints
 router.post('/auth/whatsapp/send-otp', sendOtp);
 router.post('/auth/whatsapp/verify-otp', verifyOtp);

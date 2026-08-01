@@ -259,10 +259,14 @@ export const logoutUser = async (req, res) => {
  * @access  Public
  */
 export const forgotPassword = async (req, res) => {
+  console.log(`\n[ForgotPassword] 📥 Incoming Request: ${req.method} ${req.originalUrl}`);
+  console.log(`[ForgotPassword] 📧 Target Email: "${req.body?.email}"`);
+
   try {
-    const { email, senderEmail } = req.body;
+    const { email } = req.body;
 
     if (!email || !email.trim()) {
+      console.warn('[ForgotPassword] ⚠️ Validation Error: Email address is required.');
       return res.status(400).json({ success: false, message: 'Email address is required.' });
     }
 
@@ -270,6 +274,7 @@ export const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
+      console.warn(`[ForgotPassword] ⚠️ User Not Found: No account registered with email ${normalizedEmail}`);
       return res.status(404).json({ success: false, message: 'No account found with that email address.' });
     }
 
@@ -284,7 +289,12 @@ export const forgotPassword = async (req, res) => {
     const frontendUrl = (process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173').trim().replace(/\/+$/, '');
     const resetLink = `${frontendUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
 
-    const emailResult = await sendPasswordResetEmail(user.email, resetLink, senderEmail);
+    console.log(`[ForgotPassword] 🔗 Reset Link Generated: ${resetLink}`);
+    console.log(`[ForgotPassword] ✉️ Sending Email via Nodemailer...`);
+
+    const emailResult = await sendPasswordResetEmail(user.email, resetLink);
+
+    console.log(`[ForgotPassword] 📨 Nodemailer Result:`, emailResult);
 
     if (emailResult.mode === 'console') {
       return res.status(200).json({
@@ -294,18 +304,20 @@ export const forgotPassword = async (req, res) => {
     }
 
     if (!emailResult.success) {
+      console.error(`[ForgotPassword] ❌ Email Delivery Failed: ${emailResult.error}`);
       return res.status(500).json({
         success: false,
         message: `Failed to send reset email: ${emailResult.error}`
       });
     }
 
+    console.log(`[ForgotPassword] ✅ Reset email successfully sent to ${user.email}`);
     return res.status(200).json({
       success: true,
       message: 'Password reset email sent successfully. Please check your inbox.'
     });
   } catch (error) {
-    console.error('[ForgotPassword] Error:', error);
+    console.error('[ForgotPassword] 💥 Server Exception Error:', error);
     return res.status(500).json({ success: false, message: 'Server error processing password reset request.' });
   }
 };

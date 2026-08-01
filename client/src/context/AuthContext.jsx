@@ -462,18 +462,53 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 4. Password Reset Flow — uses backend Nodemailer (not Firebase SDK directly)
+  // 4. Password Reset Flow — uses backend Nodemailer
   const sendPasswordReset = async (email) => {
+    console.log(`[ForgotPassword] 🚀 Initiating reset request for email: "${email.trim()}"`);
     try {
       const res = await authApi.forgotPassword(email.trim());
+      console.log(`[ForgotPassword] ✅ Request Succeeded - Status: ${res.status}`, res.data);
       if (res?.data?.success) {
-        return { success: true };
+        return { success: true, message: res.data.message || 'Password reset email sent successfully.' };
       }
       return { success: false, error: res?.data?.message || 'Failed to send reset email.' };
     } catch (error) {
-      console.error('Password Reset Error:', error?.response?.data || error.message);
+      const reqUrl = error?.config?.url || '/auth/forgot-password';
+      const statusCode = error?.response?.status || 'No Response (Network / CORS Error)';
       const serverMsg = error?.response?.data?.message;
-      return { success: false, error: serverMsg || 'Failed to send reset email. Please try again.' };
+
+      console.error(`[ForgotPassword] ❌ Request Failed:`, {
+        url: reqUrl,
+        statusCode,
+        error: serverMsg || error.message
+      });
+
+      if (!error?.response) {
+        return {
+          success: false,
+          error: 'Server unavailable. Please check your internet connection or backend status.'
+        };
+      } else if (statusCode === 404) {
+        return {
+          success: false,
+          error: serverMsg || 'No account found with that email address.'
+        };
+      } else if (statusCode === 400) {
+        return {
+          success: false,
+          error: serverMsg || 'Please enter a valid email address.'
+        };
+      } else if (statusCode === 500) {
+        return {
+          success: false,
+          error: serverMsg || 'Failed to send reset email due to a server error.'
+        };
+      }
+
+      return {
+        success: false,
+        error: serverMsg || 'Failed to send reset email. Please try again later.'
+      };
     }
   };
 

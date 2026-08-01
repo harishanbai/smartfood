@@ -41,13 +41,15 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // For API calls, try network first and do NOT cache by default to prevent stale data
-  if (url.pathname.startsWith('/api')) {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match(event.request);
-      })
-    );
+  // Do NOT intercept non-GET requests or API/auth/reset-password endpoints
+  if (
+    event.request.method !== 'GET' ||
+    url.pathname.includes('/api') ||
+    url.pathname.includes('auth') ||
+    url.pathname.includes('forgot-password') ||
+    url.pathname.includes('reset-password') ||
+    url.hostname.includes('onrender.com')
+  ) {
     return;
   }
 
