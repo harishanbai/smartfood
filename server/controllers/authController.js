@@ -281,7 +281,7 @@ export const forgotPassword = async (req, res) => {
     user.resetTokenExpiry = expiry;
     await user.save();
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5000';
+    const frontendUrl = (process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173').trim().replace(/\/+$/, '');
     const resetLink = `${frontendUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
 
     const emailResult = await sendPasswordResetEmail(user.email, resetLink, senderEmail);
@@ -311,6 +311,67 @@ export const forgotPassword = async (req, res) => {
 };
 
 /**
+ * @desc    Verify if reset token is valid & not expired
+ * @route   POST /api/auth/verify-reset-token
+ * @access  Public
+ */
+export const verifyResetToken = async (req, res) => {
+  try {
+    const { token, email } = req.body;
+
+    if (!token || !email) {
+      return res.status(400).json({
+        success: false,
+        code: 'MISSING_PARAMS',
+        message: 'Reset link is invalid.'
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        code: 'USER_NOT_FOUND',
+        message: 'No account found with this email address.'
+      });
+    }
+
+    const hashedToken = crypto.createHash('sha256').update(token.trim()).digest('hex');
+
+    if (user.resetToken !== hashedToken) {
+      return res.status(400).json({
+        success: false,
+        code: 'INVALID_TOKEN',
+        message: 'Reset link is invalid.'
+      });
+    }
+
+    if (!user.resetTokenExpiry || user.resetTokenExpiry <= new Date()) {
+      return res.status(400).json({
+        success: false,
+        code: 'EXPIRED_TOKEN',
+        message: 'Reset link has expired.'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      email: user.email,
+      message: 'Token is valid.'
+    });
+  } catch (error) {
+    console.error('Verify Reset Token Error:', error);
+    return res.status(500).json({
+      success: false,
+      code: 'NETWORK_ERROR',
+      message: 'Server error verifying reset token.'
+    });
+  }
+};
+
+/**
  * @desc    Verify token and set new password
  * @route   POST /api/auth/reset-password
  * @access  Public
@@ -320,25 +381,47 @@ export const resetPassword = async (req, res) => {
     const { token, email, newPassword } = req.body;
 
     if (!token || !email || !newPassword) {
-      return res.status(400).json({ success: false, message: 'Token, email, and new password are required.' });
+      return res.status(400).json({
+        success: false,
+        code: 'MISSING_PARAMS',
+        message: 'Token, email, and new password are required.'
+      });
     }
 
     if (newPassword.length < 8) {
-      return res.status(400).json({ success: false, message: 'Password must be at least 8 characters long.' });
+      return res.status(400).json({
+        success: false,
+        code: 'WEAK_PASSWORD',
+        message: 'Password must be at least 8 characters long.'
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        code: 'USER_NOT_FOUND',
+        message: 'No account found with this email address.'
+      });
     }
 
     const hashedToken = crypto.createHash('sha256').update(token.trim()).digest('hex');
 
-    const user = await User.findOne({
-      email: email.trim().toLowerCase(),
-      resetToken: hashedToken,
-      resetTokenExpiry: { $gt: new Date() }
-    });
-
-    if (!user) {
+    if (user.resetToken !== hashedToken) {
       return res.status(400).json({
         success: false,
-        message: 'This reset link is invalid or has expired. Please request a new one.'
+        code: 'INVALID_TOKEN',
+        message: 'Reset link is invalid.'
+      });
+    }
+
+    if (!user.resetTokenExpiry || user.resetTokenExpiry <= new Date()) {
+      return res.status(400).json({
+        success: false,
+        code: 'EXPIRED_TOKEN',
+        message: 'Reset link has expired.'
       });
     }
 

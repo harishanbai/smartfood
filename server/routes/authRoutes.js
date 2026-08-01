@@ -8,6 +8,7 @@ import {
   logoutUser,
   forgotPassword,
   resetPassword,
+  verifyResetToken,
   getSenderEmails
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
@@ -21,6 +22,7 @@ router.post('/auth/login', loginUser);
 router.post('/auth/google', googleAuth);
 router.post('/auth/logout', logoutUser);
 router.post('/auth/forgot-password', forgotPassword);
+router.post('/auth/verify-reset-token', verifyResetToken);
 router.post('/auth/reset-password', resetPassword);
 router.get('/auth/sender-emails', getSenderEmails);
 

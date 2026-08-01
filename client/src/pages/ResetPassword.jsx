@@ -39,6 +39,7 @@ const ResetPassword = () => {
 
   useEffect(() => {
     const verifyResetParams = async () => {
+      // 1. Firebase oobCode flow (password reset via Firebase email)
       if (oobCode) {
         try {
           const emailFromCode = await verifyPasswordResetCode(auth, oobCode);
@@ -61,20 +62,45 @@ const ResetPassword = () => {
         return;
       }
 
+      // 2. Backend token flow (password reset via Nodemailer email)
       if (token && emailParam) {
-        setValidCode(true);
-        setUserEmail(emailParam);
-        setVerifying(false);
+        try {
+          const res = await authApi.verifyResetToken(token, emailParam);
+          if (res?.data?.success) {
+            setUserEmail(res.data.email || emailParam);
+            setValidCode(true);
+            setError('');
+          } else {
+            setValidCode(false);
+            setError(res?.data?.message || 'Reset link is invalid.');
+          }
+        } catch (err) {
+          setValidCode(false);
+          const code = err?.response?.data?.code;
+          const msg = err?.response?.data?.message;
+          if (code === 'EXPIRED_TOKEN') {
+            setError('This reset link has expired. Please request a new password reset link.');
+          } else if (code === 'INVALID_TOKEN') {
+            setError('This reset link is invalid or has already been used.');
+          } else if (code === 'USER_NOT_FOUND') {
+            setError('No account found with this email address.');
+          } else if (err.code === 'ERR_NETWORK' || err.message?.includes('Network')) {
+            setError('Network error. Please check your connection and try again.');
+          } else {
+            setError(msg || 'Reset link is invalid or has expired. Please request a new one.');
+          }
+        } finally {
+          setVerifying(false);
+        }
         return;
       }
 
-      setValidCode(false);
-      setError('No reset code or token found in the URL link. Please request a new password reset link.');
-      setVerifying(false);
+      // 3. No token at all — redirect to login
+      navigate('/login', { replace: true });
     };
 
     verifyResetParams();
-  }, [oobCode, token, emailParam]);
+  }, [oobCode, token, emailParam, navigate]);
 
   const rules = {
     length: newPassword.length >= 8,
@@ -114,7 +140,19 @@ const ResetPassword = () => {
       } else if (err.code === 'auth/invalid-action-code' || err.code === 'auth/expired-action-code') {
         setError('This reset link has expired or was already used. Please request a new reset link.');
       } else {
-        setError(err.message || 'Failed to reset password. Please try again.');
+        const code = err?.response?.data?.code;
+        const msg = err?.response?.data?.message;
+        if (code === 'EXPIRED_TOKEN') {
+          setError('This reset link has expired. Please request a new password reset link.');
+        } else if (code === 'INVALID_TOKEN') {
+          setError('This reset link is invalid or has already been used.');
+        } else if (code === 'USER_NOT_FOUND') {
+          setError('No account found with this email address.');
+        } else if (err.code === 'ERR_NETWORK' || err.message?.includes('Network')) {
+          setError('Network error. Please check your internet connection and try again.');
+        } else {
+          setError(msg || err.message || 'Failed to reset password. Please try again.');
+        }
       }
     } finally {
       setLoading(false);
