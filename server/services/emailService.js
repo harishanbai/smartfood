@@ -222,6 +222,14 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
     console.error(`[EmailService]    Error Code   : ${error.code}`);
     console.error(`[EmailService]    Error Message: ${error.message}`);
     console.error(`[EmailService]    Response     : ${error.response || 'N/A'}\n`);
-    return { success: false, error: error.message, code: error.code };
+
+    let friendlyError = error.message;
+    if (error.code === 'EAUTH' || error.responseCode === 535 || error.message?.includes('Invalid login')) {
+      friendlyError = 'SMTP Authentication failed. Please verify EMAIL_USER and EMAIL_PASS App Password in Render configuration.';
+    } else if (error.code === 'ESOCKET' || error.code === 'ETIMEDOUT') {
+      friendlyError = 'Mail server connection timed out. Please try again later.';
+    }
+
+    return { success: false, error: friendlyError, code: error.code };
   }
 };
