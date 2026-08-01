@@ -16,15 +16,30 @@ import { sendOtp, verifyOtp } from '../controllers/whatsappController.js';
 
 const router = express.Router();
 
-// Auth Endpoints
+// Auth Endpoints (supports both /api/auth/* and /api/*)
 router.post('/auth/register', registerUser);
+router.post('/register', registerUser);
+
 router.post('/auth/login', loginUser);
+router.post('/login', loginUser);
+
 router.post('/auth/google', googleAuth);
+router.post('/google', googleAuth);
+
 router.post('/auth/logout', logoutUser);
+router.post('/logout', logoutUser);
+
 router.post('/auth/forgot-password', forgotPassword);
+router.post('/forgot-password', forgotPassword);
+
 router.post('/auth/verify-reset-token', verifyResetToken);
+router.post('/verify-reset-token', verifyResetToken);
+
 router.post('/auth/reset-password', resetPassword);
+router.post('/reset-password', resetPassword);
+
 router.get('/auth/sender-emails', getSenderEmails);
+router.get('/sender-emails', getSenderEmails);
 
 // WhatsApp Auth Endpoints
 router.post('/auth/whatsapp/send-otp', sendOtp);

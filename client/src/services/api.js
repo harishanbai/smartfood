@@ -54,8 +54,22 @@ export const authApi = {
   google: (googleData) => api.post('/auth/google', googleData),
   logout: () => api.post('/auth/logout'),
   forgotPassword: (email, senderEmail) => api.post('/auth/forgot-password', { email, senderEmail }),
-  verifyResetToken: (token, email) => api.post('/auth/verify-reset-token', { token, email }),
-  resetPassword: (token, email, newPassword) => api.post('/auth/reset-password', { token, email, newPassword }),
+  verifyResetToken: (token, email) => {
+    const payload = { token, email };
+    const url = `${API_BASE_URL}/auth/verify-reset-token`;
+    console.log("Verify Reset URL:", url);
+    console.log("Method:", "POST");
+    console.log("Payload:", payload);
+    return api.post('/auth/verify-reset-token', payload);
+  },
+  resetPassword: (token, email, newPassword) => {
+    const payload = { token, email, password: newPassword, newPassword };
+    const url = `${API_BASE_URL}/auth/reset-password`;
+    console.log("Reset URL:", url);
+    console.log("Method:", "POST");
+    console.log("Payload:", payload);
+    return api.post('/auth/reset-password', payload);
+  },
   getSenderEmails: () => api.get('/auth/sender-emails'),
   sendWhatsappOtp: (phone) => api.post('/auth/whatsapp/send-otp', { phone }),
   verifyWhatsappOtp: (phone, otp) => api.post('/auth/whatsapp/verify-otp', { phone, otp })

@@ -378,7 +378,8 @@ export const verifyResetToken = async (req, res) => {
  */
 export const resetPassword = async (req, res) => {
   try {
-    const { token, email, newPassword } = req.body;
+    const { token, email } = req.body;
+    const newPassword = req.body.newPassword || req.body.password;
 
     if (!token || !email || !newPassword) {
       return res.status(400).json({

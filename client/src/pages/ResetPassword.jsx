@@ -76,9 +76,19 @@ const ResetPassword = () => {
           }
         } catch (err) {
           setValidCode(false);
+          const status = err?.response?.status;
           const code = err?.response?.data?.code;
           const msg = err?.response?.data?.message;
-          if (code === 'EXPIRED_TOKEN') {
+
+          if (status === 405) {
+            setError('Password reset endpoint is configured incorrectly.');
+          } else if (status === 401) {
+            setError('Invalid token.');
+          } else if (status === 404) {
+            setError('Route not found.');
+          } else if (status === 500) {
+            setError('Server error.');
+          } else if (code === 'EXPIRED_TOKEN') {
             setError('This reset link has expired. Please request a new password reset link.');
           } else if (code === 'INVALID_TOKEN') {
             setError('This reset link is invalid or has already been used.');
@@ -86,6 +96,8 @@ const ResetPassword = () => {
             setError('No account found with this email address.');
           } else if (err.code === 'ERR_NETWORK' || err.message?.includes('Network')) {
             setError('Network error. Please check your connection and try again.');
+          } else if (status === 400) {
+            setError(msg || 'Invalid request.');
           } else {
             setError(msg || 'Reset link is invalid or has expired. Please request a new one.');
           }
@@ -135,24 +147,34 @@ const ResetPassword = () => {
       }, 3500);
     } catch (err) {
       console.error("Password reset execution error:", err);
-      if (err.code === 'auth/weak-password') {
+      const status = err?.response?.status;
+      const code = err?.response?.data?.code;
+      const msg = err?.response?.data?.message;
+
+      if (status === 405) {
+        setError('Password reset endpoint is configured incorrectly.');
+      } else if (status === 401) {
+        setError('Invalid token.');
+      } else if (status === 404) {
+        setError('Route not found.');
+      } else if (status === 500) {
+        setError('Server error.');
+      } else if (err.code === 'auth/weak-password') {
         setError('Password is too weak. Please use a stronger password.');
       } else if (err.code === 'auth/invalid-action-code' || err.code === 'auth/expired-action-code') {
         setError('This reset link has expired or was already used. Please request a new reset link.');
+      } else if (code === 'EXPIRED_TOKEN') {
+        setError('This reset link has expired. Please request a new password reset link.');
+      } else if (code === 'INVALID_TOKEN') {
+        setError('This reset link is invalid or has already been used.');
+      } else if (code === 'USER_NOT_FOUND') {
+        setError('No account found with this email address.');
+      } else if (status === 400) {
+        setError(msg || 'Invalid request.');
+      } else if (err.code === 'ERR_NETWORK' || err.message?.includes('Network')) {
+        setError('Network error. Please check your internet connection and try again.');
       } else {
-        const code = err?.response?.data?.code;
-        const msg = err?.response?.data?.message;
-        if (code === 'EXPIRED_TOKEN') {
-          setError('This reset link has expired. Please request a new password reset link.');
-        } else if (code === 'INVALID_TOKEN') {
-          setError('This reset link is invalid or has already been used.');
-        } else if (code === 'USER_NOT_FOUND') {
-          setError('No account found with this email address.');
-        } else if (err.code === 'ERR_NETWORK' || err.message?.includes('Network')) {
-          setError('Network error. Please check your internet connection and try again.');
-        } else {
-          setError(msg || err.message || 'Failed to reset password. Please try again.');
-        }
+        setError(msg || err.message || 'Failed to reset password. Please try again.');
       }
     } finally {
       setLoading(false);
