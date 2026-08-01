@@ -1,4 +1,5 @@
-const API_BASE = '';
+let envApiUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+const API_BASE = envApiUrl ? (envApiUrl.endsWith('/api') ? envApiUrl.slice(0, -4) : envApiUrl) : '';
 
 /**
  * Get a displayable image URL for a food item.

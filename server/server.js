@@ -29,6 +29,8 @@ const allowedOrigins = [
   'http://localhost:5000',
   'http://192.168.1.91:5000',
   'https://doorbell-spry-judgingly.ngrok-free.dev',
+  'https://vaseegrah-veda-catering-xer9.vercel.app',
+  'https://vaseegrah-veda-catering.vercel.app',
   process.env.CLIENT_URL // Vercel URL
 ].filter(Boolean);
 
@@ -37,16 +39,14 @@ app.use(cors({
   origin: function (origin, callback) {
     // allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      // If the origin isn't found in allowedOrigins, check if we're in dev mode.
-      // If we are, we can be a bit more permissive, else block it.
-      if (process.env.NODE_ENV !== 'production') {
-        return callback(null, true);
-      }
-      var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
+      return callback(null, true);
     }
-    return callback(null, true);
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+    return callback(new Error(msg), false);
   },
   credentials: true
 }));

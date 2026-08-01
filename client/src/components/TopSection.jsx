@@ -201,7 +201,7 @@ const TopSection = () => {
                 {currentUser.photoURL && !imgError ? (
                   <img
                     src={currentUser.photoURL}
-                    alt={currentUser.displayName || 'Gmail User'}
+                    alt={currentUser.displayName || 'Google User'}
                     onError={() => setImgError(true)}
                     className="w-full h-full object-cover"
                   />
@@ -225,6 +225,7 @@ const TopSection = () => {
                       <img
                         src={currentUser.photoURL}
                         alt={currentUser.displayName || 'User'}
+                        onError={() => setImgError(true)}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -243,7 +244,7 @@ const TopSection = () => {
                     <div className="flex flex-wrap gap-1 mt-1">
                       {(mongoUser?.provider === 'google' || currentUser?.email) && (
                         <span className="inline-block text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                          ✓ Gmail Connected
+                          ✓ Google Connected
                         </span>
                       )}
                       {(mongoUser?.provider === 'whatsapp' || mongoUser?.phone || mongoUser?.whatsappVerified) && (

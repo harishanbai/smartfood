@@ -1,7 +1,11 @@
 import axios from 'axios';
 import { auth } from '../firebase';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+let envApiUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+let API_BASE_URL = '/api';
+if (envApiUrl) {
+  API_BASE_URL = envApiUrl.endsWith('/api') ? envApiUrl : `${envApiUrl}/api`;
+}
 
 const api = axios.create({
   baseURL: API_BASE_URL,

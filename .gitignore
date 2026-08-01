@@ -38,3 +38,5 @@ server/uploads/*
 **.node-persist**
 **_IGNORE_**
 # end managed
+.vercel
+.env*
