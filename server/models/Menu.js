@@ -31,8 +31,12 @@ const menuSchema = new mongoose.Schema({
   },
   generationType: {
     type: String,
-    enum: ['automatic', 'manual'],
+    enum: ['automatic', 'manual', 'AUTO'],
     default: 'automatic'
+  },
+  scheduledTime: {
+    type: String,
+    default: null  // e.g. '20:00' for auto-scheduled, null for manual
   },
   // Smart Rule Engine fields (optional, backwards-compatible)
   ruleApplied: {

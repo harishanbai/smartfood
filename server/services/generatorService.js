@@ -19,10 +19,14 @@ import { selectFood } from './menuGenerator.js';
  * Generates EXACTLY ONE lunch menu item for the given target date.
  *
  * @param {string} dateStr - Target date in YYYY-MM-DD format
- * @param {'automatic'|'manual'} generationType - Generation source
+ * @param {'automatic'|'manual'|'AUTO'} generationType - Generation source
+ * @param {Object} [options] - Additional options
+ * @param {string|null} [options.scheduledTime] - Scheduled time string e.g. '20:00' for cron runs
  * @returns {Promise<Object>} Populated Menu mongoose document
  */
-export const generateLunchForDate = async (dateStr, generationType = 'automatic') => {
+export const generateLunchForDate = async (dateStr, generationType = 'automatic', options = {}) => {
+  const { scheduledTime = null } = options;
+
   // 1. Fetch Tamil Calendar Data
   const tamilData = await getCalendarData(dateStr);
 
@@ -50,6 +54,7 @@ export const generateLunchForDate = async (dateStr, generationType = 'automatic'
     generatedAt: new Date(),
     status: 'active',
     generationType,
+    scheduledTime,
     ruleApplied: ruleResult.ruleApplied,
     ruleCode: ruleResult.ruleCode,
     tamilCalendarSnapshot: tamilData,
