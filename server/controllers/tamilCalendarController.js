@@ -12,14 +12,7 @@
 import { getCalendarData } from '../services/tamilCalendarService.js';
 import { evaluateRule } from '../services/ruleEngine.js';
 import { translateResponse } from '../utils/translator.js';
-
-/**
- * Formats a JS Date to YYYY-MM-DD string.
- * @param {Date} d
- * @returns {string}
- */
-const toDateStr = (d) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+import { getKolkataDateStr } from '../utils/dateUtils.js';
 
 /**
  * Builds a combined response with Tamil data + rule evaluation.
@@ -50,9 +43,12 @@ const buildCalendarResponse = async (dateStr, lang = 'en') => {
  */
 export const getTodayCalendar = async (req, res) => {
   try {
-    const todayStr = toDateStr(new Date());
+    const todayStr = getKolkataDateStr(0);
     const lang = req.headers['accept-language'] || 'en';
+    console.log(`[TamilCalendarController] 📅 API Date Requested (Today): ${todayStr}`);
     const result = await buildCalendarResponse(todayStr, lang);
+    console.log(`[TamilCalendarController] Festival Today (${todayStr}):`, result?.tamilCalendar?.festivalName || (result?.tamilCalendar?.isFestival ? 'Festival' : 'None'));
+    console.log(`[TamilCalendarController] Today API Response:`, JSON.stringify(result));
     res.json(result);
   } catch (error) {
     console.error('[TamilCalendarController] Error fetching today:', error.message);
@@ -68,11 +64,12 @@ export const getTodayCalendar = async (req, res) => {
  */
 export const getTomorrowCalendar = async (req, res) => {
   try {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = toDateStr(tomorrow);
+    const tomorrowStr = getKolkataDateStr(1);
     const lang = req.headers['accept-language'] || 'en';
+    console.log(`[TamilCalendarController] 📅 API Date Requested (Tomorrow): ${tomorrowStr}`);
     const result = await buildCalendarResponse(tomorrowStr, lang);
+    console.log(`[TamilCalendarController] Festival Tomorrow (${tomorrowStr}):`, result?.tamilCalendar?.festivalName || (result?.tamilCalendar?.isFestival ? 'Festival' : 'None'));
+    console.log(`[TamilCalendarController] Tomorrow API Response:`, JSON.stringify(result));
     res.json(result);
   } catch (error) {
     console.error('[TamilCalendarController] Error fetching tomorrow:', error.message);

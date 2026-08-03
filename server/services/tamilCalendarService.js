@@ -15,6 +15,8 @@
  * enriched with the astronomical data for any missing fields.
  */
 
+import { getKolkataDateStr } from '../utils/dateUtils.js';
+
 // In-memory cache: { 'YYYY-MM-DD': data }
 const calendarCache = new Map();
 
@@ -50,21 +52,22 @@ const NAKSHATRA_NAMES = [
   'Revathi', 'Ashwini' // wrap
 ];
 
+
 /**
  * Fixed Tamil festivals: [tamilMonthIndex(0-based), tamilDayApprox]
  * These are matched against computed Tamil month + date range.
  */
 const FIXED_FESTIVALS = [
-  { month: 9, dayMin: 1,  dayMax: 3,  name: 'Pongal' },          // Thai 1–3
+  { month: 9, dayMin: 1,  dayMax: 1,  name: 'Pongal' },          // Thai 1
   { month: 0, dayMin: 1,  dayMax: 1,  name: 'Tamil New Year' },   // Chithirai 1
-  { month: 3, dayMin: 18, dayMax: 22, name: 'Aadi Perukku' },     // Aadi 18
-  { month: 5, dayMin: 1,  dayMax: 3,  name: 'Navratri' },         // Purattasi 1
-  { month: 5, dayMin: 15, dayMax: 17, name: 'Ayudha Pooja' },     // Purattasi 15
-  { month: 6, dayMin: 1,  dayMax: 5,  name: 'Deepavali' },        // Aippasi 1
-  { month: 7, dayMin: 1,  dayMax: 3,  name: 'Karthigai Deepam' }, // Karthigai 1
-  { month: 8, dayMin: 1,  dayMax: 5,  name: 'Margazhi Thiruvizha' }, // Margazhi 1
-  { month: 10, dayMin: 1, dayMax: 5,  name: 'Maha Shivaratri' },  // Maasi 1
-  { month: 11, dayMin: 10, dayMax: 14, name: 'Panguni Uthiram' }, // Panguni 10
+  { month: 3, dayMin: 18, dayMax: 18, name: 'Aadi Perukku' },     // Aadi 18
+  { month: 5, dayMin: 1,  dayMax: 9,  name: 'Navratri' },         // Purattasi 1–9
+  { month: 5, dayMin: 9,  dayMax: 9,  name: 'Ayudha Pooja' },     // Purattasi 9
+  { month: 6, dayMin: 1,  dayMax: 1,  name: 'Deepavali' },        // Aippasi 1
+  { month: 7, dayMin: 1,  dayMax: 1,  name: 'Karthigai Deepam' }, // Karthigai 1
+  { month: 8, dayMin: 1,  dayMax: 1,  name: 'Margazhi Thiruvizha' }, // Margazhi 1
+  { month: 10, dayMin: 14, dayMax: 14, name: 'Maha Shivaratri' },  // Maasi 14
+  { month: 11, dayMin: 14, dayMax: 14, name: 'Panguni Uthiram' }, // Panguni 14
 ];
 
 // ─── Astronomical Utility Functions ──────────────────────────────────────────
@@ -402,20 +405,16 @@ export const getCalendarData = async (dateStr) => {
 };
 
 /**
- * Returns Tamil calendar data for today.
+ * Returns Tamil calendar data for today (Asia/Kolkata timezone).
  * @returns {Promise<Object>}
  */
-export const getTodayCalendarData = async () => getCalendarData(toDateStr(new Date()));
+export const getTodayCalendarData = async () => getCalendarData(getKolkataDateStr(0));
 
 /**
- * Returns Tamil calendar data for tomorrow.
+ * Returns Tamil calendar data for tomorrow (Asia/Kolkata timezone).
  * @returns {Promise<Object>}
  */
-export const getTomorrowCalendarData = async () => {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return getCalendarData(toDateStr(tomorrow));
-};
+export const getTomorrowCalendarData = async () => getCalendarData(getKolkataDateStr(1));
 
 /**
  * Clears the cache (useful for testing or scheduled midnight resets).

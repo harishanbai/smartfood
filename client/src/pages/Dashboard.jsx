@@ -219,10 +219,25 @@ const Dashboard = () => {
         tamilCalendarApi.getToday(),
         tamilCalendarApi.getTomorrow(),
       ]);
-      setTamilToday(todayRes.status === 'fulfilled' ? todayRes.value?.data : null);
-      setTamilTomorrow(tomorrowRes.status === 'fulfilled' ? tomorrowRes.value?.data : null);
+
+      const todayData = todayRes.status === 'fulfilled' ? todayRes.value?.data : null;
+      const tomorrowData = tomorrowRes.status === 'fulfilled' ? tomorrowRes.value?.data : null;
+
+      console.log('Today date:', todayData?.date);
+      console.log('Tomorrow date:', tomorrowData?.date);
+      console.log('API Date Requested (Today):', todayData?.date);
+      console.log('API Date Requested (Tomorrow):', tomorrowData?.date);
+      console.log('Today API response:', todayData);
+      console.log('Tomorrow API response:', tomorrowData);
+      console.log('Festival Today:', todayData?.tamilCalendar?.festivalName || (todayData?.tamilCalendar?.isFestival ? 'Festival' : 'None'));
+      console.log('Festival Tomorrow:', tomorrowData?.tamilCalendar?.festivalName || (tomorrowData?.tamilCalendar?.isFestival ? 'Festival' : 'None'));
+
+      setTamilToday(todayData);
+      setTamilTomorrow(tomorrowData);
     } catch (err) {
       console.error('Error fetching Tamil calendar:', err);
+      setTamilToday(null);
+      setTamilTomorrow(null);
     } finally {
       setCalendarLoading(false);
     }
@@ -640,7 +655,7 @@ const Dashboard = () => {
           </div>
 
           {/* ── Tomorrow's Tamil Calendar Info ── */}
-          {!calendarLoading && tamilTomorrow?.tamilCalendar && (
+          {!calendarLoading && tamilTomorrow && (
             <div className="glass-panel rounded-[24px] p-5 border border-white/5 relative overflow-hidden">
               <div className="absolute -right-10 -top-10 w-32 h-32 bg-indigo-500/8 rounded-full blur-[60px] pointer-events-none" />
 
@@ -663,7 +678,8 @@ const Dashboard = () => {
                 ))}
               </div>
 
-              {tamilTomorrow.tamilCalendar.isFestival && (
+              {/* Festival / Viratham / Amavasai / Pournami banners or No Festival */}
+              {tamilTomorrow.tamilCalendar?.isFestival ? (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-500/15 border border-purple-500/30 mb-3">
                   <span>🎉</span>
                   <div>
@@ -671,8 +687,13 @@ const Dashboard = () => {
                     <p className="text-xs text-white font-semibold">{tamilTomorrow.tamilCalendar.festivalName}</p>
                   </div>
                 </div>
+              ) : (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 mb-3">
+                  <span>📅</span>
+                  <p className="text-xs font-semibold text-gray-400">No Festival Tomorrow</p>
+                </div>
               )}
-              {tamilTomorrow.tamilCalendar.isViratham && (
+              {tamilTomorrow.tamilCalendar?.isViratham && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-pink-500/15 border border-pink-500/30 mb-3">
                   <span>🪔</span>
                   <div>
@@ -681,13 +702,13 @@ const Dashboard = () => {
                   </div>
                 </div>
               )}
-              {tamilTomorrow.tamilCalendar.isAmavasai && (
+              {tamilTomorrow.tamilCalendar?.isAmavasai && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-500/15 border border-indigo-500/30 mb-3">
                   <span>🌑</span>
                   <p className="text-xs font-bold text-indigo-300">Amavasai (New Moon) Tomorrow</p>
                 </div>
               )}
-              {tamilTomorrow.tamilCalendar.isPournami && (
+              {tamilTomorrow.tamilCalendar?.isPournami && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-yellow-500/10 border border-yellow-500/25 mb-3">
                   <span>🌕</span>
                   <p className="text-xs font-bold text-yellow-300">Pournami (Full Moon) Tomorrow</p>
