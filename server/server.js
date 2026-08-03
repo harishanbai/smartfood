@@ -12,6 +12,7 @@ import authRoutes from './routes/authRoutes.js';
 import webhookRoutes from './routes/webhookRoutes.js';
 import { clearCache } from './services/tamilCalendarService.js';
 import { verifySmtpConnection } from './services/emailService.js';
+import mongoose from 'mongoose';
 import { initScheduler } from './services/schedulerService.js';
 import { getKolkataDateStr } from './utils/dateUtils.js';
 
@@ -75,10 +76,12 @@ app.use('/api', systemRoutes);
 
 // Health Check Endpoints
 app.get(['/api/health', '/health'], (req, res) => {
-  res.status(200).json({
+  const isDbConnected = mongoose.connection.readyState === 1;
+  res.status(isDbConnected ? 200 : 503).json({
     status: 'ok',
-    success: true,
-    message: 'Smart Lunch Generator API is healthy and operational.',
+    database: isDbConnected ? 'connected' : 'disconnected',
+    success: isDbConnected,
+    message: isDbConnected ? 'Smart Lunch Generator API is healthy and operational.' : 'Database connection error',
     timestamp: new Date().toISOString()
   });
 });
@@ -98,7 +101,16 @@ cron.schedule('0 0 * * *', () => {
 
 const PORT = process.env.PORT || 5001;
 const server = app.listen(PORT, () => {
-  console.log(`\n✅ Server running on port ${PORT}`);
+  const dbState = mongoose.connection.readyState;
+  const dbStatusStr = dbState === 1 ? 'Connected' : dbState === 2 ? 'Connecting...' : 'Disconnected';
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`🚀 [Backend Startup]`);
+  console.log(`   Port Number   : ${PORT}`);
+  console.log(`   MongoDB Status: ${dbStatusStr}`);
+  console.log(`   Allowed Origins:`);
+  allowedOrigins.forEach(o => console.log(`     • ${o}`));
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
   // Initialize Auto Lunch Scheduler
   initScheduler();
   // Verify SMTP connection after server starts

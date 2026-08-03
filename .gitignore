@@ -4,13 +4,16 @@ client/node_modules/
 server/node_modules/
 # Environment configurations
 .env
-client/.env
-server/.env
-
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.development
+.env.production
+.env.test
+.env.sample
+.env.example
+.env.*
 # Production builds
 dist/
 client/dist/

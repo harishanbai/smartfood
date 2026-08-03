@@ -1,11 +1,15 @@
 import axios from 'axios';
 import { auth } from '../firebase';
+const API_URL = import.meta.env.PROD 
+  ? (import.meta.env.VITE_API_URL_PROD || 'https://vaseegrah-veda-catering.onrender.com')
+  : (import.meta.env.VITE_API_URL || 'http://localhost:5001');
+const cleanBaseUrl = API_URL.trim().replace(/\/+$/, '');
+const API_BASE_URL = cleanBaseUrl.endsWith('/api') ? cleanBaseUrl : `${cleanBaseUrl}/api`;
 
-let envApiUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
-let API_BASE_URL = '/api';
-if (envApiUrl) {
-  API_BASE_URL = envApiUrl.endsWith('/api') ? envApiUrl : `${envApiUrl}/api`;
-}
+console.log('\n🚀 [Frontend Startup]');
+console.log('   Current Environment:', import.meta.env.MODE);
+console.log('   Current API URL    :', API_URL);
+console.log('   Resolved Base URL  :', API_BASE_URL, '\n');
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -47,6 +51,30 @@ api.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (!error.response) {
+      if (error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED') {
+        console.error(`❌ [Backend Not Running / Network Error] Could not connect to API server at ${API_BASE_URL}. Ensure the backend server is running on port 5001.`);
+      } else {
+        console.error(`❌ [Network Error] ${error.message} (Target: ${API_BASE_URL})`);
+      }
+    } else {
+      const status = error.response.status;
+      const data = error.response.data;
+      if (status === 503 || data?.database === 'disconnected') {
+        console.error('❌ [MongoDB Not Connected] Backend reports database is disconnected.');
+      } else if (status === 403 || data?.message?.includes('CORS')) {
+        console.error('❌ [CORS Blocked] Origin not allowed by backend CORS configuration.');
+      } else if (status === 404) {
+        console.error(`❌ [Invalid API URL / Route Not Found] ${error.config?.url} does not exist on ${API_BASE_URL}.`);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const authApi = {
   register: (userData) => api.post('/auth/register', userData),
