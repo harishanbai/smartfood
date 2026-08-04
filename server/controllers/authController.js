@@ -18,7 +18,7 @@ export const registerUser = async (req, res) => {
     const userName = (name || displayName || email.split('@')[0]).trim();
 
     const existingUser = await User.findOne({ $or: [{ uid }, { email: email.toLowerCase() }] });
-    
+
     if (existingUser) {
       // Update existing record
       existingUser.uid = uid;
@@ -102,16 +102,31 @@ export const loginUser = async (req, res) => {
  */
 export const googleAuth = async (req, res) => {
   try {
-    const { uid, displayName, name, email, photo, photoURL, language } = req.body;
+    const { idToken, uid: bodyUid, displayName, name, email: bodyEmail, photo, photoURL, language } = req.body;
+
+    let uid = bodyUid;
+    let email = bodyEmail;
+    let userName = (name || displayName || (email ? email.split('@')[0] : '')).trim();
+    let userPhoto = photo || photoURL || '';
+
+    // Verify Firebase ID token if provided
+    if (idToken) {
+      try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        uid = decodedToken.uid;
+        email = decodedToken.email || email;
+        userName = (decodedToken.name || userName || (email ? email.split('@')[0] : 'User')).trim();
+        userPhoto = decodedToken.picture || userPhoto;
+      } catch (tokenErr) {
+        console.warn('Google Auth Token Verification Warning:', tokenErr.message);
+      }
+    }
 
     if (!uid || !email) {
       return res.status(400).json({ success: false, message: 'Google UID and Email are required.' });
     }
 
     let user = await User.findOne({ $or: [{ uid }, { email: email.toLowerCase() }] });
-
-    const userPhoto = photo || photoURL || '';
-    const userName = (name || displayName || email.split('@')[0]).trim();
 
     if (user) {
       // Update existing user
