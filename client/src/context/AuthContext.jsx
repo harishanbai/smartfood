@@ -7,6 +7,7 @@ import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail as sendFirebasePasswordResetEmail,
   sendEmailVerification,
   updateProfile as updateFirebaseProfile,
   signInWithCustomToken,
@@ -243,23 +244,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 3. Google Sign-In Flow
+  // 3. Google Sign-In Flow (Works on both desktop and mobile)
   const loginWithGoogle = async () => {
+    console.log("[Google Sign-In] Initiating authentication...");
     try {
-      // Check if user is on a mobile device
-      const isMobile = /Mobi|Android|iPhone|iPad|Windows Phone/i.test(navigator.userAgent);
-
-      if (isMobile) {
-        console.log("[Google Sign-In] Mobile device detected, using signInWithRedirect");
-        await signInWithRedirect(auth, googleProvider);
-        return { success: true, redirecting: true };
-      }
-
-      console.log("[Google Sign-In] Initiating popup...");
+      // Attempt Popup sign-in first on all devices (mobile & desktop)
+      // Popup works smoothly across mobile browsers without cross-domain cookie restrictions
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      console.log("[Google Sign-In] Success! User:", user.email);
+      console.log("[Google Sign-In] Success! Authenticated user:", user.email);
 
       let idToken = '';
       try {
@@ -303,7 +297,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("[Google Sign-In] Error:", error.code, error.message);
 
-      // If popup fails or is blocked, try redirect as fallback
+      // If popup is blocked by mobile browser popup blocker, fall back to redirect
       if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
         console.warn("[Google Sign-In] Popup blocked/closed, falling back to Redirect...");
         try {
@@ -371,7 +365,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 4. Password Reset Flow — uses backend Nodemailer
+  // 4. Password Reset Flow — Primary Nodemailer + Firebase Auth Fallback
   const sendPasswordReset = async (email) => {
     const trimmedEmail = email.trim();
     console.log(`[ForgotPassword] 🚀 Initiating reset request for email: "${trimmedEmail}"`);
@@ -385,7 +379,6 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       const reqUrl = error?.config?.url || '/auth/forgot-password';
       const statusCode = error?.response?.status;
-      // Always use the exact server message — it has the real reason
       const serverMsg = error?.response?.data?.message;
 
       console.error(`[ForgotPassword] ❌ Request Failed:`, {
@@ -401,21 +394,24 @@ export const AuthProvider = ({ children }) => {
         };
       }
 
-      // Always prefer the server's exact error message
-      if (serverMsg) {
-        return { success: false, error: serverMsg };
-      }
-
-      // Fallbacks if no server message
+      // If user is not registered in MongoDB (404) or email format is invalid (400), strictly return that error message!
       if (statusCode === 404) {
-        return { success: false, error: 'No account found with this email address.' };
-      } else if (statusCode === 400) {
-        return { success: false, error: 'Please enter a valid email address.' };
-      } else if (statusCode === 500) {
-        return { success: false, error: 'Failed to send reset email due to a server error. Please try again later.' };
+        return { success: false, error: serverMsg || 'No account found with this email address.' };
+      }
+      if (statusCode === 400) {
+        return { success: false, error: serverMsg || 'Please enter a valid email address.' };
       }
 
-      return { success: false, error: 'Failed to send reset email. Please try again later.' };
+      // If backend Nodemailer SMTP delivery failed (e.g. 500 error due to SMTP auth issue), fallback to Firebase Auth sendPasswordResetEmail!
+      console.warn(`[ForgotPassword] Backend SMTP notice (${statusCode}). Triggering Firebase Auth password reset fallback...`);
+      try {
+        await sendFirebasePasswordResetEmail(auth, trimmedEmail);
+        console.log(`[ForgotPassword] ✅ Firebase Auth password reset email dispatched successfully to ${trimmedEmail}`);
+        return { success: true, message: 'Password reset email sent successfully. Please check your inbox.' };
+      } catch (firebaseErr) {
+        console.error(`[ForgotPassword] ❌ Firebase Auth password reset error:`, firebaseErr);
+        return { success: false, error: getFriendlyError(firebaseErr) || serverMsg || 'Failed to send reset email. Please try again later.' };
+      }
     }
   };
 
