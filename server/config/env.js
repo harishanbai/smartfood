@@ -24,5 +24,5 @@ if (result.error) {
   console.error('❌ Failed to load .env file:', result.error.message);
 } else {
   const loaded = Object.keys(result.parsed || {}).length;
-  console.log(`✅ .env loaded successfully (${loaded} variables) from: ${path.resolve(__dirname, '.env')}`);
+  console.log(`✅ .env loaded successfully (${loaded} variables) from: ${path.resolve(__dirname, '..', '.env')}`);
 }

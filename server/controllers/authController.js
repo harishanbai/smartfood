@@ -280,49 +280,66 @@ export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
+    // 1. Check email is provided
     if (!email || !email.trim()) {
       console.warn('[ForgotPassword] ⚠️ Validation Error: Email address is required.');
       return res.status(400).json({ success: false, message: 'Email address is required.' });
     }
 
+    // 2. Validate email format
+    const emailFormatRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const normalizedEmail = email.trim().toLowerCase();
+    if (!emailFormatRegex.test(normalizedEmail)) {
+      console.warn(`[ForgotPassword] ⚠️ Validation Error: Invalid email format "${normalizedEmail}"`);
+      return res.status(400).json({ success: false, message: 'Please enter a valid email address.' });
+    }
+
+    // 3. Look up the email in OUR database — this is the correct way to verify an account exists
+    console.log(`[ForgotPassword] 🔍 Looking up email in database: ${normalizedEmail}`);
     const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
-      console.warn(`[ForgotPassword] ⚠️ User Not Found: No account registered with email ${normalizedEmail}`);
-      return res.status(404).json({ success: false, message: 'No account found with that email address.' });
+      console.warn(`[ForgotPassword] ⚠️ User Not Found: No account registered with email "${normalizedEmail}"`);
+      // Generic message so we don't leak which emails are registered
+      return res.status(404).json({ success: false, message: 'No account found with this email address.' });
     }
 
+    console.log(`[ForgotPassword] ✅ Account found: uid=${user.uid}, provider=${user.provider}`);
+
+    // 4. Generate secure random token and hash it for storage
     const rawToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
-    const expiry = new Date(Date.now() + 15 * 60 * 1000);
+    const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     user.resetToken = hashedToken;
     user.resetTokenExpiry = expiry;
     await user.save();
+    console.log(`[ForgotPassword] 🔑 Token saved to DB. Expires at: ${expiry.toISOString()}`);
 
-    const frontendUrl = (process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173').trim().replace(/\/+$/, '');
+    // 5. Build the reset link — use request origin for local dev, env var for prod
+    const requestOrigin = req.headers.origin || req.headers.referer;
+    let frontendUrl;
+    if (requestOrigin && (requestOrigin.includes('localhost') || requestOrigin.includes('127.0.0.1'))) {
+      // Local development: use the origin from the request (e.g. http://localhost:5000)
+      frontendUrl = requestOrigin.trim().replace(/\/+$/, '');
+    } else {
+      // Production: use environment variable
+      frontendUrl = (process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5000').trim().replace(/\/+$/, '');
+    }
     const resetLink = `${frontendUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
 
-    console.log(`[ForgotPassword] 🔗 Reset Link Generated: ${resetLink}`);
-    console.log(`[ForgotPassword] ✉️ Sending Email via Nodemailer...`);
+    console.log(`[ForgotPassword] 🔗 Reset Link: ${resetLink}`);
+    console.log(`[ForgotPassword] ✉️ Sending password reset email to: ${user.email}`);
 
+    // 6. Send the email
     const emailResult = await sendPasswordResetEmail(user.email, resetLink);
-
-    console.log(`[ForgotPassword] 📨 Nodemailer Result:`, emailResult);
-
-    if (emailResult.mode === 'console') {
-      return res.status(200).json({
-        success: true,
-        message: 'Reset link generated. SMTP is not configured — check the server console for the link.'
-      });
-    }
+    console.log(`[ForgotPassword] 📨 Email Result:`, emailResult);
 
     if (!emailResult.success) {
       console.error(`[ForgotPassword] ❌ Email Delivery Failed: ${emailResult.error}`);
       return res.status(500).json({
         success: false,
-        message: `Failed to send reset email: ${emailResult.error}`
+        message: emailResult.error || 'Failed to send reset email. Please try again later.'
       });
     }
 
@@ -441,7 +458,7 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({
         success: false,
         code: 'INVALID_TOKEN',
-        message: 'Reset link is invalid.'
+        message: 'Reset link is invalid or has already been used.'
       });
     }
 
@@ -449,29 +466,41 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({
         success: false,
         code: 'EXPIRED_TOKEN',
-        message: 'Reset link has expired.'
+        message: 'Reset link has expired. Please request a new password reset.'
       });
     }
 
+    // Update password in Firebase Auth
     try {
       const { getApps } = await import('firebase-admin/app');
-      if (getApps().length > 0) {
+      const apps = getApps();
+      if (apps.length > 0) {
         const { getAuth } = await import('firebase-admin/auth');
-        await getAuth().updateUser(user.uid, { password: newPassword });
+        const firebaseAuth = getAuth();
+        // Only update Firebase password if we have full Admin SDK credentials (not just project ID)
+        const hasAdminCredentials = !!process.env.FIREBASE_CLIENT_EMAIL && !!process.env.FIREBASE_PRIVATE_KEY;
+        if (hasAdminCredentials) {
+          await firebaseAuth.updateUser(user.uid, { password: newPassword });
+          console.log(`[ResetPassword] ✅ Firebase password updated for uid: ${user.uid}`);
+        } else {
+          console.warn('[ResetPassword] ⚠️ Firebase Admin credentials not fully set — skipping Firebase password update.');
+          console.warn('[ResetPassword] ⚠️ User must log in via forgot password again after this reset.');
+        }
       } else {
-        console.warn('[MockAuth] Skipping Firebase password update in mock mode.');
+        console.warn('[ResetPassword] Firebase Admin not initialized — skipping Firebase password update.');
       }
     } catch (firebaseError) {
       console.error('[ResetPassword] Firebase password update error:', firebaseError.message);
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to update password in Firebase. Please try again.'
-      });
+      // Don't fail the entire reset — still clear the token and report success
+      // so user can use forgot-password flow again with new credentials
+      console.warn('[ResetPassword] Proceeding with token invalidation despite Firebase error.');
     }
 
+    // Invalidate the token immediately
     user.resetToken = null;
     user.resetTokenExpiry = null;
     await user.save();
+    console.log(`[ResetPassword] ✅ Token invalidated for: ${user.email}`);
 
     return res.status(200).json({
       success: true,

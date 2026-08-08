@@ -105,8 +105,13 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
   if (!creds || !creds.user || !creds.pass) {
-    console.warn('[EmailService] ⚠️  SMTP not configured. Running in console-only mode.');
-    return { success: true, mode: 'console' };
+    console.error('[EmailService] ❌ SMTP not configured. EMAIL_USER and EMAIL_PASS must be set in server/.env to send emails.');
+    console.warn('[EmailService] 💡 Fix: Add EMAIL_USER and EMAIL_PASS (Gmail App Password) to server/.env');
+    console.warn('[EmailService] 💡 Generate App Password at: https://myaccount.google.com/apppasswords');
+    return {
+      success: false,
+      error: 'Email service is not configured. Please contact the administrator.'
+    };
   }
 
   const { user: emailUser, pass: emailPass } = creds;

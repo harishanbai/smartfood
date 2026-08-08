@@ -373,9 +373,10 @@ export const AuthProvider = ({ children }) => {
 
   // 4. Password Reset Flow — uses backend Nodemailer
   const sendPasswordReset = async (email) => {
-    console.log(`[ForgotPassword] 🚀 Initiating reset request for email: "${email.trim()}"`);
+    const trimmedEmail = email.trim();
+    console.log(`[ForgotPassword] 🚀 Initiating reset request for email: "${trimmedEmail}"`);
     try {
-      const res = await authApi.forgotPassword(email.trim());
+      const res = await authApi.forgotPassword(trimmedEmail);
       console.log(`[ForgotPassword] ✅ Request Succeeded - Status: ${res.status}`, res.data);
       if (res?.data?.success) {
         return { success: true, message: res.data.message || 'Password reset email sent successfully.' };
@@ -383,41 +384,38 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: res?.data?.message || 'Failed to send reset email.' };
     } catch (error) {
       const reqUrl = error?.config?.url || '/auth/forgot-password';
-      const statusCode = error?.response?.status || 'No Response (Network / CORS Error)';
+      const statusCode = error?.response?.status;
+      // Always use the exact server message — it has the real reason
       const serverMsg = error?.response?.data?.message;
 
       console.error(`[ForgotPassword] ❌ Request Failed:`, {
         url: reqUrl,
-        statusCode,
+        statusCode: statusCode || 'No Response (Network / CORS Error)',
         error: serverMsg || error.message
       });
 
       if (!error?.response) {
         return {
           success: false,
-          error: 'Server unavailable. Please check your internet connection or backend status.'
-        };
-      } else if (statusCode === 404) {
-        return {
-          success: false,
-          error: serverMsg || 'No account found with that email address.'
-        };
-      } else if (statusCode === 400) {
-        return {
-          success: false,
-          error: serverMsg || 'Please enter a valid email address.'
-        };
-      } else if (statusCode === 500) {
-        return {
-          success: false,
-          error: serverMsg || 'Failed to send reset email due to a server error.'
+          error: 'Unable to reach the server. Please check your internet connection and make sure the backend is running.'
         };
       }
 
-      return {
-        success: false,
-        error: serverMsg || 'Failed to send reset email. Please try again later.'
-      };
+      // Always prefer the server's exact error message
+      if (serverMsg) {
+        return { success: false, error: serverMsg };
+      }
+
+      // Fallbacks if no server message
+      if (statusCode === 404) {
+        return { success: false, error: 'No account found with this email address.' };
+      } else if (statusCode === 400) {
+        return { success: false, error: 'Please enter a valid email address.' };
+      } else if (statusCode === 500) {
+        return { success: false, error: 'Failed to send reset email due to a server error. Please try again later.' };
+      }
+
+      return { success: false, error: 'Failed to send reset email. Please try again later.' };
     }
   };
 
