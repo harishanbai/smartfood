@@ -35,6 +35,7 @@ const allowedOrigins = [
   'https://smartfood-tech-8caa.vercel.app',
   'https://vaseegrah-veda-catering-xer9.vercel.app',
   'https://vaseegrah-veda-catering.vercel.app',
+  'https://smartfood-1424.onrender.com',
   process.env.CLIENT_URL,
   process.env.CLIENT_URL_PROD
 ].filter(Boolean);
@@ -44,7 +45,7 @@ app.use(cors({
   origin: function (origin, callback) {
     // allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com')) {
       return callback(null, true);
     }
     if (process.env.NODE_ENV !== 'production') {

@@ -13,7 +13,12 @@ const normalizePhoneNumber = (phone) => {
   if (!phone || typeof phone !== 'string') return null;
   let cleaned = phone.trim().replace(/[\s\-\(\)]/g, '');
   if (!cleaned.startsWith('+')) {
-    cleaned = '+' + cleaned;
+    // If it's a 10-digit Indian mobile number starting with 6-9, automatically prepend +91
+    if (/^[6-9]\d{9}$/.test(cleaned)) {
+      cleaned = '+91' + cleaned;
+    } else {
+      cleaned = '+' + cleaned;
+    }
   }
   const phoneRegex = /^\+[1-9]\d{7,14}$/;
   return phoneRegex.test(cleaned) ? cleaned : null;
@@ -44,6 +49,17 @@ export const sendOtp = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Invalid phone number format. Please enter a valid mobile number with country code (e.g. +919876543210).'
+      });
+    }
+
+    // Self-send check: Meta API does not allow sending WhatsApp messages from the sender number to itself
+    const senderNumber = process.env.WHATSAPP_PHONE_NUMBER
+      ? `+${process.env.WHATSAPP_PHONE_NUMBER.replace(/\D/g, '')}`
+      : '+919047484484';
+    if (normalizedPhone === senderNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot send verification OTP to the sender business phone number. Please enter your personal mobile number.'
       });
     }
 

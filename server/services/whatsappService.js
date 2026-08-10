@@ -124,30 +124,16 @@ export const sendWhatsAppOTP = async (recipientPhone, otp) => {
   console.log(`[WhatsApp OTP Service] 📱 Recipient Phone : ${recipientPhone}`);
   console.log(`[WhatsApp OTP Service] 📋 Template        : ${process.env.WHATSAPP_TEMPLATE_NAME || 'gowhats_otp'}`);
 
-  // ── 1. Credential checks (with mock mode fallback) ───────────────────────
+  // ── 1. Credential checks ──────────────────────────────────────────────────
   const token = process.env.WHATSAPP_TOKEN;
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
   if (!token || !token.trim() || !phoneNumberId || !phoneNumberId.trim()) {
-    console.log('\n[WhatsApp OTP Service] ════════════════════════════════════════════════');
-    console.warn('[WhatsApp OTP Service] ⚠️  Missing WhatsApp Cloud API credentials in .env');
-    console.warn(`[WhatsApp OTP Service] 🔑  MOCK MODE BYPASS: Your OTP code is [ ${otp} ]`);
-    console.log('[WhatsApp OTP Service] ════════════════════════════════════════════════\n');
-    
-    // Save mock log in DB so webhook log pages don't crash
-    try {
-      await WhatsAppLog.create({
-        messageId: `mock_wamid_${Date.now()}`,
-        phone: recipientPhone,
-        status: 'delivered',
-        templateName: process.env.WHATSAPP_TEMPLATE_NAME || 'gowhats_otp',
-        rawStatusEvent: { mock: true, otp }
-      });
-    } catch (logErr) {
-      console.warn('[WhatsApp OTP Service] ⚠️  MongoDB log save warning:', logErr.message);
-    }
-    
-    return { success: true, messageId: `mock_wamid_${Date.now()}`, mockOtp: otp };
+    const err = 'Missing WhatsApp Cloud API credentials (WHATSAPP_TOKEN or WHATSAPP_PHONE_NUMBER_ID) in server environment variables.';
+    console.error('\n[WhatsApp OTP Service] ════════════════════════════════════════════════');
+    console.error(`[WhatsApp OTP Service] ❌ ${err}`);
+    console.error('[WhatsApp OTP Service] ════════════════════════════════════════════════\n');
+    return { success: false, error: err };
   }
 
   // ── 2. Format phone → E.164 digits without '+' ────────────────────────────

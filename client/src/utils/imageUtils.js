@@ -1,5 +1,5 @@
 const API_URL = import.meta.env.PROD 
-  ? (import.meta.env.VITE_API_URL_PROD || 'https://vaseegrah-veda-catering.onrender.com')
+  ? (import.meta.env.VITE_API_URL_PROD || 'https://smartfood-1424.onrender.com')
   : (import.meta.env.VITE_API_URL || 'http://localhost:5001');
 let envApiUrl = API_URL.trim().replace(/\/+$/, '');
 const API_BASE = envApiUrl ? (envApiUrl.endsWith('/api') ? envApiUrl.slice(0, -4) : envApiUrl) : '';
