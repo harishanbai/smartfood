@@ -7,7 +7,7 @@
     "preview": "node preview.js",
     "tunnel": "node tunnel.js",
     "start": "npm start --prefix server",
-    "build": "npm run build --prefix client",
+    "build": "npm install --prefix client --include=dev && npm run build --prefix client",
     "install:all": "npm install --prefix client && npm install --prefix server"
   }
 }
