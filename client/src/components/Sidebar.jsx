@@ -45,11 +45,11 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
   ];
 
   return (
-    <aside className={`hidden lg:flex fixed left-0 top-0 bottom-0 ${isCollapsed ? 'w-20 p-4' : 'w-64 p-6'} bg-[#6C5DD3] flex-col z-40 transition-all duration-300 border-r border-white/10 shadow-2xl`}>
+    <aside className={`hidden lg:flex fixed left-0 top-0 bottom-0 ${isCollapsed ? 'w-20 p-4' : 'w-64 p-6'} bg-sidebarBg flex-col z-40 transition-all duration-300 border-r border-sidebarBorder shadow-2xl`}>
       {/* Collapse/Expand Toggle Button */}
       <button
         onClick={onToggle}
-        className="hidden lg:flex absolute -right-3.5 top-8 h-7 w-7 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 items-center justify-center shadow-md cursor-pointer z-50 text-gray-500 hover:text-gray-700 hover:scale-105 transition-all"
+        className="hidden lg:flex absolute -right-3.5 top-8 h-7 w-7 rounded-full bg-sidebarBg border border-sidebarBorder items-center justify-center shadow-md cursor-pointer z-50 text-sidebarText/70 hover:text-sidebarText hover:scale-105 transition-all"
         title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
       >
         {isCollapsed ? (
@@ -64,7 +64,7 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
         to="/profile" 
         className={`flex items-center gap-3 mb-10 px-2 group hover:opacity-90 transition-all cursor-pointer ${isCollapsed ? 'justify-center mb-8' : ''}`}
       >
-        <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-accentPurple to-accentOrange flex items-center justify-center shadow-lg shadow-purple-500/25 overflow-hidden flex-shrink-0 border border-white/10 group-hover:border-accentPurple/45 transition-all duration-300">
+        <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-accentPurple to-accentOrange flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden flex-shrink-0 border border-sidebarBorder group-hover:border-accentPurple/45 transition-all duration-300">
           {profilePhoto ? (
             <img src={profilePhoto} alt={profileName} className="w-full h-full object-cover" />
           ) : (
@@ -72,8 +72,8 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
           )}
         </div>
         <div className={`min-w-0 transition-all duration-300 ${isCollapsed ? 'w-0 h-0 overflow-hidden opacity-0' : 'w-auto opacity-100'}`}>
-          <h1 className="font-extrabold text-base tracking-tight text-white transition-colors duration-300 truncate max-w-[140px]">{profileName}</h1>
-          <span className="text-[10px] text-indigo-200 font-bold uppercase tracking-wider block truncate max-w-[140px] mt-0.5">{profileDesignation}</span>
+          <h1 className="font-extrabold text-base tracking-tight text-sidebarText transition-colors duration-300 truncate max-w-[140px]">{profileName}</h1>
+          <span className="text-[10px] text-accentOrange font-bold uppercase tracking-wider block truncate max-w-[140px] mt-0.5">{profileDesignation}</span>
         </div>
       </Link>
 
@@ -88,8 +88,8 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
               className={({ isActive }) => `
                 flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-4 px-4 py-3.5'} rounded-xl text-sm font-medium transition-all duration-300 group relative overflow-hidden
                 ${isActive 
-                  ? 'text-white bg-white/20 border border-white/20 shadow-md' 
-                  : 'text-white/70 hover:text-white hover:bg-white/10 border border-transparent'
+                  ? 'text-sidebarText bg-sidebarActive border border-sidebarBorder shadow-[0_0_12px_rgba(34,197,94,0.12)]' 
+                  : 'text-sidebarText/70 hover:text-sidebarText hover:bg-sidebarHover border border-transparent'
                 }
               `}
               title={isCollapsed ? item.name : undefined}
@@ -97,13 +97,13 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
               {({ isActive }) => (
                 <>
                   {/* Glow effect on active item hover */}
-                  <span className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  <span className="absolute inset-0 bg-sidebarHover opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                   
-                  <Icon className={`h-5 w-5 transition-transform duration-300 group-hover:scale-110 ${isActive ? 'text-white' : 'text-white/70 group-hover:text-white'}`} />
+                  <Icon className={`h-5 w-5 transition-transform duration-300 group-hover:scale-110 ${isActive ? 'text-accentOrange' : 'text-sidebarText/60 group-hover:text-sidebarText'}`} />
                   <span className={`relative z-10 transition-all duration-300 ${isCollapsed ? 'w-0 h-0 overflow-hidden opacity-0' : 'opacity-100'}`}>{item.name}</span>
 
                   {isActive && !isCollapsed && (
-                    <span className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-6 rounded-l bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
+                    <span className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-6 rounded-l bg-accentOrange shadow-[0_0_10px_rgba(212,175,55,0.8)]" />
                   )}
                 </>
               )}
@@ -113,11 +113,11 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
       </nav>
 
       {/* Bottom status indicator & Logout */}
-      <div className="mt-auto pt-6 border-t border-white/5">
+      <div className="mt-auto pt-6 border-t border-sidebarBorder/50">
         {currentUser && (
           <button
             onClick={logout}
-            className={`flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-4 px-4 py-3'} rounded-xl text-sm font-semibold transition-all duration-300 text-red-200 hover:text-white hover:bg-red-500/20 border border-red-500/10 w-full text-left cursor-pointer`}
+            className={`flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-4 px-4 py-3'} rounded-xl text-sm font-semibold transition-all duration-300 text-red-400 hover:text-white hover:bg-red-500/20 border border-red-500/10 w-full text-left cursor-pointer`}
             title={isCollapsed ? (language === 'ta' ? 'வெளியேறு' : 'Log Out') : undefined}
           >
             <LogOut className="h-5 w-5 flex-shrink-0" />

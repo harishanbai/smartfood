@@ -200,8 +200,8 @@ const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpi
                 }}
                 className={`carousel-card w-[205px] xs:w-[245px] sm:w-[285px] md:w-[320px] h-[300px] sm:h-[340px] rounded-[24px] overflow-hidden glass-panel p-3.5 sm:p-4 flex flex-col justify-between cursor-pointer border
                   ${isCenter 
-                    ? 'border-accentPurple bg-gradient-to-b from-[#1E1B4B]/80 to-[#111827]/90 shadow-[0_0_40px_rgba(168,85,247,0.25)] glow-active-purple' 
-                    : 'border-white/5 bg-[#111827]/50'
+                    ? 'border-accentOrange/35 bg-gradient-to-b from-bgElevated to-bgCard shadow-[0_0_25px_rgba(34,197,94,0.15)] glow-active-green' 
+                    : 'border-white/5 bg-bgCard/50'
                   }
                 `}
               >

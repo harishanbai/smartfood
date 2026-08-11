@@ -353,7 +353,7 @@ const Payment = () => {
         {/* Right Side: Billing Status & Log History */}
         <div className="col-span-1 lg:col-span-5 space-y-6">
           {/* Subscription Card */}
-          <div className="glass-panel rounded-[24px] p-6 border border-white/5 relative overflow-hidden flex flex-col justify-between">
+          <div className="rounded-[24px] p-6 border border-[#D4AF37]/35 bg-[#001F16] relative overflow-hidden flex flex-col justify-between shadow-xl">
             <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-accentGreen/8 rounded-full blur-[80px] pointer-events-none" />
 
             <div>
@@ -361,7 +361,7 @@ const Payment = () => {
                 {language === 'ta' ? 'செயலில் உள்ள திட்டம்' : 'Active Plan'}
               </span>
               <h3 className="text-lg font-bold text-white">{language === 'ta' ? 'தினசரி மெனு சந்தா' : 'Daily Meal Subscription'}</h3>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-300 mt-1">
                 {language === 'ta' ? 'அனைத்து வேலை நாட்களிலும் மதிய உணவு வழங்கப்படுகிறது.' : 'Fresh lunch served every weekday at your desk.'}
               </p>
 
@@ -377,9 +377,9 @@ const Payment = () => {
               </div>
             </div>
 
-            <div className="mt-6 p-4 rounded-2xl bg-white/3 border border-white/5 flex items-center justify-between">
+            <div className="mt-6 p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
               <div>
-                <p className="text-[9px] text-gray-500 uppercase tracking-wider font-semibold">Current Balance</p>
+                <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold">Current Balance</p>
                 <p className="text-lg font-extrabold text-accentGreen font-mono">₹0.00</p>
               </div>
               <span className="text-[10px] bg-accentGreen/15 border border-accentGreen/30 text-accentGreen px-2.5 py-0.5 rounded-full font-bold uppercase">

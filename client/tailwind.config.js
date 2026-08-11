@@ -9,9 +9,14 @@ export default {
       colors: {
         bgMain: 'var(--bg-main)',
         bgCard: 'var(--bg-card)',
-        accentOrange: '#F97316',
-        accentPurple: '#A855F7',
-        accentGreen: '#22C55E',
+        bgElevated: 'var(--bg-elevated)',
+        sidebarBg: 'var(--sidebar-bg)',
+        sidebarHover: 'var(--sidebar-hover)',
+        sidebarActive: 'var(--sidebar-active)',
+        sidebarBorder: 'var(--sidebar-border)',
+        accentOrange: 'var(--accent-orange)',
+        accentPurple: 'var(--accent-purple)',
+        accentGreen: 'var(--accent-green)',
       },
       textColor: {
         white: 'var(--text-title)',

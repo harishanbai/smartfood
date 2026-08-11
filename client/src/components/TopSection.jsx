@@ -145,7 +145,7 @@ const TopSection = () => {
                       <span>{lang.name}</span>
                     </span>
                     {language === lang.code && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-accentPurple shadow-[0_0_6px_#A855F7]" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-accentPurple shadow-[0_0_6px_rgba(34,197,94,0.8)]" />
                     )}
                   </button>
                 ))}
@@ -168,7 +168,7 @@ const TopSection = () => {
 
         {/* 3. Date Card */}
         <div className="glass-panel date-card flex items-center gap-2.5 bg-white/5 border border-white/10 text-xs font-semibold text-gray-300 shadow-sm">
-          <Calendar className="h-4.5 w-4.5 text-accentPurple flex-shrink-0" />
+          <Calendar className="h-4.5 w-4.5 text-accentOrange flex-shrink-0" />
           <span className="whitespace-nowrap">{formatDate(time)}</span>
         </div>
 
@@ -194,7 +194,7 @@ const TopSection = () => {
             <button
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
               title={currentUser.displayName || 'Google Profile'}
-              className="relative avatar-button flex-shrink-0 rounded-full bg-gradient-to-tr from-accentPurple to-fuchsia-500 p-[2px] transition-all duration-300 hover:scale-105 cursor-pointer shadow-lg hover:shadow-[0_4px_20px_rgba(168,85,247,0.35)] group"
+              className="relative avatar-button flex-shrink-0 rounded-full bg-gradient-to-tr from-accentPurple to-accentOrange p-[2px] transition-all duration-300 hover:scale-105 cursor-pointer shadow-lg hover:shadow-[0_4px_16px_rgba(212,175,55,0.25)] group"
             >
               {/* Circular Avatar */}
               <div className="w-full h-full rounded-full overflow-hidden bg-slate-900 flex items-center justify-center">
