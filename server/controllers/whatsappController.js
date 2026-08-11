@@ -31,7 +31,7 @@ const normalizePhoneNumber = (phone) => {
  */
 export const sendOtp = async (req, res) => {
   console.log('\n[WhatsApp Auth] ─────────────────────────────────────────');
-  console.log('[WhatsApp Auth] 📩 Request: send-otp');
+  console.log('[OTP] Request received');
   console.log(`[WhatsApp Auth] Body:`, req.body);
 
   try {
@@ -45,6 +45,7 @@ export const sendOtp = async (req, res) => {
     }
 
     const normalizedPhone = normalizePhoneNumber(phone);
+    console.log(`[OTP] Phone number normalized: ${normalizedPhone}`);
     if (!normalizedPhone) {
       return res.status(400).json({
         success: false,
@@ -82,7 +83,7 @@ export const sendOtp = async (req, res) => {
     const rawOtp = crypto.randomInt(100000, 999999).toString();
     const otpHash = crypto.createHash('sha256').update(rawOtp).digest('hex');
 
-    console.log(`[WhatsApp Auth] 🔑 OTP generated for ${normalizedPhone}`);
+    console.log(`[OTP] OTP generated`);
 
     // Expiry: 5 minutes from now
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
@@ -101,10 +102,13 @@ export const sendOtp = async (req, res) => {
     console.log(`[WhatsApp Auth] 💾 Hashed OTP saved to database. Expires at: ${expiresAt.toISOString()}`);
 
     // Send OTP via Meta WhatsApp Cloud API
+    console.log(`[OTP] Sending WhatsApp message`);
     const whatsappResult = await sendWhatsAppOTP(normalizedPhone, rawOtp);
 
+    console.log(`[OTP] Provider response status: ${whatsappResult.success ? 'ACCEPTED' : 'FAILED'}`);
+
     if (!whatsappResult.success) {
-      console.error(`[WhatsApp Auth] ❌ OTP delivery failed via Meta API: ${whatsappResult.error}`);
+      console.error(`[OTP] Provider error: ${whatsappResult.error}`);
       // Remove unsent OTP document so user does not lose attempts
       await Otp.deleteMany({ phone: normalizedPhone });
 
@@ -114,6 +118,7 @@ export const sendOtp = async (req, res) => {
       });
     }
 
+    console.log(`[OTP] Provider message ID: ${whatsappResult.messageId}`);
     console.log(`[WhatsApp Auth] ✅ OTP delivered via Meta API. WAMID: ${whatsappResult.messageId}`);
     console.log('[WhatsApp Auth] ─────────────────────────────────────────\n');
 
@@ -121,8 +126,7 @@ export const sendOtp = async (req, res) => {
       success: true,
       message: 'Verification code sent to your WhatsApp number.',
       phone: normalizedPhone,
-      messageId: whatsappResult.messageId,
-      mockOtp: whatsappResult.mockOtp
+      messageId: whatsappResult.messageId
     });
   } catch (error) {
     console.error('[WhatsApp Auth] 💥 Error in sendOtp:', error);

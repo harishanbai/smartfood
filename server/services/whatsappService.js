@@ -68,52 +68,136 @@ const postToMetaApi = async (endpoint, token, payload) => {
  *   The gowhats_otp template uses a regular URL button (via GoWhats), so the correct
  *   sub_type is "url" with a plain text parameter filling the URL suffix {{1}}.
  */
-const buildOtpTemplatePayload = (recipientDigits, otp) => {
+/**
+ * Build candidate Meta Cloud API payloads for OTP template sending.
+ */
+const getOtpTemplatePayloadCandidates = (recipientDigits, otp) => {
   const templateName = process.env.WHATSAPP_TEMPLATE_NAME || 'gowhats_otp';
   const templateLang = process.env.WHATSAPP_TEMPLATE_LANG || 'en';
 
-  const payload = {
-    messaging_product: 'whatsapp',
-    recipient_type: 'individual',
-    to: recipientDigits,
-    type: 'template',
-    template: {
-      name: templateName,
-      language: {
-        code: templateLang
-      },
-      components: [
-        // BODY component — {{1}} = OTP digits
-        {
-          type: 'body',
-          parameters: [
-            { type: 'text', text: otp }
-          ]
-        },
-        // BUTTON component — sub_type "url" fills the {{1}} URL suffix
-        // URL becomes: ...?otp_type=COPY_CODE&code=otp507000 (for OTP 507000)
-        {
-          type: 'button',
-          sub_type: 'url',
-          index: '0',
-          parameters: [
-            { type: 'text', text: otp }
+  const candidates = [
+    // Candidate 1: Standard URL button component with string index '0'
+    {
+      name: `${templateName} (URL button sub_type: url, index: "0")`,
+      payload: {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: recipientDigits,
+        type: 'template',
+        template: {
+          name: templateName,
+          language: { code: templateLang },
+          components: [
+            {
+              type: 'body',
+              parameters: [{ type: 'text', text: otp }]
+            },
+            {
+              type: 'button',
+              sub_type: 'url',
+              index: '0',
+              parameters: [{ type: 'text', text: otp }]
+            }
           ]
         }
-      ]
+      }
+    },
+    // Candidate 2: URL button component with integer index 0
+    {
+      name: `${templateName} (URL button sub_type: url, index: 0)`,
+      payload: {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: recipientDigits,
+        type: 'template',
+        template: {
+          name: templateName,
+          language: { code: templateLang },
+          components: [
+            {
+              type: 'body',
+              parameters: [{ type: 'text', text: otp }]
+            },
+            {
+              type: 'button',
+              sub_type: 'url',
+              index: 0,
+              parameters: [{ type: 'text', text: otp }]
+            }
+          ]
+        }
+      }
+    },
+    // Candidate 3: Copy Code button component with sub_type copy_code
+    {
+      name: `${templateName} (Copy Code button sub_type: copy_code)`,
+      payload: {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: recipientDigits,
+        type: 'template',
+        template: {
+          name: templateName,
+          language: { code: templateLang },
+          components: [
+            {
+              type: 'body',
+              parameters: [{ type: 'text', text: otp }]
+            },
+            {
+              type: 'button',
+              sub_type: 'copy_code',
+              index: '0',
+              parameters: [{ type: 'coupon_code', coupon_code: otp }]
+            }
+          ]
+        }
+      }
+    },
+    // Candidate 4: Body component only (without button component)
+    {
+      name: `${templateName} (Body component only)`,
+      payload: {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: recipientDigits,
+        type: 'template',
+        template: {
+          name: templateName,
+          language: { code: templateLang },
+          components: [
+            {
+              type: 'body',
+              parameters: [{ type: 'text', text: otp }]
+            }
+          ]
+        }
+      }
     }
-  };
+  ];
 
-  console.log('[WhatsApp OTP Service] 📦 Built template payload:');
-  console.log(`   Template  : ${templateName} (lang: ${templateLang})`);
-  console.log(`   Body {{1}}: ${otp}`);
-  console.log(`   Button URL suffix: ${otp}  (sub_type: url)`);
+  // Candidate 5: Standard fallback template (hello_world)
+  const fallbackTemplate = process.env.WHATSAPP_FALLBACK_TEMPLATE || 'hello_world';
+  const fallbackLang = process.env.WHATSAPP_FALLBACK_LANG || 'en_US';
+  candidates.push({
+    name: `Fallback Template (${fallbackTemplate}, lang: ${fallbackLang})`,
+    payload: {
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to: recipientDigits,
+      type: 'template',
+      template: {
+        name: fallbackTemplate,
+        language: { code: fallbackLang }
+      }
+    }
+  });
 
-  return payload;
+  return candidates;
 };
 
 /**
- * Send a 6-digit OTP via the approved gowhats_otp WhatsApp Authentication template.
+ * Send a 6-digit OTP via Meta WhatsApp Cloud API.
  *
  * @param {string} recipientPhone  E.164 format, e.g. "+919360377386"
  * @param {string} otp             6-digit OTP string
@@ -130,9 +214,8 @@ export const sendWhatsAppOTP = async (recipientPhone, otp) => {
 
   if (!token || !token.trim() || !phoneNumberId || !phoneNumberId.trim()) {
     const err = 'Missing WhatsApp Cloud API credentials (WHATSAPP_TOKEN or WHATSAPP_PHONE_NUMBER_ID) in server environment variables.';
-    console.error('\n[WhatsApp OTP Service] ════════════════════════════════════════════════');
     console.error(`[WhatsApp OTP Service] ❌ ${err}`);
-    console.error('[WhatsApp OTP Service] ════════════════════════════════════════════════\n');
+    console.log('[WhatsApp OTP Service] ════════════════════════════════════════════════\n');
     return { success: false, error: err };
   }
 
@@ -141,68 +224,75 @@ export const sendWhatsAppOTP = async (recipientPhone, otp) => {
   if (!recipientDigits || recipientDigits.length < 8) {
     const err = `Invalid recipient number "${recipientPhone}" — could not extract E.164 digits.`;
     console.error(`[WhatsApp OTP Service] ❌ ${err}`);
+    console.log('[WhatsApp OTP Service] ════════════════════════════════════════════════\n');
     return { success: false, error: err };
   }
   console.log(`[WhatsApp OTP Service] 📞 E.164 Digits     : ${recipientDigits}`);
 
-  // ── 3. Build template payload ─────────────────────────────────────────────
   const endpoint = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
-  const payload = buildOtpTemplatePayload(recipientDigits, otp);
+  const candidates = getOtpTemplatePayloadCandidates(recipientDigits, otp);
 
-  // ── 4. Call Meta Graph API ────────────────────────────────────────────────
-  try {
-    const { response, responseData } = await postToMetaApi(endpoint, token, payload);
+  let lastError = null;
+  let lastResponseData = null;
 
-    // ── 5. Evaluate response ───────────────────────────────────────────────
-    if (
-      response.ok &&
-      responseData.messages &&
-      Array.isArray(responseData.messages) &&
-      responseData.messages.length > 0
-    ) {
-      const messageId = responseData.messages[0].id;
-      console.log(`[WhatsApp OTP Service] ✅ Message accepted by Meta!`);
-      console.log(`[WhatsApp OTP Service]    WAMID : ${messageId}`);
+  // ── 3. Iterate through candidate payloads ─────────────────────────────────
+  for (let i = 0; i < candidates.length; i++) {
+    const candidate = candidates[i];
+    console.log(`[WhatsApp OTP Service] 🚀 Trying candidate ${i + 1}/${candidates.length}: ${candidate.name}`);
 
-      // Persist initial log document in MongoDB
-      try {
-        await WhatsAppLog.create({
-          messageId,
-          phone: recipientPhone,
-          status: 'accepted',
-          templateName: process.env.WHATSAPP_TEMPLATE_NAME || 'gowhats_otp',
-          rawStatusEvent: responseData
-        });
-        console.log('[WhatsApp OTP Service] 💾 MongoDB log created (status: accepted)');
-      } catch (logErr) {
-        console.warn('[WhatsApp OTP Service] ⚠️  MongoDB log save warning:', logErr.message);
+    try {
+      const { response, responseData } = await postToMetaApi(endpoint, token, candidate.payload);
+      lastResponseData = responseData;
+
+      // Check if Meta Graph API accepted the message
+      if (
+        response.ok &&
+        responseData.messages &&
+        Array.isArray(responseData.messages) &&
+        responseData.messages.length > 0
+      ) {
+        const messageId = responseData.messages[0].id;
+        console.log(`[WhatsApp OTP Service] ✅ Message accepted by Meta via candidate ${i + 1}!`);
+        console.log(`[WhatsApp OTP Service]    WAMID : ${messageId}`);
+
+        // Persist initial log document in MongoDB
+        try {
+          await WhatsAppLog.create({
+            messageId,
+            phone: recipientPhone,
+            status: 'accepted',
+            templateName: process.env.WHATSAPP_TEMPLATE_NAME || 'gowhats_otp',
+            rawStatusEvent: responseData
+          });
+          console.log('[WhatsApp OTP Service] 💾 MongoDB log created (status: accepted)');
+        } catch (logErr) {
+          console.warn('[WhatsApp OTP Service] ⚠️  MongoDB log save warning:', logErr.message);
+        }
+
+        console.log('[WhatsApp OTP Service] ════════════════════════════════════════════════\n');
+        return { success: true, messageId, data: responseData };
       }
 
-      console.log('[WhatsApp OTP Service] ════════════════════════════════════════════════\n');
-      return { success: true, messageId, data: responseData };
+      // Handle error returned by Meta for this candidate
+      const metaErr = responseData?.error || {};
+      let detail = metaErr.message || 'Unknown Meta WhatsApp Cloud API error';
+      if (metaErr.error_data?.details) {
+        detail += ` — ${metaErr.error_data.details}`;
+      }
+      lastError = metaErr.code ? `Meta API Error (${metaErr.code}): ${detail}` : detail;
+
+      console.warn(`[WhatsApp OTP Service] ⚠️ Candidate ${i + 1} rejected by Meta API: ${lastError}`);
+
+    } catch (fetchErr) {
+      lastError = `Network error reaching Meta Graph API: ${fetchErr.message}`;
+      console.error(`[WhatsApp OTP Service] 💥 ${lastError}`);
     }
-
-    // ── 6. Handle Meta error response ─────────────────────────────────────
-    const metaErr = responseData?.error || {};
-    let detail = metaErr.message || 'Unknown Meta WhatsApp Cloud API error';
-    if (metaErr.error_data?.details) {
-      detail += ` — ${metaErr.error_data.details}`;
-    }
-    const fullError = metaErr.code ? `Meta API Error (${metaErr.code}): ${detail}` : detail;
-
-    console.error(`[WhatsApp OTP Service] ❌ Meta returned error:`);
-    console.error(`   Code      : ${metaErr.code || 'N/A'}`);
-    console.error(`   Type      : ${metaErr.type || 'N/A'}`);
-    console.error(`   Message   : ${detail}`);
-    console.error(`   FBTrace   : ${metaErr.fbtrace_id || 'N/A'}`);
-    console.log('[WhatsApp OTP Service] ════════════════════════════════════════════════\n');
-
-    return { success: false, error: fullError, data: responseData };
-
-  } catch (fetchErr) {
-    const networkError = `Network error reaching Meta Graph API: ${fetchErr.message}`;
-    console.error(`[WhatsApp OTP Service] 💥 ${networkError}`);
-    console.log('[WhatsApp OTP Service] ════════════════════════════════════════════════\n');
-    return { success: false, error: networkError };
   }
+
+  // If all candidate payloads failed
+  console.error(`[WhatsApp OTP Service] ❌ All Meta API payload candidates failed.`);
+  console.error(`   Final Error : ${lastError}`);
+  console.log('[WhatsApp OTP Service] ════════════════════════════════════════════════\n');
+
+  return { success: false, error: lastError, data: lastResponseData };
 };
