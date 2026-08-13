@@ -394,23 +394,20 @@ export const AuthProvider = ({ children }) => {
         };
       }
 
-      // If user is not registered in MongoDB (404) or email format is invalid (400), strictly return that error message!
-      if (statusCode === 404) {
-        return { success: false, error: serverMsg || 'No account found with this email address.' };
-      }
       if (statusCode === 400) {
         return { success: false, error: serverMsg || 'Please enter a valid email address.' };
       }
 
-      // If backend Nodemailer SMTP delivery failed (e.g. 500 error due to SMTP auth issue), fallback to Firebase Auth sendPasswordResetEmail!
-      console.warn(`[ForgotPassword] Backend SMTP notice (${statusCode}). Triggering Firebase Auth password reset fallback...`);
+      // Universal fallback: If backend server error (500), 404, or SMTP issue occurs, trigger Firebase Auth reset dispatch directly!
+      console.warn(`[ForgotPassword] Backend notice (${statusCode || 'network'}). Triggering Firebase Auth password reset fallback for ${trimmedEmail}...`);
       try {
         await sendFirebasePasswordResetEmail(auth, trimmedEmail);
         console.log(`[ForgotPassword] ✅ Firebase Auth password reset email dispatched successfully to ${trimmedEmail}`);
         return { success: true, message: 'Password reset email sent successfully. Please check your inbox.' };
       } catch (firebaseErr) {
         console.error(`[ForgotPassword] ❌ Firebase Auth password reset error:`, firebaseErr);
-        return { success: false, error: getFriendlyError(firebaseErr) || serverMsg || 'Failed to send reset email. Please try again later.' };
+        const friendlyMsg = typeof getFriendlyError === 'function' ? getFriendlyError(firebaseErr) : firebaseErr?.message;
+        return { success: false, error: friendlyMsg || serverMsg || 'No account found with this email address.' };
       }
     }
   };

@@ -294,13 +294,37 @@ export const forgotPassword = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please enter a valid email address.' });
     }
 
-    // 3. Look up the email in OUR database — this is the correct way to verify an account exists
+    // 3. Look up the email in database OR Firebase Auth
     console.log(`[ForgotPassword] 🔍 Looking up email in database: ${normalizedEmail}`);
-    const user = await User.findOne({ email: normalizedEmail });
+    let user = await User.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      console.warn(`[ForgotPassword] ⚠️ User not in MongoDB. Checking Firebase Auth for: "${normalizedEmail}"`);
+      try {
+        const { getApps } = await import('firebase-admin/app');
+        if (getApps().length > 0) {
+          const { getAuth } = await import('firebase-admin/auth');
+          const firebaseAuth = getAuth();
+          const fbUser = await firebaseAuth.getUserByEmail(normalizedEmail);
+          if (fbUser) {
+            user = await User.create({
+              uid: fbUser.uid,
+              email: normalizedEmail,
+              displayName: fbUser.displayName || normalizedEmail.split('@')[0],
+              name: fbUser.displayName || normalizedEmail.split('@')[0],
+              provider: fbUser.providerData?.[0]?.providerId || 'email',
+              isVerified: fbUser.emailVerified || false
+            });
+            console.log(`[ForgotPassword] ➕ Provisioned MongoDB user for existing Firebase user: ${normalizedEmail}`);
+          }
+        }
+      } catch (fbLookupErr) {
+        console.warn(`[ForgotPassword] Firebase user lookup check: ${fbLookupErr.message}`);
+      }
+    }
 
     if (!user) {
       console.warn(`[ForgotPassword] ⚠️ User Not Found: No account registered with email "${normalizedEmail}"`);
-      // Generic message so we don't leak which emails are registered
       return res.status(404).json({ success: false, message: 'No account found with this email address.' });
     }
 
@@ -331,15 +355,22 @@ export const forgotPassword = async (req, res) => {
     console.log(`[ForgotPassword] 🔗 Reset Link: ${resetLink}`);
     console.log(`[ForgotPassword] ✉️ Sending password reset email to: ${user.email}`);
 
-    // 6. Send the email
-    const emailResult = await sendPasswordResetEmail(user.email, resetLink);
+    // 6. Send the email wrapped in safety try-catch block
+    let emailResult;
+    try {
+      emailResult = await sendPasswordResetEmail(user.email, resetLink);
+    } catch (mailError) {
+      console.error('[ForgotPassword] ❌ Exception thrown during email dispatch:', mailError);
+      emailResult = { success: false, error: mailError?.message || 'Failed to dispatch reset email.' };
+    }
+
     console.log(`[ForgotPassword] 📨 Email Result:`, emailResult);
 
-    if (!emailResult.success) {
-      console.error(`[ForgotPassword] ❌ Email Delivery Failed: ${emailResult.error}`);
+    if (!emailResult || !emailResult.success) {
+      console.error(`[ForgotPassword] ❌ Email Delivery Failed: ${emailResult?.error}`);
       return res.status(500).json({
         success: false,
-        message: emailResult.error || 'Failed to send reset email. Please try again later.'
+        message: emailResult?.error || 'Failed to send reset email. Please try again later.'
       });
     }
 
@@ -350,7 +381,13 @@ export const forgotPassword = async (req, res) => {
     });
   } catch (error) {
     console.error('[ForgotPassword] 💥 Server Exception Error:', error);
-    return res.status(500).json({ success: false, message: 'Server error processing password reset request.' });
+    let errorMessage = 'Server error processing password reset request.';
+    if (error.name === 'MongoServerSelectionError' || error.code === 'ETIMEDOUT' || error.name === 'MongooseError') {
+      errorMessage = 'Database connection timed out. Please check network connectivity and try again.';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    return res.status(500).json({ success: false, message: errorMessage });
   }
 };
 
@@ -470,30 +507,68 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    // Update password in Firebase Auth
+    // Update password in Firebase Auth (Universal for ALL users)
     try {
       const { getApps } = await import('firebase-admin/app');
       const apps = getApps();
       if (apps.length > 0) {
         const { getAuth } = await import('firebase-admin/auth');
         const firebaseAuth = getAuth();
-        // Only update Firebase password if we have full Admin SDK credentials (not just project ID)
         const hasAdminCredentials = !!process.env.FIREBASE_CLIENT_EMAIL && !!process.env.FIREBASE_PRIVATE_KEY;
+        
         if (hasAdminCredentials) {
-          await firebaseAuth.updateUser(user.uid, { password: newPassword });
-          console.log(`[ResetPassword] ✅ Firebase password updated for uid: ${user.uid}`);
+          let updated = false;
+
+          // 1. Primary: Try updating by stored user.uid
+          if (user.uid) {
+            try {
+              await firebaseAuth.updateUser(user.uid, { password: newPassword });
+              console.log(`[ResetPassword] ✅ Firebase password updated for uid: ${user.uid}`);
+              updated = true;
+            } catch (uidErr) {
+              console.warn(`[ResetPassword] ⚠️ updateByUid failed (${uidErr.message}), attempting email lookup fallback...`);
+            }
+          }
+
+          // 2. Secondary: Find user in Firebase Auth by email and update password
+          if (!updated) {
+            try {
+              const fbUser = await firebaseAuth.getUserByEmail(normalizedEmail);
+              if (fbUser?.uid) {
+                await firebaseAuth.updateUser(fbUser.uid, { password: newPassword });
+                // Also sync user.uid in MongoDB if it differed
+                user.uid = fbUser.uid;
+                console.log(`[ResetPassword] ✅ Firebase password updated via email lookup for uid: ${fbUser.uid}`);
+                updated = true;
+              }
+            } catch (emailErr) {
+              // 3. Fallback: If user account exists in DB but not in Firebase Auth, create Firebase user
+              if (emailErr.code === 'auth/user-not-found') {
+                console.log(`[ResetPassword] ➕ Provisioning Firebase Auth user for: ${normalizedEmail}`);
+                const newUser = await firebaseAuth.createUser({
+                  email: normalizedEmail,
+                  password: newPassword,
+                  displayName: user.displayName || user.name || normalizedEmail.split('@')[0],
+                  emailVerified: true
+                });
+                user.uid = newUser.uid;
+                updated = true;
+                console.log(`[ResetPassword] ✅ Created Firebase user with uid: ${newUser.uid}`);
+              } else {
+                throw emailErr;
+              }
+            }
+          }
         } else {
-          console.warn('[ResetPassword] ⚠️ Firebase Admin credentials not fully set — skipping Firebase password update.');
-          console.warn('[ResetPassword] ⚠️ User must log in via forgot password again after this reset.');
+          console.warn('[ResetPassword] ⚠️ Firebase Admin credentials missing — skipping Firebase password update.');
         }
-      } else {
-        console.warn('[ResetPassword] Firebase Admin not initialized — skipping Firebase password update.');
       }
     } catch (firebaseError) {
-      console.error('[ResetPassword] Firebase password update error:', firebaseError.message);
-      // Don't fail the entire reset — still clear the token and report success
-      // so user can use forgot-password flow again with new credentials
-      console.warn('[ResetPassword] Proceeding with token invalidation despite Firebase error.');
+      console.error('[ResetPassword] ❌ Firebase password update error:', firebaseError.message);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to update authentication credentials: ' + firebaseError.message
+      });
     }
 
     // Invalidate the token immediately

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useNotifications } from '../context/NotificationContext';
 import { authApi } from '../services/api';
 
 const ForgotPassword = () => {
@@ -24,6 +25,11 @@ const ForgotPassword = () => {
 
   const { sendPasswordReset } = useAuth();
   const { language, setLanguage } = useLanguage();
+  const notificationContext = useNotifications();
+  const addNotification = notificationContext?.addNotification;
+
+  // Alias for compatibility
+  const setIsLoading = setLoading;
 
   const validateForm = () => {
     if (!email.trim()) {
@@ -43,21 +49,32 @@ const ForgotPassword = () => {
     e.preventDefault();
     if (!validateForm() || loading) return;
 
-    setLoading(true);
+    setIsLoading(true);
     setError('');
 
     try {
       const res = await sendPasswordReset(email.trim());
-      if (res.success) {
+      if (res?.success) {
         setSubmitted(true);
+        if (addNotification) {
+          addNotification(res.message || 'Password reset email sent successfully!', 'success');
+        }
       } else {
-        setError(res.error || 'Failed to send password reset email.');
+        const errorMsg = res?.error || 'Failed to send password reset email.';
+        setError(errorMsg);
+        if (addNotification) {
+          addNotification(errorMsg, 'error');
+        }
       }
     } catch (err) {
       console.error('[ForgotPassword] Form Submit Error:', err);
-      setError(err?.message || 'An unexpected error occurred. Please try again.');
+      const catchMsg = err?.message || 'An unexpected error occurred. Please try again.';
+      setError(catchMsg);
+      if (addNotification) {
+        addNotification(catchMsg, 'error');
+      }
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
