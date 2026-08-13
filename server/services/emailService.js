@@ -37,8 +37,13 @@ const createTransporter = (selectedSender = null) => {
     return null;
   }
   return nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: creds.user, pass: creds.pass }
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    auth: { user: creds.user, pass: creds.pass },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000
   });
 };
 
@@ -67,8 +72,13 @@ export const verifySmtpConnection = async () => {
     if (!user || !pass) continue;
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user, pass }
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: { user, pass },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000
     });
 
     try {
@@ -117,7 +127,6 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
   const { user: emailUser, pass: emailPass } = creds;
 
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
     host: 'smtp.gmail.com',
     port: 465,
     secure: true,
