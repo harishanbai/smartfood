@@ -22,13 +22,13 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
 
   const [profileName, setProfileName] = useState(() => localStorage.getItem('profileName') || 'Smart Lunch');
   const [profileDesignation, setProfileDesignation] = useState(() => localStorage.getItem('profileDesignation') || 'MESS MASTER');
-  const [profilePhoto, setProfilePhoto] = useState(() => localStorage.getItem('profilePhoto') || '');
+  const [appLogo, setAppLogo] = useState(() => localStorage.getItem('appLogo') || '');
 
   useEffect(() => {
     const handleProfileChange = () => {
       setProfileName(localStorage.getItem('profileName') || 'Smart Lunch');
       setProfileDesignation(localStorage.getItem('profileDesignation') || 'MESS MASTER');
-      setProfilePhoto(localStorage.getItem('profilePhoto') || '');
+      setAppLogo(localStorage.getItem('appLogo') || '');
     };
     window.addEventListener('profile-change', handleProfileChange);
     return () => window.removeEventListener('profile-change', handleProfileChange);
@@ -65,14 +65,16 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
         className={`flex items-center gap-3 mb-10 px-2 group hover:opacity-90 transition-all cursor-pointer ${isCollapsed ? 'justify-center mb-8' : ''}`}
       >
         <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-accentPurple to-accentOrange flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden flex-shrink-0 border border-sidebarBorder group-hover:border-accentPurple/45 transition-all duration-300">
-          {profilePhoto ? (
-            <img src={profilePhoto} alt={profileName} className="w-full h-full object-cover" />
+          {appLogo ? (
+            <img src={appLogo} alt={profileName} className="w-full h-full object-cover" />
           ) : (
             <ChefHat className="h-5 w-5 text-white" />
           )}
         </div>
         <div className={`min-w-0 transition-all duration-300 ${isCollapsed ? 'w-0 h-0 overflow-hidden opacity-0' : 'w-auto opacity-100'}`}>
-          <h1 className="font-extrabold text-base tracking-tight text-sidebarText transition-colors duration-300 truncate max-w-[140px]">{profileName}</h1>
+          <h1 className="font-extrabold text-base tracking-tight bg-gradient-to-r from-[#D4AF37] via-[#F3D77A] to-[#22C55E] bg-[length:200%_auto] animate-gradient-text bg-clip-text text-transparent truncate max-w-[140px] drop-shadow-[0_2px_8px_rgba(212,175,55,0.2)]">
+            {profileName}
+          </h1>
           <span className="text-[10px] text-accentOrange font-bold uppercase tracking-wider block truncate max-w-[140px] mt-0.5">{profileDesignation}</span>
         </div>
       </Link>
@@ -86,24 +88,24 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
               key={item.name}
               to={item.path}
               className={({ isActive }) => `
-                flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-4 px-4 py-3.5'} rounded-xl text-sm font-medium transition-all duration-300 group relative overflow-hidden
+                flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-4 px-4 py-3.5'} rounded-xl text-sm font-semibold transition-all duration-300 group relative overflow-hidden transform hover:-translate-y-0.5
                 ${isActive 
-                  ? 'text-sidebarText bg-sidebarActive border border-sidebarBorder shadow-[0_0_12px_rgba(34,197,94,0.12)]' 
-                  : 'text-sidebarText/70 hover:text-sidebarText hover:bg-sidebarHover border border-transparent'
+                  ? 'active text-accentOrange bg-sidebarActive border border-accentOrange/40 shadow-[0_0_16px_rgba(212,175,55,0.25)]' 
+                  : 'text-sidebarText hover:text-sidebarText hover:bg-sidebarHover border border-transparent'
                 }
               `}
               title={isCollapsed ? item.name : undefined}
             >
               {({ isActive }) => (
                 <>
-                  {/* Glow effect on active item hover */}
-                  <span className="absolute inset-0 bg-sidebarHover opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  {/* Subtle animated shimmer background on hover */}
+                  <span className="absolute inset-0 bg-gradient-to-r from-accentOrange/10 via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                   
-                  <Icon className={`h-5 w-5 transition-transform duration-300 group-hover:scale-110 ${isActive ? 'text-accentOrange' : 'text-sidebarText/60 group-hover:text-sidebarText'}`} />
-                  <span className={`relative z-10 transition-all duration-300 ${isCollapsed ? 'w-0 h-0 overflow-hidden opacity-0' : 'opacity-100'}`}>{item.name}</span>
+                  <Icon className={`h-5 w-5 transition-all duration-300 group-hover:scale-115 group-hover:rotate-3 ${isActive ? 'text-accentOrange drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]' : 'text-sidebarText/80 group-hover:text-sidebarText'}`} />
+                  <span className={`relative z-10 transition-all duration-300 font-bold ${isCollapsed ? 'w-0 h-0 overflow-hidden opacity-0' : 'opacity-100'}`}>{item.name}</span>
 
                   {isActive && !isCollapsed && (
-                    <span className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-6 rounded-l bg-accentOrange shadow-[0_0_10px_rgba(212,175,55,0.8)]" />
+                    <span className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-6 rounded-l bg-accentOrange animate-pulse shadow-[0_0_12px_rgba(212,175,55,0.9)]" />
                   )}
                 </>
               )}

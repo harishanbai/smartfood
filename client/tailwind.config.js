@@ -7,10 +7,18 @@ export default {
   theme: {
     extend: {
       colors: {
+        gold: {
+          400: '#E5C158',
+          500: '#D4AF37',
+          600: '#B8962E',
+        },
+        darkBg: '#03140E',
+        sidebarBg: 'var(--sidebar-bg)',
         bgMain: 'var(--bg-main)',
         bgCard: 'var(--bg-card)',
         bgElevated: 'var(--bg-elevated)',
-        sidebarBg: 'var(--sidebar-bg)',
+        sidebarText: 'var(--sidebar-text)',
+        sidebarTextMuted: 'var(--sidebar-text-muted)',
         sidebarHover: 'var(--sidebar-hover)',
         sidebarActive: 'var(--sidebar-active)',
         sidebarBorder: 'var(--sidebar-border)',
@@ -19,26 +27,21 @@ export default {
         accentGreen: 'var(--accent-green)',
       },
       textColor: {
-        white: 'var(--text-title)',
-        gray: {
-          50: '#F9FAFB',
-          100: '#F3F4F6',
-          200: 'var(--text-body)',
-          300: 'var(--text-body-muted)',
-          400: 'var(--text-muted)',
-          500: 'var(--text-muted-dark)',
-        }
+        title: 'var(--text-title)',
+        body: 'var(--text-body)',
+        muted: 'var(--text-muted)',
+        sidebarText: 'var(--sidebar-text)',
+        sidebarTextMuted: 'var(--sidebar-text-muted)',
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
       },
       screens: {
         'xs': '480px',
       },
       boxShadow: {
         glass: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-        glowOrange: '0 0 20px rgba(249, 115, 22, 0.3)',
-        glowPurple: '0 0 20px rgba(168, 85, 247, 0.3)',
+        glowGold: '0 0 20px rgba(212, 175, 55, 0.3)',
         glowGreen: '0 0 20px rgba(34, 197, 94, 0.3)',
       }
     },

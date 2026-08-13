@@ -88,11 +88,13 @@ const TopSection = () => {
     return name.slice(0, 2).toUpperCase();
   };
 
+  const userPhoto = mongoUser?.photo || currentUser?.photoURL || localStorage.getItem('userProfilePhoto') || '';
+
   return (
     <header className="header-container mb-4 w-full relative">
       {/* Left Section */}
       <div className="left-section">
-        <h2 className="greeting-title text-white tracking-tight">
+        <h2 className="greeting-title text-title tracking-tight font-extrabold">
           {(() => {
             let name = currentUser?.displayName || chefName || '';
             // If the name is essentially a phone number (digits and optional + or dashes), treat it as empty
@@ -105,59 +107,21 @@ const TopSection = () => {
             return `${getGreeting()} 👋`;
           })()}
         </h2>
-        <p className="subtitle-text text-gray-500">
+        <p className="subtitle-text text-body-muted">
           {t('topSection.subtitle')}
         </p>
       </div>
 
       {/* Right Section */}
       <div className="right-section">
-        {/* Row for Language & Theme on Mobile */}
+        {/* Row for Theme on Mobile */}
         <div className="lang-theme-row">
-          {/* 1. Language Selector */}
-          <div className="relative select-container" ref={langRef}>
-            <button
-              onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-              className="glass-panel lang-selector flex items-center justify-between bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-gray-300 hover:text-white cursor-pointer shadow-sm"
-            >
-              <span className="flex items-center gap-1.5">
-                <Globe className="h-4 w-4 text-accentPurple md:hidden" />
-                <span className="text-xs font-bold uppercase tracking-wider">{activeLang.code}</span>
-              </span>
-              <ChevronDown className={`h-3.5 w-3.5 text-gray-400 transition-transform duration-300 ${langDropdownOpen ? 'rotate-180' : ''} hidden md:block`} />
-            </button>
-
-            {langDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-40 glass-panel rounded-2xl border border-white/10 bg-bgCard/95 p-1.5 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                {languagesList.map((lang) => (
-                  <button
-                    key={lang.code}
-                    onClick={() => {
-                      setLanguage(lang.code);
-                      setLangDropdownOpen(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all hover:bg-white/5 cursor-pointer ${
-                      language === lang.code ? 'text-accentPurple bg-white/5 font-semibold' : 'text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span>{lang.flag}</span>
-                      <span>{lang.name}</span>
-                    </span>
-                    {language === lang.code && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-accentPurple shadow-[0_0_6px_rgba(34,197,94,0.8)]" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
 
           {/* 2. Theme Toggle */}
           <button
             onClick={toggleTheme}
             aria-label="Toggle Theme"
-            className="glass-panel theme-toggle flex items-center justify-center bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-gray-300 hover:text-white cursor-pointer shadow-sm relative overflow-hidden"
+            className="glass-panel theme-toggle flex items-center justify-center bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-title cursor-pointer shadow-sm relative overflow-hidden"
           >
             <div className="relative h-4.5 w-4.5 flex items-center justify-center">
               <Sun className={`h-4.5 w-4.5 text-accentOrange absolute transition-all duration-500 transform ${theme === 'light' ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'}`} />
@@ -167,24 +131,18 @@ const TopSection = () => {
         </div>
 
         {/* 3. Date Card */}
-        <div className="glass-panel date-card flex items-center gap-2.5 bg-white/5 border border-white/10 text-xs font-semibold text-gray-300 shadow-sm">
-          <Calendar className="h-4.5 w-4.5 text-accentOrange flex-shrink-0" />
-          <span className="whitespace-nowrap">{formatDate(time)}</span>
+        <div className="glass-panel date-card flex items-center gap-2.5 bg-white/5 border border-white/10 text-xs font-semibold text-title shadow-sm">
+          <Calendar className="h-4 w-4 text-accentOrange flex-shrink-0" />
+          <span className="hidden sm:inline">{formatDate(time)}</span>
+          <span className="sm:hidden">{time.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { month: 'short', day: 'numeric' })}</span>
         </div>
 
-        {/* 4. Auto Generation Status Card */}
-        <div className="glass-panel autogen-card flex items-center justify-between bg-accentGreen/10 border border-accentGreen/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-          <div className="flex items-center gap-2.5">
-            <span className="relative flex h-2 w-2 flex-shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accentGreen opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-accentGreen"></span>
-            </span>
-            <span className="text-[10px] uppercase font-bold text-accentGreen tracking-wider select-none">
-              {(t('topSection.autoGen') || 'AUTO GENERATION').toUpperCase()}
-            </span>
-          </div>
-          <span className="text-xs font-bold text-white tracking-wide">
-            08:00 PM
+        {/* 4. Generation Mode Badge */}
+        <div className="glass-panel status-badge-card flex items-center gap-2 bg-white/5 border border-white/10 shadow-sm">
+          <span className="h-2 w-2 rounded-full bg-accentGreen animate-pulse shadow-[0_0_8px_#22C55E]" />
+          <span className="text-[11px] font-extrabold uppercase tracking-wider text-accentGreen flex items-center gap-1.5">
+            {t('topSection.autoGeneration')}
+            <span className="font-mono text-title text-xs font-bold">08:00 PM</span>
           </span>
         </div>
 
@@ -193,15 +151,15 @@ const TopSection = () => {
           <div className="avatar-container" ref={profileRef}>
             <button
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-              title={currentUser.displayName || 'Google Profile'}
+              title={currentUser.displayName || 'User Profile'}
               className="relative avatar-button flex-shrink-0 rounded-full bg-gradient-to-tr from-accentPurple to-accentOrange p-[2px] transition-all duration-300 hover:scale-105 cursor-pointer shadow-lg hover:shadow-[0_4px_16px_rgba(212,175,55,0.25)] group"
             >
               {/* Circular Avatar */}
               <div className="w-full h-full rounded-full overflow-hidden bg-slate-900 flex items-center justify-center">
-                {currentUser.photoURL && !imgError ? (
+                {userPhoto && !imgError ? (
                   <img
-                    src={currentUser.photoURL}
-                    alt={currentUser.displayName || 'Google User'}
+                    src={userPhoto}
+                    alt={currentUser.displayName || 'User'}
                     onError={() => setImgError(true)}
                     className="w-full h-full object-cover"
                   />
@@ -221,9 +179,9 @@ const TopSection = () => {
               <div className="absolute right-0 mt-3 w-64 glass-panel rounded-2xl border border-white/10 bg-bgCard/95 p-4 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="flex items-center gap-3 pb-3 mb-3 border-b border-white/10">
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center flex-shrink-0 shadow-md">
-                    {currentUser?.photoURL && !imgError ? (
+                    {userPhoto && !imgError ? (
                       <img
-                        src={currentUser.photoURL}
+                        src={userPhoto}
                         alt={currentUser.displayName || 'User'}
                         onError={() => setImgError(true)}
                         className="w-full h-full object-cover"

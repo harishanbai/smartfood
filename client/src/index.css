@@ -1,4 +1,4 @@
-/* Smart Lunch Generator - Dark Green Mess Master Theme Design System */
+/* Smart Lunch Generator - TechVaseegrah Gold & Dark Emerald Theme Design System */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
@@ -6,17 +6,17 @@
 @tailwind utilities;
 
 :root {
-  --bg-main: #070B14;
-  --bg-secondary: #0B101B;
-  --bg-card: #101722;
-  --bg-elevated: #141C28;
-  --bg-scrollbar: #070B14;
-  --bg-scrollbar-thumb: rgba(255, 255, 255, 0.15);
+  --bg-main: #062419;
+  --bg-secondary: #0A3022;
+  --bg-card: #0E3C2B;
+  --bg-elevated: #124835;
+  --bg-scrollbar: #062419;
+  --bg-scrollbar-thumb: rgba(212, 175, 55, 0.4);
 
-  --sidebar-bg: #001F16;
-  --sidebar-hover: #082C21;
-  --sidebar-active: #1E321A;
-  --sidebar-border: rgba(212, 175, 55, 0.2);
+  --sidebar-bg: #041D14;
+  --sidebar-hover: #0A3626;
+  --sidebar-active: rgba(212, 175, 55, 0.22);
+  --sidebar-border: rgba(212, 175, 55, 0.4);
   --sidebar-text: #F8FAFC;
   --sidebar-text-muted: #A7B0BE;
 
@@ -24,65 +24,120 @@
   --accent-purple-bright: #22C55E;
   --accent-purple-soft: #34D399;
 
-  --accent-orange: #D4AF37; /* Gold */
-  --accent-orange-bright: #EABF45;
+  --accent-orange: #D4AF37; /* Metallic Gold */
+  --accent-orange-bright: #E5C158;
   --accent-orange-soft: #F3D77A;
 
   --accent-green: #22C55E;
 
-  --text-title: #F8FAFC;
-  --text-body: #A7B0BE;
-  --text-body-muted: #A7B0BE;
-  --text-muted: #6B7280;
-  --text-muted-dark: #6B7280;
+  --text-title: #FFFFFF;
+  --text-body: #C2D5CD;
+  --text-body-muted: #A3C0B4;
+  --text-muted: #84AA9B;
+  --text-muted-dark: #658F7F;
 
-  --glass-bg: rgba(16, 23, 34, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-gold: rgba(212, 175, 55, 0.35);
-  --glass-border-emerald: rgba(34, 197, 94, 0.25);
-  --glass-hover-bg: rgba(20, 28, 40, 0.85);
-  --glass-hover-border: rgba(255, 255, 255, 0.15);
+  --glass-bg: rgba(14, 60, 43, 0.88);
+  --glass-border: rgba(212, 175, 55, 0.45);
+  --glass-border-gold: rgba(212, 175, 55, 0.55);
+  --glass-border-emerald: rgba(34, 197, 94, 0.4);
+  --glass-hover-bg: rgba(18, 72, 53, 0.95);
+  --glass-hover-border: rgba(212, 175, 55, 0.7);
   --shadow-hover: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
 
 :root.light {
-  --bg-main: #F6F8F7;
-  --bg-secondary: #F6F8F7;
+  --bg-main: #F2F8F5;
+  --bg-secondary: #E5F0EB;
   --bg-card: #FFFFFF;
   --bg-elevated: #FFFFFF;
-  --bg-scrollbar: #F6F8F7;
-  --bg-scrollbar-thumb: #E5E7EB;
+  --bg-scrollbar: #F2F8F5;
+  --bg-scrollbar-thumb: rgba(212, 175, 55, 0.4);
 
   --sidebar-bg: #FFFFFF;
-  --sidebar-hover: #F6F8F7;
-  --sidebar-active: rgba(21, 128, 61, 0.08);
-  --sidebar-border: #E5E7EB;
-  --sidebar-text: #111827;
-  --sidebar-text-muted: #667085;
+  --sidebar-hover: #F0F7F3;
+  --sidebar-active: rgba(212, 175, 55, 0.18);
+  --sidebar-border: rgba(212, 175, 55, 0.45);
+  --sidebar-text: #0F172A;
+  --sidebar-text-muted: #334155;
 
-  --accent-purple: #15803D; /* Emerald */
-  --accent-purple-bright: #16A34A;
+  --accent-purple: #16A34A; /* Emerald */
+  --accent-purple-bright: #15803D;
   --accent-purple-soft: #22C55E;
 
-  --accent-orange: #B8860B; /* Gold */
+  --accent-orange: #B8962E; /* Metallic Gold */
   --accent-orange-bright: #D4AF37;
-  --accent-orange-soft: #EABF45;
+  --accent-orange-soft: #E5C158;
 
-  --accent-green: #15803D;
+  --accent-green: #16A34A;
 
-  --text-title: #111827;
-  --text-body: #667085;
-  --text-body-muted: #667085;
-  --text-muted: #9CA3AF;
-  --text-muted-dark: #6B7280;
+  --text-title: #0F172A;
+  --text-body: #1E293B;
+  --text-body-muted: #334155;
+  --text-muted: #475569;
+  --text-muted-dark: #334155;
 
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: #E5E7EB;
-  --glass-border-gold: rgba(184, 134, 11, 0.35);
-  --glass-border-emerald: rgba(21, 128, 61, 0.25);
-  --glass-hover-bg: rgba(255, 255, 255, 0.9);
-  --glass-hover-border: rgba(0, 0, 0, 0.12);
-  --shadow-hover: 0 8px 32px 0 rgba(0, 0, 0, 0.04);
+  --glass-bg: rgba(255, 255, 255, 0.96);
+  --glass-border: rgba(212, 175, 55, 0.45);
+  --glass-border-gold: rgba(212, 175, 55, 0.55);
+  --glass-border-emerald: rgba(22, 163, 74, 0.4);
+  --glass-hover-bg: #FFFFFF;
+  --glass-hover-border: rgba(212, 175, 55, 0.7);
+  --shadow-hover: 0 10px 30px 0 rgba(15, 23, 42, 0.08);
+}
+
+/* Light Mode Specific High-Visibility Typography Rules */
+:root.light .glass-panel .text-white:not(button *):not([class*="bg-"]):not([class*="from-"]) {
+  color: #0F172A !important;
+}
+
+:root.light .glass-panel .text-gray-300:not(button *),
+:root.light .glass-panel .text-gray-400:not(button *),
+:root.light .glass-panel .text-gray-500:not(button *) {
+  color: #334155 !important;
+}
+
+:root.light input,
+:root.light select,
+:root.light textarea {
+  color: #0F172A !important;
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(212, 175, 55, 0.45) !important;
+}
+
+:root.light input::placeholder,
+:root.light textarea::placeholder {
+  color: #64748B !important;
+}
+
+:root.light label {
+  color: #334155 !important;
+}
+
+/* Light Mode Sidebar Specific Solid Text Rule */
+:root.light aside nav a:not(.active) {
+  color: #0F172A !important;
+  font-weight: 700 !important;
+}
+
+:root.light aside nav a:not(.active) svg {
+  color: #334155 !important;
+}
+
+:root.light aside nav a:not(.active):hover {
+  color: #000000 !important;
+  background-color: #E8F3EE !important;
+}
+
+/* Unique Shimmering Animated Gradient Text for Brand Name */
+@keyframes gradientText {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient-text {
+  background-size: 200% auto;
+  animation: gradientText 4s linear infinite;
 }
 
 body {
@@ -236,6 +291,7 @@ p {
 
 /* Mobile general card and layout overrides */
 @media (max-width: 767px) {
+
   /* Dashboard Card padding & border radius mobile overrides */
   .glass-panel.rounded-\[24px\] {
     border-radius: 16px !important;
@@ -247,6 +303,7 @@ p {
   .flex.flex-col.gap-6 {
     gap: 14px !important;
   }
+
   .grid.gap-6 {
     gap: 14px !important;
   }
@@ -271,7 +328,8 @@ p {
     align-items: flex-start !important;
     text-align: left !important;
     width: 100% !important;
-    padding-right: 54px !important; /* Space for absolute avatar */
+    padding-right: 54px !important;
+    /* Space for absolute avatar */
     box-sizing: border-box !important;
   }
 

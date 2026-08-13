@@ -15,7 +15,8 @@ const Profile = () => {
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [userLang, setUserLang] = useState('en');
-  const [profilePhoto, setProfilePhoto] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState(() => localStorage.getItem('userProfilePhoto') || mongoUser?.photo || currentUser?.photoURL || '');
+  const [appLogo, setAppLogo] = useState(() => localStorage.getItem('appLogo') || '');
   const [saving, setSaving] = useState(false);
   const [brandName, setBrandName] = useState(() => localStorage.getItem('profileName') || 'Smart Lunch');
   const [designation, setDesignation] = useState(() => localStorage.getItem('profileDesignation') || 'MESS MASTER');
@@ -28,7 +29,9 @@ const Profile = () => {
       setLastName(ln);
       setPhone(mongoUser?.phone || '');
       setUserLang(mongoUser?.language || currentLang || 'en');
-      setProfilePhoto(mongoUser?.photo || currentUser?.photoURL || '');
+      const photo = localStorage.getItem('userProfilePhoto') || mongoUser?.photo || currentUser?.photoURL || '';
+      setProfilePhoto(photo);
+      setAppLogo(localStorage.getItem('appLogo') || '');
     }
   }, [mongoUser, currentUser, currentLang]);
 
@@ -41,10 +44,11 @@ const Profile = () => {
 
     setSaving(true);
     
-    // Save local-only customizations immediately
+    // Save local-only customizations independently
     localStorage.setItem('profileName', brandName.trim());
     localStorage.setItem('profileDesignation', designation.trim());
-    localStorage.setItem('profilePhoto', profilePhoto);
+    localStorage.setItem('userProfilePhoto', profilePhoto);
+    localStorage.setItem('appLogo', appLogo);
     localStorage.setItem('chefName', firstName.trim());
     window.dispatchEvent(new Event('profile-change'));
 
@@ -132,6 +136,50 @@ const Profile = () => {
         return;
       }
       compressAndSetPhoto(file);
+    }
+  };
+
+  const compressAndSetAppLogo = (file) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 200;
+        const MAX_HEIGHT = 200;
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        setAppLogo(compressedBase64);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAppLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        addNotification("Logo image is too large. Please select an image under 10MB.", "warning");
+        return;
+      }
+      compressAndSetAppLogo(file);
     }
   };
 
@@ -306,8 +354,49 @@ const Profile = () => {
 
               {/* Sidebar Customization Section */}
               <div className="sm:col-span-2 mt-4 pt-4 border-t border-white/5">
-                <h4 className="text-sm font-bold text-white mb-2">Sidebar Customization</h4>
-                <p className="text-xs text-gray-400">Customize the title and designation displayed at the top of the sidebar.</p>
+                <h4 className="text-sm font-bold text-white mb-1">Sidebar & Company Branding</h4>
+                <p className="text-xs text-gray-400">Customize the application logo, title, and designation displayed in the sidebar header.</p>
+              </div>
+
+              {/* Application Logo Upload */}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <Camera className="h-3.5 w-3.5 text-accentOrange" /> Application / Company Logo
+                </label>
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-accentPurple to-accentOrange flex items-center justify-center overflow-hidden border border-white/20 shadow-md">
+                    {appLogo ? (
+                      <img src={appLogo} alt="App Logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <Camera className="h-5 w-5 text-white" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAppLogoUpload}
+                      className="hidden"
+                      id="app-logo-input"
+                    />
+                    <label
+                      htmlFor="app-logo-input"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-semibold text-white hover:bg-white/10 cursor-pointer transition-all"
+                    >
+                      <Camera className="h-3.5 w-3.5 text-accentOrange" />
+                      {appLogo ? 'Change Application Logo' : 'Upload Application Logo'}
+                    </label>
+                    {appLogo && (
+                      <button
+                        type="button"
+                        onClick={() => setAppLogo('')}
+                        className="ml-2 text-xs text-red-400 hover:text-red-300 font-semibold cursor-pointer"
+                      >
+                        Reset to Default Icon
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Sidebar Title (Brand) */}

@@ -397,19 +397,19 @@ const Dashboard = () => {
       </div>
 
       {/* Quick Billing Alert */}
-      <div className="mb-6 rounded-2xl border border-[#D4AF37]/35 bg-[#001F16] p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+      <div className="mb-6 rounded-2xl border border-[#D4AF37]/40 bg-bgCard p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl transition-all">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-accentGreen/20 flex items-center justify-center text-accentGreen">
+          <div className="h-9 w-9 rounded-xl bg-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37]">
             <CreditCard className="h-5 w-5" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-white">{language === 'ta' ? 'மதிய உணவு சந்தா கணக்கு' : 'Active Meal Subscription Account'}</h4>
-            <p className="text-xs text-gray-300 mt-0.5">{language === 'ta' ? 'கட்டண விவரங்களை சரிபார்த்து, UPI QR அல்லது வங்கிப் பரிமாற்றம் மூலம் தொகையைச் செலுத்தவும்.' : 'Check payment details or scan UPI QR code to keep your meal subscription active.'}</p>
+            <h4 className="text-sm font-bold text-title">{language === 'ta' ? 'மதிய உணவு சந்தா கணக்கு' : 'Active Meal Subscription Account'}</h4>
+            <p className="text-xs text-body mt-0.5">{language === 'ta' ? 'கட்டண விவரங்களை சரிபார்த்து, UPI QR அல்லது வங்கிப் பரிமாற்றம் மூலம் தொகையைச் செலுத்தவும்.' : 'Check payment details or scan UPI QR code to keep your meal subscription active.'}</p>
           </div>
         </div>
         <button
           onClick={() => navigate('/payment')}
-          className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-[#C99A24] to-[#EABF45] text-[#111827] text-xs font-bold rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(234,191,69,0.35)] cursor-pointer min-h-[38px] text-center border-none"
+          className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-[#D4AF37] via-[#E5C158] to-[#D4AF37] text-black font-extrabold text-xs rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(212,175,55,0.4)] cursor-pointer min-h-[38px] text-center border-none shadow-md"
         >
           {language === 'ta' ? 'பணம் செலுத்து' : 'Pay Now'}
         </button>

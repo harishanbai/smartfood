@@ -46,10 +46,18 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    // Safety timer: guarantee loading state completes within 2.5 seconds
+    const safetyTimer = setTimeout(() => {
+      setLoading(false);
+    }, 2500);
+
     // Process redirect result if any
     const handleRedirect = async () => {
       try {
-        const result = await getRedirectResult(auth);
+        const result = await Promise.race([
+          getRedirectResult(auth),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Redirect timeout')), 2000))
+        ]);
         if (result?.user) {
           const user = result.user;
           const googlePayload = {
@@ -82,13 +90,14 @@ export const AuthProvider = ({ children }) => {
           if (dbUser) localStorage.setItem('smart_lunch_mongo_user', JSON.stringify(dbUser));
         }
       } catch (err) {
-        console.error("Google Redirect Result handling error:", err);
+        console.warn("Google Redirect Result handling notice:", err.message);
       }
     };
 
     handleRedirect();
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      clearTimeout(safetyTimer);
       if (user) {
         const userData = {
           uid: user.uid,
@@ -99,7 +108,7 @@ export const AuthProvider = ({ children }) => {
         };
         setCurrentUser(userData);
         localStorage.setItem('smart_lunch_user', JSON.stringify(userData));
-        setLoading(false); // Let the UI render immediately using local cached details
+        setLoading(false);
 
         // Sync from MongoDB in the background
         syncMongoProfile(user.uid, user.email);
@@ -111,11 +120,15 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
       }
     }, (error) => {
+      clearTimeout(safetyTimer);
       console.warn("Firebase Auth state notice:", error.message);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      clearTimeout(safetyTimer);
+      unsubscribe();
+    };
   }, []);
 
   // Map Firebase errors to human-friendly messages
