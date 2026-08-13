@@ -6,7 +6,9 @@ export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('theme') || 'dark';
+    // Default to 'dark' green thali theme for all users
+    const saved = localStorage.getItem('theme');
+    return saved === 'light' ? 'light' : 'dark';
   });
 
   useEffect(() => {
