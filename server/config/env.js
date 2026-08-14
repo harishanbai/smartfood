@@ -13,6 +13,16 @@
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import dns from 'dns';
+
+// Force Node.js DNS resolver to prioritize IPv4 over IPv6 globally
+if (dns.setDefaultResultOrder) {
+  try {
+    dns.setDefaultResultOrder('ipv4first');
+  } catch (e) {
+    // Ignore if not supported in runtime
+  }
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

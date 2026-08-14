@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import dns from 'dns';
 
 // Do NOT read process.env at module load time — dotenv may not have run yet.
 // Always read inside functions so the values are resolved at call time.
@@ -30,6 +31,7 @@ export const getEmailCredentials = (selectedSender = null) => {
 
 /**
  * Creates a Nodemailer transporter using dynamic environment settings (defaults to port 587 STARTTLS for cloud compatibility like Render).
+ * Explicitly forces IPv4 via family: 4 and custom dns.lookup.
  */
 export const createTransporter = (user, pass) => {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
@@ -41,7 +43,11 @@ export const createTransporter = (user, pass) => {
     port,
     secure,
     auth: { user, pass },
-    family: 4, // ← Force IPv4 DNS resolution to prevent ENETUNREACH IPv6 routing errors on Render
+    family: 4, // Force IPv4 socket family
+    lookup: (hostname, options, callback) => {
+      // Force DNS resolution to ONLY return IPv4 addresses (AF_INET)
+      dns.lookup(hostname, { family: 4, hints: 0 }, callback);
+    },
     connectionTimeout: 15000,
     greetingTimeout: 15000,
     socketTimeout: 15000
@@ -243,7 +249,7 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
 
   let friendlyError = lastError?.message || 'Failed to send reset email. Please check server SMTP configuration.';
   if (lastError?.code === 'ENETUNREACH' || lastError?.message?.includes('ENETUNREACH')) {
-    friendlyError = 'Mail server network route unreachable (IPv6 error). Retrying via IPv4...';
+    friendlyError = 'Mail server network route unreachable. Please verify server SMTP and network configuration.';
   } else if (lastError?.code === 'EAUTH' || lastError?.responseCode === 535 || lastError?.message?.includes('Invalid login')) {
     friendlyError = 'SMTP Authentication failed. Please verify EMAIL_USER and EMAIL_PASS App Password in server configuration.';
   } else if (lastError?.code === 'ESOCKET' || lastError?.code === 'ETIMEDOUT') {
