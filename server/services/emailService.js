@@ -48,9 +48,9 @@ const customIPv4Lookup = (hostname, options, callback) => {
  * Creates a Nodemailer transporter using dynamic environment settings (defaults to port 587 STARTTLS for cloud compatibility like Render).
  * Explicitly forces IPv4 resolution via dns.resolve4 and family: 4.
  */
-export const createTransporter = (user, pass) => {
+export const createTransporter = (user, pass, customPort = null) => {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
+  const port = customPort || (process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587);
   const secure = process.env.SMTP_SECURE !== undefined ? process.env.SMTP_SECURE === 'true' : port === 465;
 
   return nodemailer.createTransport({
@@ -60,6 +60,9 @@ export const createTransporter = (user, pass) => {
     auth: { user, pass },
     family: 4, // Force IPv4 socket family
     lookup: customIPv4Lookup,
+    tls: {
+      servername: host
+    },
     connectionTimeout: 15000,
     greetingTimeout: 15000,
     socketTimeout: 15000
@@ -73,9 +76,9 @@ export const createTransporter = (user, pass) => {
 export const verifySmtpConnection = async () => {
   const creds = getEmailCredentials();
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
+  const defaultPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
 
-  console.log(`\n[EmailService] 🔌 Verifying SMTP connection (${host}:${port})...`);
+  console.log(`\n[EmailService] 🔌 Verifying SMTP connection (${host}:${defaultPort})...`);
 
   if (!creds) {
     console.warn('[EmailService] ⚠️  EMAIL_USER or EMAIL_PASS environment variables are not set.');
@@ -92,23 +95,31 @@ export const verifySmtpConnection = async () => {
 
     if (!user || !pass) continue;
 
-    const transporter = createTransporter(user, pass);
+    let transporter = createTransporter(user, pass, defaultPort);
 
     try {
       await transporter.verify();
-      console.log(`[EmailService] ✅ SMTP connection verified for index ${i}. Ready to send emails from: ${user} via ${host}:${port} (IPv4)`);
+      console.log(`[EmailService] ✅ SMTP connection verified for index ${i}. Ready to send emails from: ${user} via ${host}:${defaultPort} (IPv4)`);
     } catch (error) {
-      console.error(`[EmailService] ❌ SMTP verification FAILED for ${user} (${host}:${port}):`, error.message);
-      console.error('[EmailService] 💡 Diagnostic Info:');
-      if (error.code === 'ENETUNREACH' || error.message?.includes('ENETUNREACH') || error.message?.includes('IPv6')) {
-        console.error('   • Network Route Unreachable (ENETUNREACH / IPv6 network error). Ensured family: 4 option forces IPv4 connection.');
-      } else if (error.code === 'EAUTH' || error.responseCode === 535 || error.message?.includes('Invalid login')) {
-        console.error('   • SMTP Authentication Failed: Verify EMAIL_USER and EMAIL_PASS App Password in Render configuration.');
-        console.error('   ➜ Fix: https://myaccount.google.com/apppasswords');
-      } else if (error.code === 'ETIMEDOUT' || error.code === 'ESOCKET') {
-        console.error('   • Connection Timeout: Check host firewall or ensure port 587 STARTTLS is used.');
-      } else {
-        console.error(`   • Details: ${error.message}`);
+      console.warn(`[EmailService] ⚠️  Port ${defaultPort} failed for ${user}: ${error.message}. Attempting fallback port...`);
+      const fallbackPort = defaultPort === 587 ? 465 : 587;
+      transporter = createTransporter(user, pass, fallbackPort);
+      try {
+        await transporter.verify();
+        console.log(`[EmailService] ✅ SMTP connection verified on fallback port ${fallbackPort} for index ${i}. Ready to send emails from: ${user} (IPv4)`);
+      } catch (fallbackErr) {
+        console.error(`[EmailService] ❌ SMTP verification FAILED for ${user} on both ports (${defaultPort} & ${fallbackPort}):`, fallbackErr.message);
+        console.error('[EmailService] 💡 Diagnostic Info:');
+        if (fallbackErr.code === 'ENETUNREACH' || fallbackErr.message?.includes('ENETUNREACH')) {
+          console.error('   • Network Route Unreachable (ENETUNREACH / IPv6 network error). Ensured family: 4 option forces IPv4 connection.');
+        } else if (fallbackErr.code === 'EAUTH' || fallbackErr.responseCode === 535 || fallbackErr.message?.includes('Invalid login')) {
+          console.error('   • SMTP Authentication Failed: Verify EMAIL_USER and EMAIL_PASS App Password in Render configuration.');
+          console.error('   ➜ Fix: https://myaccount.google.com/apppasswords');
+        } else if (fallbackErr.code === 'ETIMEDOUT' || fallbackErr.code === 'ESOCKET') {
+          console.error('   • Connection Timeout: Cloud provider blocked outbound SMTP ports (587 & 465).');
+        } else {
+          console.error(`   • Details: ${fallbackErr.message}`);
+        }
       }
     }
   }
@@ -230,7 +241,8 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
 
     console.log(`[EmailService] 📤 Attempting to send email (${i + 1}/${users.length}) to: ${toEmail} via SMTP (${emailUser})...`);
 
-    const transporter = createTransporter(emailUser, emailPass);
+    const defaultPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
+    let transporter = createTransporter(emailUser, emailPass, defaultPort);
 
     try {
       const info = await transporter.sendMail({
@@ -254,8 +266,32 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
 
       return { success: true, mode: 'smtp', messageId: info.messageId, sender: emailUser };
     } catch (error) {
-      console.error(`[EmailService] ❌ sendMail FAILED for sender ${emailUser}:`, error.message);
-      lastError = error;
+      console.warn(`[EmailService] ⚠️  sendMail port ${defaultPort} failed for ${emailUser}: ${error.message}. Retrying on fallback port...`);
+      const fallbackPort = defaultPort === 587 ? 465 : 587;
+      transporter = createTransporter(emailUser, emailPass, fallbackPort);
+      try {
+        const info = await transporter.sendMail({
+          from: `"Smart Lunch Generator" <${emailUser}>`,
+          to: toEmail,
+          replyTo: emailUser,
+          subject: '🔐 Reset Your Smart Lunch Generator Password',
+          text: textBody,
+          html: htmlBody,
+          headers: {
+            'X-Priority': '1',
+            'X-MSMail-Priority': 'High',
+            'Importance': 'High'
+          }
+        });
+
+        console.log(`[EmailService] ✅ Email sent successfully via ${emailUser} on fallback port ${fallbackPort}!`);
+        console.log(`[EmailService]    Message ID : ${info.messageId}`);
+        console.log(`[EmailService]    Accepted   : ${info.accepted?.join(', ')}`);
+        return { success: true, mode: 'smtp', messageId: info.messageId, sender: emailUser };
+      } catch (fallbackErr) {
+        console.error(`[EmailService] ❌ sendMail FAILED for sender ${emailUser} on both ports:`, fallbackErr.message);
+        lastError = fallbackErr;
+      }
     }
   }
 
