@@ -30,8 +30,23 @@ export const getEmailCredentials = (selectedSender = null) => {
 };
 
 /**
+ * Custom DNS lookup that explicitly queries IPv4 A records via dns.resolve4.
+ * Guarantees that Node/Nodemailer connects to a literal IPv4 address on Linux/Render containers,
+ * completely bypassing glibc getaddrinfo IPv6 dual-stack resolution.
+ */
+const customIPv4Lookup = (hostname, options, callback) => {
+  dns.resolve4(hostname, (err, addresses) => {
+    if (err || !addresses || !addresses.length) {
+      return dns.lookup(hostname, { family: 4, hints: 0 }, callback);
+    }
+    const ip = addresses[Math.floor(Math.random() * addresses.length)];
+    callback(null, ip, 4);
+  });
+};
+
+/**
  * Creates a Nodemailer transporter using dynamic environment settings (defaults to port 587 STARTTLS for cloud compatibility like Render).
- * Explicitly forces IPv4 via family: 4 and custom dns.lookup.
+ * Explicitly forces IPv4 resolution via dns.resolve4 and family: 4.
  */
 export const createTransporter = (user, pass) => {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
@@ -44,10 +59,7 @@ export const createTransporter = (user, pass) => {
     secure,
     auth: { user, pass },
     family: 4, // Force IPv4 socket family
-    lookup: (hostname, options, callback) => {
-      // Force DNS resolution to ONLY return IPv4 addresses (AF_INET)
-      dns.lookup(hostname, { family: 4, hints: 0 }, callback);
-    },
+    lookup: customIPv4Lookup,
     connectionTimeout: 15000,
     greetingTimeout: 15000,
     socketTimeout: 15000
