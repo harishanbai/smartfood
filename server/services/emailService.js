@@ -29,36 +29,38 @@ export const getEmailCredentials = (selectedSender = null) => {
 };
 
 /**
- * Creates a Nodemailer transporter using Gmail SMTP.
+ * Creates a Nodemailer transporter using dynamic environment settings (defaults to port 587 STARTTLS for cloud compatibility like Render).
  */
-const createTransporter = (selectedSender = null) => {
-  const creds = getEmailCredentials(selectedSender);
-  if (!creds || !creds.user || !creds.pass) {
-    return null;
-  }
+export const createTransporter = (user, pass) => {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
+  const secure = process.env.SMTP_SECURE !== undefined ? process.env.SMTP_SECURE === 'true' : port === 465;
+
   return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: { user: creds.user, pass: creds.pass },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000
+    host,
+    port,
+    secure,
+    auth: { user, pass },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 15000
   });
 };
 
 /**
  * Call this once on server startup to verify SMTP credentials.
- * Logs a clear pass/fail to the console.
+ * Logs a clear pass/fail to the console without logging sensitive passwords.
  */
 export const verifySmtpConnection = async () => {
   const creds = getEmailCredentials();
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
 
-  console.log('\n[EmailService] 🔌 Verifying SMTP connection...');
+  console.log(`\n[EmailService] 🔌 Verifying SMTP connection (${host}:${port})...`);
 
   if (!creds) {
-    console.warn('[EmailService] ⚠️  EMAIL_USER or EMAIL_PASS is not set in .env');
-    console.warn('[EmailService] ⚠️  Emails will NOT be sent. Reset links will only appear in the console.\n');
+    console.warn('[EmailService] ⚠️  EMAIL_USER or EMAIL_PASS environment variables are not set.');
+    console.warn('[EmailService] ⚠️  Emails will NOT be sent. Reset links will only appear in logs.\n');
     return;
   }
 
@@ -71,27 +73,16 @@ export const verifySmtpConnection = async () => {
 
     if (!user || !pass) continue;
 
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: { user, pass },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000
-    });
+    const transporter = createTransporter(user, pass);
 
     try {
       await transporter.verify();
-      console.log(`[EmailService] ✅ SMTP connection verified for index ${i}. Ready to send emails from: ${user}`);
+      console.log(`[EmailService] ✅ SMTP connection verified for index ${i}. Ready to send emails from: ${user} via ${host}:${port}`);
     } catch (error) {
-      console.error(`[EmailService] ❌ SMTP verification FAILED for ${user}:`, error.message);
+      console.error(`[EmailService] ❌ SMTP verification FAILED for ${user} (${host}:${port}):`, error.message);
       console.error('[EmailService] 💡 Common causes:');
-      console.error('   • Wrong EMAIL_USER or EMAIL_PASS in .env');
-      console.error('   • Gmail 2FA not enabled (required for App Passwords)');
-      console.error('   • Using your real Gmail password instead of an App Password');
-      console.error('   • Less Secure App access blocked by Google');
-      console.error('   ➜  Fix: https://myaccount.google.com/apppasswords');
+      console.error('   • Wrong EMAIL_USER or EMAIL_PASS App Password');
+      console.error('   • Gmail App Password required: https://myaccount.google.com/apppasswords');
     }
   }
   console.log('');
@@ -212,15 +203,7 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
 
     console.log(`[EmailService] 📤 Attempting to send email (${i + 1}/${users.length}) to: ${toEmail} via SMTP (${emailUser})...`);
 
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: { user: emailUser, pass: emailPass },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000
-    });
+    const transporter = createTransporter(emailUser, emailPass);
 
     try {
       const info = await transporter.sendMail({

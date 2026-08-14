@@ -21,7 +21,11 @@ const __dirname = path.dirname(__filename);
 const result = dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
 if (result.error) {
-  console.error('❌ Failed to load .env file:', result.error.message);
+  if (result.error.code === 'ENOENT') {
+    console.log('ℹ️  No local .env file found — reading configuration from system environment variables (Production).');
+  } else {
+    console.error('❌ Failed to load .env file:', result.error.message);
+  }
 } else {
   const loaded = Object.keys(result.parsed || {}).length;
   console.log(`✅ .env loaded successfully (${loaded} variables) from: ${path.resolve(__dirname, '..', '.env')}`);
