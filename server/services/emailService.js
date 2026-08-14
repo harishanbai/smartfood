@@ -41,6 +41,7 @@ export const createTransporter = (user, pass) => {
     port,
     secure,
     auth: { user, pass },
+    family: 4, // ← Force IPv4 DNS resolution to prevent ENETUNREACH IPv6 routing errors on Render
     connectionTimeout: 15000,
     greetingTimeout: 15000,
     socketTimeout: 15000
@@ -77,12 +78,20 @@ export const verifySmtpConnection = async () => {
 
     try {
       await transporter.verify();
-      console.log(`[EmailService] ✅ SMTP connection verified for index ${i}. Ready to send emails from: ${user} via ${host}:${port}`);
+      console.log(`[EmailService] ✅ SMTP connection verified for index ${i}. Ready to send emails from: ${user} via ${host}:${port} (IPv4)`);
     } catch (error) {
       console.error(`[EmailService] ❌ SMTP verification FAILED for ${user} (${host}:${port}):`, error.message);
-      console.error('[EmailService] 💡 Common causes:');
-      console.error('   • Wrong EMAIL_USER or EMAIL_PASS App Password');
-      console.error('   • Gmail App Password required: https://myaccount.google.com/apppasswords');
+      console.error('[EmailService] 💡 Diagnostic Info:');
+      if (error.code === 'ENETUNREACH' || error.message?.includes('ENETUNREACH') || error.message?.includes('IPv6')) {
+        console.error('   • Network Route Unreachable (ENETUNREACH / IPv6 network error). Ensured family: 4 option forces IPv4 connection.');
+      } else if (error.code === 'EAUTH' || error.responseCode === 535 || error.message?.includes('Invalid login')) {
+        console.error('   • SMTP Authentication Failed: Verify EMAIL_USER and EMAIL_PASS App Password in Render configuration.');
+        console.error('   ➜ Fix: https://myaccount.google.com/apppasswords');
+      } else if (error.code === 'ETIMEDOUT' || error.code === 'ESOCKET') {
+        console.error('   • Connection Timeout: Check host firewall or ensure port 587 STARTTLS is used.');
+      } else {
+        console.error(`   • Details: ${error.message}`);
+      }
     }
   }
   console.log('');
@@ -233,7 +242,9 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
   }
 
   let friendlyError = lastError?.message || 'Failed to send reset email. Please check server SMTP configuration.';
-  if (lastError?.code === 'EAUTH' || lastError?.responseCode === 535 || lastError?.message?.includes('Invalid login')) {
+  if (lastError?.code === 'ENETUNREACH' || lastError?.message?.includes('ENETUNREACH')) {
+    friendlyError = 'Mail server network route unreachable (IPv6 error). Retrying via IPv4...';
+  } else if (lastError?.code === 'EAUTH' || lastError?.responseCode === 535 || lastError?.message?.includes('Invalid login')) {
     friendlyError = 'SMTP Authentication failed. Please verify EMAIL_USER and EMAIL_PASS App Password in server configuration.';
   } else if (lastError?.code === 'ESOCKET' || lastError?.code === 'ETIMEDOUT') {
     friendlyError = 'Mail server connection timed out. Please try again later.';
