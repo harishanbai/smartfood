@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import User from '../models/User.js';
 import { sendPasswordResetEmail } from '../services/emailService.js';
+import admin from '../config/firebaseAdmin.js';
 
 /**
  * @desc    Register / Sync new user to MongoDB after Firebase Auth
@@ -294,19 +295,31 @@ export const forgotPassword = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please enter a valid email address.' });
     }
 
-    // 3. Look up the email in database OR Firebase Auth
-    console.log(`[ForgotPassword] 🔍 Looking up email in database: ${normalizedEmail}`);
+    // 3. Look up the email in database (exact match first, then case-insensitive regex match)
+    console.log(`[ForgotPassword] 🔍 Looking up email in database: "${normalizedEmail}"`);
     let user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
-      console.warn(`[ForgotPassword] ⚠️ User not in MongoDB. Checking Firebase Auth for: "${normalizedEmail}"`);
+      const escapedEmail = normalizedEmail.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+      user = await User.findOne({ email: { $regex: new RegExp(`^\\s*${escapedEmail}\\s*$`, 'i') } });
+      if (user) {
+        console.log(`[ForgotPassword] 🔍 Found user via case-insensitive regex match: ${user.email}`);
+      }
+    }
+
+    if (!user) {
+      console.warn(`[ForgotPassword] ⚠️ User not in MongoDB by email. Checking Firebase Auth for: "${normalizedEmail}"`);
       try {
-        const { getApps } = await import('firebase-admin/app');
-        if (getApps().length > 0) {
-          const { getAuth } = await import('firebase-admin/auth');
-          const firebaseAuth = getAuth();
-          const fbUser = await firebaseAuth.getUserByEmail(normalizedEmail);
-          if (fbUser) {
+        const { getAuth } = await import('firebase-admin/auth');
+        const firebaseAuth = getAuth();
+        const fbUser = await firebaseAuth.getUserByEmail(normalizedEmail);
+        if (fbUser) {
+          user = await User.findOne({ uid: fbUser.uid });
+          if (user) {
+            user.email = normalizedEmail;
+            await user.save();
+            console.log(`[ForgotPassword] 🔄 Updated MongoDB user email for existing UID: ${user.uid}`);
+          } else {
             user = await User.create({
               uid: fbUser.uid,
               email: normalizedEmail,
@@ -319,7 +332,7 @@ export const forgotPassword = async (req, res) => {
           }
         }
       } catch (fbLookupErr) {
-        console.warn(`[ForgotPassword] Firebase user lookup check: ${fbLookupErr.message}`);
+        console.warn(`[ForgotPassword] Firebase user lookup notice: ${fbLookupErr.message}`);
       }
     }
 
@@ -335,13 +348,22 @@ export const forgotPassword = async (req, res) => {
     const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
     const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
+    const recipientEmail = normalizedEmail;
+    user.email = recipientEmail;
     user.resetToken = hashedToken;
     user.resetTokenExpiry = expiry;
     await user.save();
-    console.log(`[ForgotPassword] 🔑 Token saved to DB. Expires at: ${expiry.toISOString()}`);
+    console.log(`[ForgotPassword] 🔑 Token saved to DB for ${recipientEmail}. Expires at: ${expiry.toISOString()}`);
 
     // 5. Build the reset link — use request origin for local dev, env var for prod
-    const requestOrigin = req.headers.origin || req.headers.referer;
+    let requestOrigin = req.headers.origin;
+    if (!requestOrigin && req.headers.referer) {
+      try {
+        requestOrigin = new URL(req.headers.referer).origin;
+      } catch (e) {
+        requestOrigin = req.headers.referer;
+      }
+    }
     let frontendUrl;
     if (requestOrigin && (requestOrigin.includes('localhost') || requestOrigin.includes('127.0.0.1'))) {
       // Local development: use the origin from the request (e.g. http://localhost:5000)
@@ -350,15 +372,15 @@ export const forgotPassword = async (req, res) => {
       // Production: use environment variable
       frontendUrl = (process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5000').trim().replace(/\/+$/, '');
     }
-    const resetLink = `${frontendUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(user.email)}`;
+    const resetLink = `${frontendUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(recipientEmail)}`;
 
     console.log(`[ForgotPassword] 🔗 Reset Link: ${resetLink}`);
-    console.log(`[ForgotPassword] ✉️ Sending password reset email to: ${user.email}`);
+    console.log(`[ForgotPassword] ✉️ Sending password reset email to: ${recipientEmail}`);
 
     // 6. Send the email wrapped in safety try-catch block
     let emailResult;
     try {
-      emailResult = await sendPasswordResetEmail(user.email, resetLink);
+      emailResult = await sendPasswordResetEmail(recipientEmail, resetLink);
     } catch (mailError) {
       console.error('[ForgotPassword] ❌ Exception thrown during email dispatch:', mailError);
       emailResult = { success: false, error: mailError?.message || 'Failed to dispatch reset email.' };
@@ -409,7 +431,12 @@ export const verifyResetToken = async (req, res) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const user = await User.findOne({ email: normalizedEmail });
+    let user = await User.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      const escapedEmail = normalizedEmail.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+      user = await User.findOne({ email: { $regex: new RegExp(`^\\s*${escapedEmail}\\s*$`, 'i') } });
+    }
 
     if (!user) {
       return res.status(404).json({
@@ -479,7 +506,12 @@ export const resetPassword = async (req, res) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const user = await User.findOne({ email: normalizedEmail });
+    let user = await User.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      const escapedEmail = normalizedEmail.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+      user = await User.findOne({ email: { $regex: new RegExp(`^\\s*${escapedEmail}\\s*$`, 'i') } });
+    }
 
     if (!user) {
       return res.status(404).json({

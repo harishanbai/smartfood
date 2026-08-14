@@ -107,34 +107,16 @@ export const verifySmtpConnection = async () => {
  * @returns {{ success: boolean, mode?: string, error?: string }}
  */
 export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = null) => {
-  const creds = getEmailCredentials(senderEmail);
-  // ── Always log the link so you can copy-paste it for local testing ──
-  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(`🔗 TEST RESET LINK for ${toEmail}:`);
-  console.log(`   ${resetLink}`);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+  const users = (process.env.EMAIL_USER || '').split(',').map(s => s.trim()).filter(Boolean);
+  const passes = (process.env.EMAIL_PASS || '').split(',').map(s => s.trim()).filter(Boolean);
 
-  if (!creds || !creds.user || !creds.pass) {
+  if (users.length === 0) {
     console.error('[EmailService] ❌ SMTP not configured. EMAIL_USER and EMAIL_PASS must be set in server/.env to send emails.');
-    console.warn('[EmailService] 💡 Fix: Add EMAIL_USER and EMAIL_PASS (Gmail App Password) to server/.env');
-    console.warn('[EmailService] 💡 Generate App Password at: https://myaccount.google.com/apppasswords');
     return {
       success: false,
       error: 'Email service is not configured. Please contact the administrator.'
     };
   }
-
-  const { user: emailUser, pass: emailPass } = creds;
-
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: { user: emailUser, pass: emailPass },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000
-  });
 
   const htmlBody = `
     <!DOCTYPE html>
@@ -221,35 +203,58 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
     </html>
   `;
 
-  console.log(`[EmailService] 📤 Attempting to send email to: ${toEmail} via SMTP (${emailUser})...`);
+  const textBody = `Hi there 👋,\n\nWe received a request to reset the password for your Smart Lunch Generator account.\n\nPlease click or copy and paste the following link into your browser to reset your password (link expires in 15 minutes):\n\n${resetLink}\n\nIf you did not request a password reset, you can safely ignore this email.\n\nBest regards,\nSmart Lunch Generator Team`;
 
-  try {
-    const info = await transporter.sendMail({
-      from: `"Smart Lunch Generator" <${emailUser}>`,
-      to: toEmail,
-      subject: '🔐 Reset Your Smart Lunch Generator Password',
-      html: htmlBody
+  let lastError = null;
+  for (let i = 0; i < users.length; i++) {
+    const emailUser = users[i];
+    const emailPass = passes[i] || passes[0];
+
+    console.log(`[EmailService] 📤 Attempting to send email (${i + 1}/${users.length}) to: ${toEmail} via SMTP (${emailUser})...`);
+
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: { user: emailUser, pass: emailPass },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000
     });
 
-    console.log(`[EmailService] ✅ Email sent successfully!`);
-    console.log(`[EmailService]    Message ID : ${info.messageId}`);
-    console.log(`[EmailService]    Accepted   : ${info.accepted?.join(', ')}`);
-    console.log(`[EmailService]    Rejected   : ${info.rejected?.join(', ') || 'none'}\n`);
+    try {
+      const info = await transporter.sendMail({
+        from: `"Smart Lunch Generator" <${emailUser}>`,
+        to: toEmail,
+        replyTo: emailUser,
+        subject: '🔐 Reset Your Smart Lunch Generator Password',
+        text: textBody,
+        html: htmlBody,
+        headers: {
+          'X-Priority': '1',
+          'X-MSMail-Priority': 'High',
+          'Importance': 'High'
+        }
+      });
 
-    return { success: true, mode: 'smtp', messageId: info.messageId };
-  } catch (error) {
-    console.error('\n[EmailService] ❌ sendMail FAILED!');
-    console.error(`[EmailService]    Error Code   : ${error.code}`);
-    console.error(`[EmailService]    Error Message: ${error.message}`);
-    console.error(`[EmailService]    Response     : ${error.response || 'N/A'}\n`);
+      console.log(`[EmailService] ✅ Email sent successfully via ${emailUser}!`);
+      console.log(`[EmailService]    Message ID : ${info.messageId}`);
+      console.log(`[EmailService]    Accepted   : ${info.accepted?.join(', ')}`);
+      console.log(`[EmailService]    Rejected   : ${info.rejected?.join(', ') || 'none'}\n`);
 
-    let friendlyError = error.message;
-    if (error.code === 'EAUTH' || error.responseCode === 535 || error.message?.includes('Invalid login')) {
-      friendlyError = 'SMTP Authentication failed. Please verify EMAIL_USER and EMAIL_PASS App Password in Render configuration.';
-    } else if (error.code === 'ESOCKET' || error.code === 'ETIMEDOUT') {
-      friendlyError = 'Mail server connection timed out. Please try again later.';
+      return { success: true, mode: 'smtp', messageId: info.messageId, sender: emailUser };
+    } catch (error) {
+      console.error(`[EmailService] ❌ sendMail FAILED for sender ${emailUser}:`, error.message);
+      lastError = error;
     }
-
-    return { success: false, error: friendlyError, code: error.code };
   }
+
+  let friendlyError = lastError?.message || 'Failed to send reset email. Please check server SMTP configuration.';
+  if (lastError?.code === 'EAUTH' || lastError?.responseCode === 535 || lastError?.message?.includes('Invalid login')) {
+    friendlyError = 'SMTP Authentication failed. Please verify EMAIL_USER and EMAIL_PASS App Password in server configuration.';
+  } else if (lastError?.code === 'ESOCKET' || lastError?.code === 'ETIMEDOUT') {
+    friendlyError = 'Mail server connection timed out. Please try again later.';
+  }
+
+  return { success: false, error: friendlyError, code: lastError?.code };
 };

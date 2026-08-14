@@ -378,7 +378,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 4. Password Reset Flow — Primary Nodemailer + Firebase Auth Fallback
+  // 4. Password Reset Flow — Nodemailer Email Service
   const sendPasswordReset = async (email) => {
     const trimmedEmail = email.trim();
     console.log(`[ForgotPassword] 🚀 Initiating reset request for email: "${trimmedEmail}"`);
@@ -386,9 +386,9 @@ export const AuthProvider = ({ children }) => {
       const res = await authApi.forgotPassword(trimmedEmail);
       console.log(`[ForgotPassword] ✅ Request Succeeded - Status: ${res.status}`, res.data);
       if (res?.data?.success) {
-        return { success: true, message: res.data.message || 'Password reset email sent successfully.' };
+        return { success: true, message: res.data.message || 'Password reset email sent successfully. Please check your inbox.' };
       }
-      return { success: false, error: res?.data?.message || 'Failed to send reset email.' };
+      return { success: false, error: res?.data?.message || 'Unable to send reset email. Please try again later.' };
     } catch (error) {
       const reqUrl = error?.config?.url || '/auth/forgot-password';
       const statusCode = error?.response?.status;
@@ -407,21 +407,10 @@ export const AuthProvider = ({ children }) => {
         };
       }
 
-      if (statusCode === 400) {
-        return { success: false, error: serverMsg || 'Please enter a valid email address.' };
-      }
-
-      // Universal fallback: If backend server error (500), 404, or SMTP issue occurs, trigger Firebase Auth reset dispatch directly!
-      console.warn(`[ForgotPassword] Backend notice (${statusCode || 'network'}). Triggering Firebase Auth password reset fallback for ${trimmedEmail}...`);
-      try {
-        await sendFirebasePasswordResetEmail(auth, trimmedEmail);
-        console.log(`[ForgotPassword] ✅ Firebase Auth password reset email dispatched successfully to ${trimmedEmail}`);
-        return { success: true, message: 'Password reset email sent successfully. Please check your inbox.' };
-      } catch (firebaseErr) {
-        console.error(`[ForgotPassword] ❌ Firebase Auth password reset error:`, firebaseErr);
-        const friendlyMsg = typeof getFriendlyError === 'function' ? getFriendlyError(firebaseErr) : firebaseErr?.message;
-        return { success: false, error: friendlyMsg || serverMsg || 'No account found with this email address.' };
-      }
+      return {
+        success: false,
+        error: serverMsg || 'Unable to send reset email. Please try again later.'
+      };
     }
   };
 

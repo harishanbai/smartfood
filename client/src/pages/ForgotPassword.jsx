@@ -60,7 +60,7 @@ const ForgotPassword = () => {
           addNotification(res.message || 'Password reset email sent successfully!', 'success');
         }
       } else {
-        const errorMsg = res?.error || 'Failed to send password reset email.';
+        const errorMsg = res?.error || 'Unable to send reset email. Please try again later.';
         setError(errorMsg);
         if (addNotification) {
           addNotification(errorMsg, 'error');
