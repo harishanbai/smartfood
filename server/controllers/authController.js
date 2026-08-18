@@ -341,7 +341,7 @@ export const forgotPassword = async (req, res) => {
       return res.status(404).json({ success: false, message: 'No account found with this email address.' });
     }
 
-    console.log(`[ForgotPassword] ✅ Account found: uid=${user.uid}, provider=${user.provider}`);
+    console.log(`[ForgotPassword] ✅ Account verified: uid=${user.uid}, email=${user.email}, provider=${user.provider || 'email'}`);
 
     // 4. Generate secure random token and hash it for storage
     const rawToken = crypto.randomBytes(32).toString('hex');
@@ -353,29 +353,30 @@ export const forgotPassword = async (req, res) => {
     user.resetToken = hashedToken;
     user.resetTokenExpiry = expiry;
     await user.save();
-    console.log(`[ForgotPassword] 🔑 Token saved to DB for ${recipientEmail}. Expires at: ${expiry.toISOString()}`);
+    console.log(`[ForgotPassword] 🔑 Secure token generated and hashed (SHA-256) in DB for ${recipientEmail}. Expires at: ${expiry.toISOString()}`);
 
-    // 5. Build the reset link — use request origin for local dev, env var for prod
-    let requestOrigin = req.headers.origin;
-    if (!requestOrigin && req.headers.referer) {
+    // 5. Build the reset link — dynamically detect client origin (local or prod), fallback to configured env var
+    let frontendUrl = req.headers.origin;
+    if (!frontendUrl && req.headers.referer) {
       try {
-        requestOrigin = new URL(req.headers.referer).origin;
+        frontendUrl = new URL(req.headers.referer).origin;
       } catch (e) {
-        requestOrigin = req.headers.referer;
+        frontendUrl = req.headers.referer;
       }
     }
-    let frontendUrl;
-    if (requestOrigin && (requestOrigin.includes('localhost') || requestOrigin.includes('127.0.0.1'))) {
-      // Local development: use the origin from the request (e.g. http://localhost:5000)
-      frontendUrl = requestOrigin.trim().replace(/\/+$/, '');
+    if (!frontendUrl) {
+      frontendUrl = (process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://vaseegrah-veda-catering-xer9.vercel.app').trim().replace(/\/+$/, '');
     } else {
-      // Production: use environment variable
-      frontendUrl = (process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5000').trim().replace(/\/+$/, '');
+      frontendUrl = frontendUrl.trim().replace(/\/+$/, '');
     }
-    const resetLink = `${frontendUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(recipientEmail)}`;
 
-    console.log(`[ForgotPassword] 🔗 Reset Link: ${resetLink}`);
-    console.log(`[ForgotPassword] ✉️ Sending password reset email to: ${recipientEmail}`);
+    const resetLink = `${frontendUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(recipientEmail)}`;
+    const maskedLink = `${frontendUrl}/reset-password?token=${rawToken.substring(0, 6)}...[REDACTED]&email=${encodeURIComponent(recipientEmail)}`;
+
+    console.log(`[ForgotPassword] 🔗 Reset URL constructed: ${maskedLink}`);
+    console.log(`[ForgotPassword] 📤 Stage 1: Application validation — SUCCESS`);
+    console.log(`[ForgotPassword] 📤 Stage 2: Token generation & DB record — SUCCESS`);
+    console.log(`[ForgotPassword] 📤 Stage 3: SMTP submission dispatching to: ${recipientEmail}...`);
 
     // 6. Send the email wrapped in safety try-catch block
     let emailResult;
@@ -386,20 +387,25 @@ export const forgotPassword = async (req, res) => {
       emailResult = { success: false, error: mailError?.message || 'Failed to dispatch reset email.' };
     }
 
-    console.log(`[ForgotPassword] 📨 Email Result:`, emailResult);
-
     if (!emailResult || !emailResult.success) {
-      console.error(`[ForgotPassword] ❌ Email Delivery Failed: ${emailResult?.error}`);
+      console.error(`[ForgotPassword] ❌ Stage 4: SMTP Submission FAILED: ${emailResult?.error || 'Unknown error'}`);
       return res.status(500).json({
         success: false,
         message: emailResult?.error || 'Failed to send reset email. Please try again later.'
       });
     }
 
-    console.log(`[ForgotPassword] ✅ Reset email successfully sent to ${user.email}`);
+    console.log(`[ForgotPassword] ✅ Stage 4: SMTP Submission SUCCESS`);
+    console.log(`[ForgotPassword]    • Message ID : ${emailResult.messageId}`);
+    console.log(`[ForgotPassword]    • Accepted   : ${JSON.stringify(emailResult.accepted || [])}`);
+    console.log(`[ForgotPassword]    • Rejected   : ${JSON.stringify(emailResult.rejected || [])}`);
+    console.log(`[ForgotPassword]    • Response   : ${emailResult.response || 'OK'}`);
+    console.log(`[ForgotPassword] ℹ️  Stage 5 (Downstream): Email accepted by SMTP server for transport.`);
+    console.log(`[ForgotPassword]    Final inbox placement is subject to recipient's email provider heuristics (Spam/Junk/Promotions/Corporate filtering).`);
+
     return res.status(200).json({
       success: true,
-      message: 'Password reset email sent successfully. Please check your inbox.'
+      message: 'Password reset email sent successfully. Please check your inbox (and spam/promotions folder).'
     });
   } catch (error) {
     console.error('[ForgotPassword] 💥 Server Exception Error:', error);
