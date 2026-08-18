@@ -53,6 +53,8 @@ export const getSmtpConfig = () => {
   const rawPass = cleanPassword(process.env.SMTP_PASS || process.env.EMAIL_PASS);
 
   const rawFrom = cleanEnv(process.env.EMAIL_FROM || process.env.SMTP_FROM || process.env.MAIL_FROM);
+  const resendApiKey = cleanEnv(process.env.RESEND_API_KEY);
+  const brevoApiKey = cleanEnv(process.env.BREVO_API_KEY);
 
   return {
     host,
@@ -60,7 +62,9 @@ export const getSmtpConfig = () => {
     secure,
     user: rawUser,
     pass: rawPass,
-    from: rawFrom
+    from: rawFrom,
+    resendApiKey,
+    brevoApiKey
   };
 };
 
@@ -106,13 +110,19 @@ export const getEmailCredentials = (selectedSender = null) => {
  */
 export const logSmtpDiagnostics = () => {
   const config = getSmtpConfig();
-  console.log('[EmailService] 📋 SMTP Environment Diagnostics:');
-  console.log(`   • SMTP_HOST  : ${config.host ? 'configured (' + config.host + ')' : 'NOT CONFIGURED (defaulting to smtp.gmail.com)'}`);
-  console.log(`   • SMTP_PORT  : ${process.env.SMTP_PORT ? 'configured (' + config.port + ')' : 'NOT CONFIGURED (defaulting to 587)'}`);
-  console.log(`   • SMTP_SECURE: ${process.env.SMTP_SECURE ? 'configured (' + config.secure + ')' : 'derived (' + config.secure + ')'}`);
-  console.log(`   • SMTP_USER  : ${config.user ? 'configured' : 'NOT CONFIGURED (missing SMTP_USER / EMAIL_USER)'}`);
-  console.log(`   • SMTP_PASS  : ${config.pass ? 'configured (' + config.pass.length + ' chars)' : 'NOT CONFIGURED (missing SMTP_PASS / EMAIL_PASS)'}`);
-  console.log(`   • EMAIL_FROM : ${config.from ? 'configured' : 'NOT CONFIGURED (will default to Smart Lunch Generator <user>)'}`);
+  console.log('[EmailService] 📋 Email Service Environment Diagnostics:');
+  if (config.resendApiKey) {
+    console.log(`   • RESEND_API_KEY : configured (${config.resendApiKey.length} chars) [HTTPS Delivery Active]`);
+  }
+  if (config.brevoApiKey) {
+    console.log(`   • BREVO_API_KEY  : configured (${config.brevoApiKey.length} chars) [HTTPS Delivery Active]`);
+  }
+  console.log(`   • SMTP_HOST      : ${config.host ? 'configured (' + config.host + ')' : 'NOT CONFIGURED (defaulting to smtp.gmail.com)'}`);
+  console.log(`   • SMTP_PORT      : ${process.env.SMTP_PORT ? 'configured (' + config.port + ')' : 'NOT CONFIGURED (defaulting to 587)'}`);
+  console.log(`   • SMTP_SECURE    : ${process.env.SMTP_SECURE ? 'configured (' + config.secure + ')' : 'derived (' + config.secure + ')'}`);
+  console.log(`   • SMTP_USER      : ${config.user ? 'configured' : 'NOT CONFIGURED (missing SMTP_USER / EMAIL_USER)'}`);
+  console.log(`   • SMTP_PASS      : ${config.pass ? 'configured (' + config.pass.length + ' chars)' : 'NOT CONFIGURED (missing SMTP_PASS / EMAIL_PASS)'}`);
+  console.log(`   • EMAIL_FROM     : ${config.from ? 'configured' : 'NOT CONFIGURED (will default to Smart Lunch Generator <user>)'}`);
 };
 
 /**
@@ -188,6 +198,12 @@ export const verifySmtpConnection = async () => {
 
   const creds = getEmailCredentials();
   const config = getSmtpConfig();
+
+  if (config.resendApiKey || config.brevoApiKey) {
+    console.log('\n[EmailService] ⚡ HTTPS Email API is configured — outbound email delivery will use cloud-safe HTTPS (Port 443).\n');
+    return;
+  }
+
   const host = config.host;
   const port = config.port;
 
@@ -310,11 +326,11 @@ const buildEmailText = (resetLink) =>
   `Hello,\n\nWe received a request to reset your password for Smart Lunch Generator.\n\nPlease open the link below in your browser to set a new password (valid for 15 minutes):\n\n${resetLink}\n\nIf you did not request a password reset, you can safely ignore this email.\n\nBest regards,\nSmart Lunch Generator Team`;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Main Send Function — 100% Pure Nodemailer SMTP
+// Main Send Function — Supports Pure Nodemailer SMTP & HTTPS Cloud API (Resend/Brevo)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Sends a password reset email via Nodemailer SMTP to ANY recipient email address.
+ * Sends a password reset email via HTTPS API or Nodemailer SMTP to ANY recipient email address.
  *
  * @param {string} toEmail      - Recipient email address (any user)
  * @param {string} resetLink    - Secure reset URL containing the token
@@ -326,6 +342,85 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
   const textBody = buildEmailText(resetLink);
   const emailSubject = 'Password Reset Request - Smart Lunch Generator';
 
+  const config = getSmtpConfig();
+
+  // 1. Check if Resend HTTPS API is configured (Bypasses Render SMTP port blocking)
+  if (config.resendApiKey) {
+    try {
+      console.log(`[EmailService] ⚡ Dispatching reset email via Resend HTTPS API to: ${toEmail}`);
+      const fromAddress = config.from || 'Smart Lunch Generator <onboarding@resend.dev>';
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${config.resendApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: fromAddress,
+          to: [toEmail],
+          subject: emailSubject,
+          html: htmlBody,
+          text: textBody
+        })
+      });
+
+      const resData = await res.json();
+      if (res.ok && resData?.id) {
+        console.log(`[EmailService] ✅ Email dispatched successfully via Resend HTTPS API: ${resData.id}`);
+        return {
+          success: true,
+          mode: 'resend_api',
+          messageId: resData.id,
+          response: 'Accepted via Resend HTTPS API'
+        };
+      } else {
+        console.error('[EmailService] ❌ Resend API Error:', resData);
+      }
+    } catch (apiErr) {
+      console.error('[EmailService] ❌ Resend HTTPS API Request Exception:', apiErr.message);
+    }
+  }
+
+  // 2. Check if Brevo HTTPS API is configured (Bypasses Render SMTP port blocking)
+  if (config.brevoApiKey) {
+    try {
+      console.log(`[EmailService] ⚡ Dispatching reset email via Brevo HTTPS API to: ${toEmail}`);
+      const senderName = 'Smart Lunch Generator';
+      const senderEmailAddr = config.user || 'no-reply@smartlunch.app';
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': config.brevoApiKey,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: { name: senderName, email: senderEmailAddr },
+          to: [{ email: toEmail }],
+          subject: emailSubject,
+          htmlContent: htmlBody,
+          textContent: textBody
+        })
+      });
+
+      const resData = await res.json();
+      if (res.ok && resData?.messageId) {
+        console.log(`[EmailService] ✅ Email dispatched successfully via Brevo HTTPS API: ${resData.messageId}`);
+        return {
+          success: true,
+          mode: 'brevo_api',
+          messageId: resData.messageId,
+          response: 'Accepted via Brevo HTTPS API'
+        };
+      } else {
+        console.error('[EmailService] ❌ Brevo API Error:', resData);
+      }
+    } catch (apiErr) {
+      console.error('[EmailService] ❌ Brevo HTTPS API Request Exception:', apiErr.message);
+    }
+  }
+
+  // 3. Nodemailer SMTP Fallback / Primary
   const creds = getEmailCredentials(senderEmail);
 
   if (!creds || !creds.user || !creds.pass) {
@@ -336,7 +431,7 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
     };
   }
 
-  const { allUsers, allPasses, config } = creds;
+  const { allUsers, allPasses } = creds;
   const customFrom = config.from;
   let lastError = null;
 
