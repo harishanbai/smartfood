@@ -365,7 +365,12 @@ export const forgotPassword = async (req, res) => {
       }
     }
     if (!frontendUrl) {
-      frontendUrl = (process.env.CLIENT_URL || process.env.FRONTEND_URL || 'https://vaseegrah-veda-catering-xer9.vercel.app').trim().replace(/\/+$/, '');
+      const rawEnvUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || process.env.CLIENT_URL_PROD || 'https://vaseegrah-veda-catering-xer9.vercel.app';
+      let cleanUrl = String(rawEnvUrl).trim();
+      if ((cleanUrl.startsWith('"') && cleanUrl.endsWith('"')) || (cleanUrl.startsWith("'") && cleanUrl.endsWith("'"))) {
+        cleanUrl = cleanUrl.slice(1, -1).trim();
+      }
+      frontendUrl = cleanUrl.replace(/\/+$/, '');
     } else {
       frontendUrl = frontendUrl.trim().replace(/\/+$/, '');
     }

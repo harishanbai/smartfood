@@ -1,23 +1,80 @@
 import nodemailer from 'nodemailer';
 
 // Do NOT read process.env at module load time — dotenv may not have run yet.
-// Always read inside functions so the values are resolved at call time.
+// Always read inside functions so the values are resolved dynamically at call time.
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Credential helpers (100% dynamic from Environment Variables)
+// Utility & Sanitization Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Resolves SMTP credentials entirely from environment variables.
- * No hardcoded emails or secrets in code.
+ * Strips accidental wrapping quotes (single or double) and trims whitespace.
+ */
+export const cleanEnv = (val) => {
+  if (val === undefined || val === null) return '';
+  let str = String(val).trim();
+  if ((str.startsWith('"') && str.endsWith('"')) || (str.startsWith("'") && str.endsWith("'"))) {
+    str = str.slice(1, -1).trim();
+  }
+  return str;
+};
+
+/**
+ * Sanitizes password/secret string by removing outer quotes and internal whitespace
+ * (especially helpful for Google 16-character App Passwords generated with spaces).
+ */
+export const cleanPassword = (val) => {
+  if (val === undefined || val === null) return '';
+  let str = cleanEnv(val);
+  return str.replace(/\s+/g, '');
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Credential & Config Resolvers (100% dynamic from Environment Variables)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Resolves SMTP configuration options dynamically from environment variables.
+ */
+export const getSmtpConfig = () => {
+  const host = cleanEnv(process.env.SMTP_HOST) || 'smtp.gmail.com';
+  const rawPort = cleanEnv(process.env.SMTP_PORT);
+  const port = rawPort ? parseInt(rawPort, 10) : 587;
+
+  let secure;
+  const rawSecure = cleanEnv(process.env.SMTP_SECURE);
+  if (rawSecure !== '') {
+    secure = rawSecure === 'true';
+  } else {
+    secure = port === 465;
+  }
+
+  const rawUser = cleanEnv(process.env.SMTP_USER || process.env.EMAIL_USER);
+  const rawPass = cleanPassword(process.env.SMTP_PASS || process.env.EMAIL_PASS);
+
+  const rawFrom = cleanEnv(process.env.EMAIL_FROM || process.env.SMTP_FROM || process.env.MAIL_FROM);
+
+  return {
+    host,
+    port,
+    secure,
+    user: rawUser,
+    pass: rawPass,
+    from: rawFrom
+  };
+};
+
+/**
+ * Resolves SMTP credentials with support for multiple fallback accounts if configured.
  */
 export const getEmailCredentials = (selectedSender = null) => {
-  const smtpUser = (process.env.SMTP_USER || '').trim();
-  const smtpPass = (process.env.SMTP_PASS || '').trim();
+  const config = getSmtpConfig();
+  const smtpUser = config.user;
+  const smtpPass = config.pass;
 
   // Support legacy comma-separated lists if multiple accounts are configured
-  const users = (process.env.EMAIL_USER || '').split(',').map(s => s.trim()).filter(Boolean);
-  const passes = (process.env.EMAIL_PASS || '').split(',').map(s => s.trim()).filter(Boolean);
+  const users = (cleanEnv(process.env.EMAIL_USER) || '').split(',').map(s => cleanEnv(s)).filter(Boolean);
+  const passes = (cleanEnv(process.env.EMAIL_PASS) || '').split(',').map(s => cleanPassword(s)).filter(Boolean);
 
   const allUsers = smtpUser ? [smtpUser, ...users.filter(u => u !== smtpUser)] : users;
   const allPasses = smtpUser ? [smtpPass, ...passes] : passes;
@@ -26,7 +83,7 @@ export const getEmailCredentials = (selectedSender = null) => {
 
   let index = 0;
   if (selectedSender) {
-    const foundIndex = allUsers.indexOf(selectedSender.trim());
+    const foundIndex = allUsers.indexOf(cleanEnv(selectedSender));
     if (foundIndex !== -1) index = foundIndex;
   }
 
@@ -34,75 +91,111 @@ export const getEmailCredentials = (selectedSender = null) => {
     user: allUsers[index],
     pass: allPasses[index] || allPasses[0] || '',
     allUsers,
-    allPasses
+    allPasses,
+    config
   };
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Transporter factory
+// Safe Diagnostic Logger (Never logs passwords or secrets)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Creates a Nodemailer transporter using dynamic environment variables.
- * Explicitly forces family: 4 (IPv4) to prevent cloud hosting (Render/AWS) IPv6 timeout hangs.
+ * Safe startup diagnostics that show whether each required SMTP variable exists.
+ * NEVER prints the actual SMTP password or secret.
+ */
+export const logSmtpDiagnostics = () => {
+  const config = getSmtpConfig();
+  console.log('[EmailService] 📋 SMTP Environment Diagnostics:');
+  console.log(`   • SMTP_HOST  : ${config.host ? 'configured (' + config.host + ')' : 'NOT CONFIGURED (defaulting to smtp.gmail.com)'}`);
+  console.log(`   • SMTP_PORT  : ${process.env.SMTP_PORT ? 'configured (' + config.port + ')' : 'NOT CONFIGURED (defaulting to 587)'}`);
+  console.log(`   • SMTP_SECURE: ${process.env.SMTP_SECURE ? 'configured (' + config.secure + ')' : 'derived (' + config.secure + ')'}`);
+  console.log(`   • SMTP_USER  : ${config.user ? 'configured' : 'NOT CONFIGURED (missing SMTP_USER / EMAIL_USER)'}`);
+  console.log(`   • SMTP_PASS  : ${config.pass ? 'configured (' + config.pass.length + ' chars)' : 'NOT CONFIGURED (missing SMTP_PASS / EMAIL_PASS)'}`);
+  console.log(`   • EMAIL_FROM : ${config.from ? 'configured' : 'NOT CONFIGURED (will default to Smart Lunch Generator <user>)'}`);
+};
+
+/**
+ * Logs real Nodemailer error details safely without leaking sensitive tokens or passwords.
+ */
+export const logSafeSmtpError = (prefix, err) => {
+  if (!err) return;
+  console.error(`[EmailService] ❌ ${prefix}`);
+  if (err.message) console.error(`   • Message     : ${err.message}`);
+  if (err.code) console.error(`   • Error Code  : ${err.code}`);
+  if (err.command) console.error(`   • Command     : ${err.command}`);
+  if (err.responseCode) console.error(`   • ResponseCode: ${err.responseCode}`);
+  if (err.response) console.error(`   • Response    : ${err.response}`);
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Transporter Factory
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Creates a production-safe Nodemailer transporter.
+ * Supports Port 587 (STARTTLS, secure: false) and Port 465 (SMTPS, secure: true).
+ * Explicitly sets family: 4 (IPv4) to prevent cloud hosting (Render/AWS) IPv6 timeout hangs.
  */
 export const createTransporter = (user, pass, customPort = null) => {
-  const host = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
-  const port = customPort || (process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587);
-
-  // For Gmail, connect directly via smtp.gmail.com:465 with forced IPv4 (family: 4)
-  if (host === 'smtp.gmail.com' || host === 'gmail' || (user && user.endsWith('@gmail.com'))) {
-    return nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: { user, pass },
-      family: 4, // Force IPv4 — critical for Render/cloud environments
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000
-    });
-  }
-
+  const config = getSmtpConfig();
+  const host = config.host;
+  const port = customPort !== null && customPort !== undefined ? customPort : config.port;
+  
   let secure;
   if (process.env.SMTP_SECURE !== undefined && process.env.SMTP_SECURE !== '') {
-    secure = process.env.SMTP_SECURE === 'true';
+    secure = cleanEnv(process.env.SMTP_SECURE) === 'true';
   } else {
     secure = port === 465;
   }
 
-  return nodemailer.createTransport({
+  const transportOptions = {
     host,
     port,
     secure,
     auth: { user, pass },
-    family: 4, // Force IPv4
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-    tls: {
+    family: 4, // Force IPv4 — critical for Render/cloud environments
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000
+  };
+
+  // For port 587 STARTTLS configuration, enforce TLS standard
+  if (!secure && port === 587) {
+    transportOptions.requireTLS = true;
+    transportOptions.tls = {
+      rejectUnauthorized: true,
+      minVersion: 'TLSv1.2'
+    };
+  } else if (!secure) {
+    transportOptions.tls = {
       rejectUnauthorized: true
-    }
-  });
+    };
+  }
+
+  return nodemailer.createTransport(transportOptions);
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Startup SMTP verification
+// Startup SMTP Verification
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Safe startup test: verifies SMTP credentials without exposing secrets.
  */
 export const verifySmtpConnection = async () => {
+  logSmtpDiagnostics();
+
   const creds = getEmailCredentials();
-  const host = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
-  const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
+  const config = getSmtpConfig();
+  const host = config.host;
+  const port = config.port;
 
-  console.log(`\n[EmailService] 🔌 Verifying SMTP connection → ${host}:${port}...`);
+  console.log(`\n[EmailService] 🔌 Verifying SMTP connection → ${host}:${port} (secure: ${config.secure})...`);
 
-  if (!creds) {
-    console.warn('[EmailService] ⚠️  No SMTP credentials configured.');
-    console.warn('[EmailService] ⚠️  Set SMTP_USER and SMTP_PASS in environment variables.');
+  if (!creds || !creds.user || !creds.pass) {
+    console.warn('[EmailService] ⚠️  Incomplete SMTP credentials.');
+    console.warn('[EmailService] ⚠️  Please ensure SMTP_USER and SMTP_PASS are set in Render Environment Variables.');
     return;
   }
 
@@ -120,18 +213,14 @@ export const verifySmtpConnection = async () => {
       await transporter.verify();
       console.log(`[EmailService] ✅ SMTP connection verified for: ${user} via ${host}:${port}`);
     } catch (err) {
-      console.error(`[EmailService] ❌ SMTP verification failed for: ${user}`);
-      console.error(`[EmailService]    Host     : ${host}:${port}`);
-      console.error(`[EmailService]    Error    : ${err.message}`);
-      console.error(`[EmailService]    Code     : ${err.code || 'N/A'}`);
-      if (err.response) console.error(`[EmailService]    Response : ${err.response}`);
+      logSafeSmtpError(`SMTP verification failed for: ${user} (${host}:${port})`, err);
     }
   }
   console.log('');
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Email HTML template
+// Email HTML Template
 // ─────────────────────────────────────────────────────────────────────────────
 
 const buildEmailHtml = (resetLink) => `
@@ -221,7 +310,7 @@ const buildEmailText = (resetLink) =>
   `Hello,\n\nWe received a request to reset your password for Smart Lunch Generator.\n\nPlease open the link below in your browser to set a new password (valid for 15 minutes):\n\n${resetLink}\n\nIf you did not request a password reset, you can safely ignore this email.\n\nBest regards,\nSmart Lunch Generator Team`;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Main send function — 100% Pure Nodemailer SMTP
+// Main Send Function — 100% Pure Nodemailer SMTP
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -239,16 +328,16 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
 
   const creds = getEmailCredentials(senderEmail);
 
-  if (!creds) {
-    console.error('[EmailService] ❌ No SMTP credentials configured. Please set SMTP_USER and SMTP_PASS.');
+  if (!creds || !creds.user || !creds.pass) {
+    console.error('[EmailService] ❌ No SMTP credentials configured. Please set SMTP_USER and SMTP_PASS in environment variables.');
     return {
       success: false,
       error: 'Email service is not configured. Please contact the administrator.'
     };
   }
 
-  const { allUsers, allPasses } = creds;
-  const customFrom = (process.env.SMTP_FROM || '').trim();
+  const { allUsers, allPasses, config } = creds;
+  const customFrom = config.from;
   let lastError = null;
 
   for (let i = 0; i < allUsers.length; i++) {
@@ -258,9 +347,9 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
 
     if (!emailUser || !emailPass) continue;
 
-    console.log(`[EmailService] 📤 Dispatching reset email to: ${toEmail} via SMTP (${emailUser})`);
+    console.log(`[EmailService] 📤 Dispatching reset email to: ${toEmail} via SMTP (${emailUser}) [Host: ${config.host}:${config.port}, Secure: ${config.secure}]`);
 
-    const transporter = createTransporter(emailUser, emailPass);
+    const transporter = createTransporter(emailUser, emailPass, config.port);
     try {
       const info = await transporter.sendMail({
         from: fromAddress,
@@ -276,11 +365,11 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
       });
 
       console.log(`[EmailService] ✅ SMTP server accepted the email`);
-      console.log(`[EmailService]    Message ID  : ${info.messageId}`);
-      console.log(`[EmailService]    Recipient   : ${toEmail}`);
-      console.log(`[EmailService]    Accepted    : ${JSON.stringify(info.accepted)}`);
-      console.log(`[EmailService]    Rejected    : ${JSON.stringify(info.rejected)}`);
-      console.log(`[EmailService]    Response    : ${info.response}`);
+      console.log(`[EmailService]    • Message ID : ${info.messageId}`);
+      console.log(`[EmailService]    • Recipient  : ${toEmail}`);
+      console.log(`[EmailService]    • Accepted   : ${JSON.stringify(info.accepted)}`);
+      console.log(`[EmailService]    • Rejected   : ${JSON.stringify(info.rejected)}`);
+      console.log(`[EmailService]    • Response   : ${info.response}`);
 
       const wasAccepted = Array.isArray(info.accepted) && info.accepted.length > 0;
       const wasRejected = Array.isArray(info.rejected) && info.rejected.length > 0 && info.rejected.includes(toEmail);
@@ -309,8 +398,7 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
         response: info.response
       };
     } catch (err) {
-      console.warn(`[EmailService] ⚠️  SMTP submission failed (${emailUser}): [${err.code || 'ERR'}] ${err.message}`);
-      if (err.response) console.warn(`[EmailService]    SMTP Response: ${err.response}`);
+      logSafeSmtpError(`SMTP submission failed for ${emailUser} -> ${toEmail}`, err);
       lastError = err;
     }
   }
@@ -330,6 +418,12 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
     }
   }
 
-  return { success: false, error: friendlyError, code: lastError?.code };
+  return { 
+    success: false, 
+    error: friendlyError, 
+    code: lastError?.code,
+    command: lastError?.command,
+    responseCode: lastError?.responseCode
+  };
 };
 
