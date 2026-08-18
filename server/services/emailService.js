@@ -136,13 +136,15 @@ export const logSafeSmtpError = (prefix, err) => {
  * Supports Port 587 (STARTTLS, secure: false) and Port 465 (SMTPS, secure: true).
  * Explicitly sets family: 4 (IPv4) to prevent cloud hosting (Render/AWS) IPv6 timeout hangs.
  */
-export const createTransporter = (user, pass, customPort = null) => {
+export const createTransporter = (user, pass, customPort = null, customSecure = null) => {
   const config = getSmtpConfig();
   const host = config.host;
   const port = customPort !== null && customPort !== undefined ? customPort : config.port;
   
   let secure;
-  if (process.env.SMTP_SECURE !== undefined && process.env.SMTP_SECURE !== '') {
+  if (customSecure !== null && customSecure !== undefined) {
+    secure = customSecure;
+  } else if (process.env.SMTP_SECURE !== undefined && process.env.SMTP_SECURE !== '') {
     secure = cleanEnv(process.env.SMTP_SECURE) === 'true';
   } else {
     secure = port === 465;
@@ -154,9 +156,9 @@ export const createTransporter = (user, pass, customPort = null) => {
     secure,
     auth: { user, pass },
     family: 4, // Force IPv4 — critical for Render/cloud environments
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 45000,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000,
     tls: {
       rejectUnauthorized: true,
       minVersion: 'TLSv1.2'
@@ -208,6 +210,18 @@ export const verifySmtpConnection = async () => {
       console.log(`[EmailService] ✅ SMTP connection verified for: ${user} via ${host}:${port}`);
     } catch (err) {
       logSafeSmtpError(`SMTP verification failed for: ${user} (${host}:${port})`, err);
+      if (err.code === 'ETIMEDOUT' || err.code === 'ESOCKET' || err.code === 'ECONNREFUSED') {
+        const altPort = port === 587 ? 465 : 587;
+        const altSecure = altPort === 465;
+        console.log(`[EmailService] 🔌 Testing alternative SMTP port → ${host}:${altPort} (secure: ${altSecure})...`);
+        try {
+          const altTransporter = createTransporter(user, pass, altPort, altSecure);
+          await altTransporter.verify();
+          console.log(`[EmailService] ✅ SMTP connection verified on alternative port: ${user} via ${host}:${altPort}`);
+        } catch (altErr) {
+          logSafeSmtpError(`SMTP alternative verification also failed for: ${user} (${host}:${altPort})`, altErr);
+        }
+      }
     }
   }
   console.log('');
@@ -341,9 +355,12 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
 
     if (!emailUser || !emailPass) continue;
 
-    console.log(`[EmailService] 📤 Dispatching reset email to: ${toEmail} via SMTP (${emailUser}) [Host: ${config.host}:${config.port}, Secure: ${config.secure}]`);
+    const primaryPort = config.port;
+    const primarySecure = config.secure;
 
-    const transporter = createTransporter(emailUser, emailPass, config.port);
+    console.log(`[EmailService] 📤 Dispatching reset email to: ${toEmail} via SMTP (${emailUser}) [Host: ${config.host}:${primaryPort}, Secure: ${primarySecure}]`);
+
+    const transporter = createTransporter(emailUser, emailPass, primaryPort, primarySecure);
     try {
       const info = await transporter.sendMail({
         from: fromAddress,
@@ -392,8 +409,49 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
         response: info.response
       };
     } catch (err) {
-      logSafeSmtpError(`SMTP submission failed for ${emailUser} -> ${toEmail}`, err);
+      logSafeSmtpError(`SMTP submission on primary port ${primaryPort} failed for ${emailUser} -> ${toEmail}`, err);
       lastError = err;
+
+      // If connection timed out or socket unreachable, automatically attempt standard alternative SMTP port
+      const isConnectionError = err.code === 'ETIMEDOUT' || err.code === 'ESOCKET' || err.code === 'ECONNREFUSED' || err.code === 'ENETUNREACH';
+      if (isConnectionError && (config.host === 'smtp.gmail.com' || (emailUser && emailUser.endsWith('@gmail.com')))) {
+        const altPort = primaryPort === 587 ? 465 : 587;
+        const altSecure = altPort === 465;
+        console.log(`[EmailService] 🔄 Retrying via alternative SMTP port ${altPort} (secure: ${altSecure}) for: ${emailUser}...`);
+        
+        try {
+          const altTransporter = createTransporter(emailUser, emailPass, altPort, altSecure);
+          const altInfo = await altTransporter.sendMail({
+            from: fromAddress,
+            to: toEmail,
+            replyTo: emailUser,
+            subject: emailSubject,
+            text: textBody,
+            html: htmlBody,
+            headers: {
+              'X-Priority': '3',
+              'X-Mailer': 'Smart Lunch Generator Mailer'
+            }
+          });
+
+          console.log(`[EmailService] ✅ SMTP server accepted email on alternative port ${altPort}`);
+          console.log(`[EmailService]    • Message ID : ${altInfo.messageId}`);
+          console.log(`[EmailService]    • Response   : ${altInfo.response}`);
+
+          return {
+            success: true,
+            mode: 'smtp',
+            messageId: altInfo.messageId,
+            sender: emailUser,
+            accepted: altInfo.accepted,
+            rejected: altInfo.rejected,
+            response: altInfo.response
+          };
+        } catch (altErr) {
+          logSafeSmtpError(`SMTP alternative port ${altPort} also failed for ${emailUser} -> ${toEmail}`, altErr);
+          lastError = altErr;
+        }
+      }
     }
   }
 
