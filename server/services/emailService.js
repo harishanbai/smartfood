@@ -44,17 +44,23 @@ export const getEmailCredentials = (selectedSender = null) => {
 
 /**
  * Creates a Nodemailer transporter using dynamic environment variables.
- * Works seamlessly across Localhost, Render, AWS, VPS, etc.
+ * Explicitly forces family: 4 (IPv4) to prevent cloud hosting (Render/AWS) IPv6 timeout hangs.
  */
 export const createTransporter = (user, pass, customPort = null) => {
   const host = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
   const port = customPort || (process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587);
 
-  // If using Gmail, Nodemailer's built-in 'service: gmail' ensures maximum reliability across both local & cloud servers (Render)
+  // For Gmail, connect directly via smtp.gmail.com:465 with forced IPv4 (family: 4)
   if (host === 'smtp.gmail.com' || host === 'gmail' || (user && user.endsWith('@gmail.com'))) {
     return nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user, pass }
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: { user, pass },
+      family: 4, // Force IPv4 — critical for Render/cloud environments
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000
     });
   }
 
@@ -70,6 +76,10 @@ export const createTransporter = (user, pass, customPort = null) => {
     port,
     secure,
     auth: { user, pass },
+    family: 4, // Force IPv4
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
     tls: {
       rejectUnauthorized: true
     }
