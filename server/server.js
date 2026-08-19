@@ -32,6 +32,7 @@ const allowedOrigins = [
   'http://localhost:5000',
   'http://192.168.1.91:5000',
   'https://doorbell-spry-judgingly.ngrok-free.dev',
+  'https://smartfood-sandy.vercel.app',
   'https://smartfood-tech-8caa.vercel.app',
   'https://vaseegrah-veda-catering-xer9.vercel.app',
   'https://vaseegrah-veda-catering.vercel.app',

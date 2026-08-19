@@ -365,7 +365,7 @@ export const forgotPassword = async (req, res) => {
       }
     }
     if (!frontendUrl) {
-      const rawEnvUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || process.env.CLIENT_URL_PROD || 'https://vaseegrah-veda-catering-xer9.vercel.app';
+      const rawEnvUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || process.env.CLIENT_URL_PROD || 'https://smartfood-sandy.vercel.app';
       let cleanUrl = String(rawEnvUrl).trim();
       if ((cleanUrl.startsWith('"') && cleanUrl.endsWith('"')) || (cleanUrl.startsWith("'") && cleanUrl.endsWith("'"))) {
         cleanUrl = cleanUrl.slice(1, -1).trim();

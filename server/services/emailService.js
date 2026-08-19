@@ -1,4 +1,14 @@
 import nodemailer from 'nodemailer';
+import dns from 'dns';
+
+// 1. Force Node.js DNS resolver to prioritize IPv4 globally (prevents IPv6 ENETUNREACH on Render)
+if (dns.setDefaultResultOrder) {
+  try {
+    dns.setDefaultResultOrder('ipv4first');
+  } catch (e) {
+    // Ignore if not supported in runtime
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Utility & Sanitization Helpers
@@ -26,40 +36,35 @@ export const cleanPassword = (val) => {
 // Resolved Credentials & Transporter Setup
 // ─────────────────────────────────────────────────────────────────────────────
 
-const user = cleanEnv(process.env.SMTP_USER || process.env.EMAIL_USER);
-const pass = cleanPassword(process.env.SMTP_PASS || process.env.EMAIL_PASS);
-const host = cleanEnv(process.env.SMTP_HOST) || 'smtp.gmail.com';
-const rawPort = cleanEnv(process.env.SMTP_PORT);
-const port = rawPort ? parseInt(rawPort, 10) : 587;
-const secure = cleanEnv(process.env.SMTP_SECURE) === 'true';
+// 2. Sanitize environment credentials (strip accidental spaces/quotes)
+const user = (process.env.SMTP_USER || process.env.EMAIL_USER || '').trim();
+const pass = (process.env.SMTP_PASS || process.env.EMAIL_PASS || '').replace(/\s+/g, '').replace(/^["']|["']$/g, '');
 
-/**
- * Primary Nodemailer Transporter configured with forced IPv4 (family: 4)
- * to prevent ENETUNREACH errors on cloud hosting platforms (e.g. Render).
- */
+// 3. Configure Transporter explicitly for IPv4 on Port 587 (STARTTLS)
 export const transporter = nodemailer.createTransport({
-  host: host,
-  port: port,
-  secure: secure, // false for port 587 (STARTTLS)
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // Must be false for 587 (STARTTLS)
   auth: {
     user: user,
     pass: pass,
   },
-  family: 4, // CRITICAL: Force IPv4 to prevent IPv6 ENETUNREACH errors on cloud hosting
-  connectionTimeout: 15000, // 15 seconds timeout
-  greetingTimeout: 15000,
-  socketTimeout: 15000,
+  family: 4, // Strict IPv4 socket enforcement
   tls: {
     rejectUnauthorized: true,
+    minVersion: 'TLSv1.2',
   },
+  connectionTimeout: 20000,
+  greetingTimeout: 20000,
+  socketTimeout: 20000,
 });
 
-// Verify connection on startup
+// 4. Verify connection status on startup
 transporter.verify((error, success) => {
   if (error) {
-    console.error('[EmailService] ❌ Gmail SMTP verification failed:', error.message);
+    console.error('[EmailService] ❌ Nodemailer verification failed:', error.message);
   } else {
-    console.log('[EmailService] ✅ Gmail SMTP connected successfully via IPv4 (Port 587)');
+    console.log('[EmailService] ✅ Nodemailer connected via IPv4 (smtp.gmail.com:587)');
   }
 });
 
@@ -70,15 +75,12 @@ transporter.verify((error, success) => {
 export const getSmtpConfig = () => {
   const u = cleanEnv(process.env.SMTP_USER || process.env.EMAIL_USER);
   const p = cleanPassword(process.env.SMTP_PASS || process.env.EMAIL_PASS);
-  const h = cleanEnv(process.env.SMTP_HOST) || 'smtp.gmail.com';
-  const prt = cleanEnv(process.env.SMTP_PORT) ? parseInt(cleanEnv(process.env.SMTP_PORT), 10) : 587;
-  const sec = cleanEnv(process.env.SMTP_SECURE) === 'true';
   const from = cleanEnv(process.env.EMAIL_FROM || process.env.SMTP_FROM || process.env.MAIL_FROM);
 
   return {
-    host: h,
-    port: prt,
-    secure: sec,
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
     family: 4,
     user: u,
     pass: p,
@@ -148,13 +150,14 @@ export const createTransporter = (customUser = null, customPass = null, customPo
       user: u,
       pass: p,
     },
-    family: 4, // CRITICAL: Force IPv4
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 15000,
+    family: 4, // Strict IPv4 socket enforcement
     tls: {
       rejectUnauthorized: true,
+      minVersion: 'TLSv1.2',
     },
+    connectionTimeout: 20000,
+    greetingTimeout: 20000,
+    socketTimeout: 20000,
   });
 };
 
@@ -162,10 +165,10 @@ export const verifySmtpConnection = async () => {
   return new Promise((resolve) => {
     transporter.verify((error, success) => {
       if (error) {
-        console.error('[EmailService] ❌ Gmail SMTP verification failed:', error.message);
+        console.error('[EmailService] ❌ Nodemailer verification failed:', error.message);
         resolve(false);
       } else {
-        console.log('[EmailService] ✅ Gmail SMTP connected successfully via IPv4 (Port 587)');
+        console.log('[EmailService] ✅ Nodemailer connected via IPv4 (smtp.gmail.com:587)');
         resolve(true);
       }
     });
