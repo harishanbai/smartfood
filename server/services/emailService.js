@@ -38,21 +38,45 @@ export const cleanPassword = (val) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Resolved Credentials & Transporter Setup
+// Dynamic SMTP Config Resolver
 // ─────────────────────────────────────────────────────────────────────────────
 
-// 3. Sanitize environment credentials (strip whitespace/quotes)
-const user = (process.env.SMTP_USER || process.env.EMAIL_USER || '').trim();
-const pass = (process.env.SMTP_PASS || process.env.EMAIL_PASS || '').replace(/\s+/g, '').replace(/^["']|["']$/g, '');
+export const getSmtpConfig = () => {
+  const host = cleanEnv(process.env.SMTP_HOST) || 'smtp.gmail.com';
+  const rawPort = cleanEnv(process.env.SMTP_PORT);
+  const port = rawPort ? parseInt(rawPort, 10) : 587;
+  const rawSecure = cleanEnv(process.env.SMTP_SECURE);
+  const secure = rawSecure === 'true' || (rawSecure === '' && port === 465);
+
+  const u = cleanEnv(process.env.SMTP_USER || process.env.EMAIL_USER);
+  const p = cleanPassword(process.env.SMTP_PASS || process.env.EMAIL_PASS);
+  const from = cleanEnv(process.env.EMAIL_FROM || process.env.SMTP_FROM || process.env.MAIL_FROM);
+
+  return {
+    host,
+    port,
+    secure,
+    lookup: forceIpv4Lookup,
+    user: u,
+    pass: p,
+    from: from
+  };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Resolved Credentials & Transporter Setup (100% Nodemailer)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const initialConfig = getSmtpConfig();
 
 export const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // Standard STARTTLS
+  host: initialConfig.host,
+  port: initialConfig.port,
+  secure: initialConfig.secure,
   lookup: forceIpv4Lookup, // Enforces strict IPv4 addressing
   auth: {
-    user: user,
-    pass: pass,
+    user: initialConfig.user,
+    pass: initialConfig.pass,
   },
   tls: {
     rejectUnauthorized: true,
@@ -66,31 +90,11 @@ export const transporter = nodemailer.createTransport({
 // Startup verification check
 transporter.verify((error, success) => {
   if (error) {
-    console.error('[EmailService] ❌ Nodemailer verification failed:', error.message);
+    console.error(`[EmailService] ❌ Nodemailer verification failed (${initialConfig.host}:${initialConfig.port}):`, error.message);
   } else {
-    console.log('[EmailService] ✅ Nodemailer successfully connected to Gmail via IPv4 (Port 587)');
+    console.log(`[EmailService] ✅ Nodemailer connected via IPv4 (${initialConfig.host}:${initialConfig.port})`);
   }
 });
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SMTP Config & Credentials Resolvers
-// ─────────────────────────────────────────────────────────────────────────────
-
-export const getSmtpConfig = () => {
-  const u = cleanEnv(process.env.SMTP_USER || process.env.EMAIL_USER);
-  const p = cleanPassword(process.env.SMTP_PASS || process.env.EMAIL_PASS);
-  const from = cleanEnv(process.env.EMAIL_FROM || process.env.SMTP_FROM || process.env.MAIL_FROM);
-
-  return {
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    lookup: forceIpv4Lookup,
-    user: u,
-    pass: p,
-    from: from
-  };
-};
 
 export const getEmailCredentials = (selectedSender = null) => {
   const config = getSmtpConfig();
@@ -122,7 +126,7 @@ export const getEmailCredentials = (selectedSender = null) => {
 
 export const logSmtpDiagnostics = () => {
   const config = getSmtpConfig();
-  console.log('[EmailService] 📋 Gmail SMTP Environment Diagnostics:');
+  console.log('[EmailService] 📋 SMTP Environment Diagnostics:');
   console.log(`   • Host       : ${config.host}:${config.port} (secure: ${config.secure})`);
   console.log(`   • SMTP_USER  : ${config.user ? 'configured (' + config.user + ')' : 'NOT CONFIGURED (missing SMTP_USER / EMAIL_USER)'}`);
   console.log(`   • SMTP_PASS  : ${config.pass ? 'configured (' + config.pass.length + ' chars, sanitized)' : 'NOT CONFIGURED (missing SMTP_PASS / EMAIL_PASS)'}`);
@@ -147,7 +151,7 @@ export const createTransporter = (customUser = null, customPass = null, customPo
   const sec = customSecure !== null && customSecure !== undefined ? customSecure : config.secure;
 
   return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
+    host: config.host,
     port: prt,
     secure: sec,
     lookup: forceIpv4Lookup, // Strict IPv4 socket enforcement
@@ -169,10 +173,10 @@ export const verifySmtpConnection = async () => {
   return new Promise((resolve) => {
     transporter.verify((error, success) => {
       if (error) {
-        console.error('[EmailService] ❌ Nodemailer verification failed:', error.message);
+        console.error(`[EmailService] ❌ Nodemailer verification failed (${initialConfig.host}:${initialConfig.port}):`, error.message);
         resolve(false);
       } else {
-        console.log('[EmailService] ✅ Nodemailer successfully connected to Gmail via IPv4 (Port 587)');
+        console.log(`[EmailService] ✅ Nodemailer connected via IPv4 (${initialConfig.host}:${initialConfig.port})`);
         resolve(true);
       }
     });
@@ -180,7 +184,7 @@ export const verifySmtpConnection = async () => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Email HTML & Text Templates
+// Email HTML & Text Templates (Password Reset Content)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const buildEmailHtml = (resetLink) => `
@@ -257,11 +261,11 @@ const buildEmailText = (resetLink) =>
   `Hello,\n\nWe received a request to reset your password for Smart Lunch Generator.\n\nPlease open the link below in your browser to set a new password (valid for 15 minutes):\n\n${resetLink}\n\nIf you did not request a password reset, you can safely ignore this email.\n\nBest regards,\nSmart Lunch Generator Team`;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Main Send Function — Gmail SMTP via Nodemailer
+// Main Send Function — 100% Nodemailer
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Sends a password reset email via Gmail SMTP to any recipient email address.
+ * Sends a password reset email via Nodemailer to any recipient email address.
  *
  * @param {string} toEmail      - Recipient email address
  * @param {string} resetLink    - Secure reset URL containing the token
@@ -273,8 +277,9 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
   const textBody = buildEmailText(resetLink);
   const emailSubject = 'Password Reset Request - Smart Lunch Generator';
 
-  const u = cleanEnv(senderEmail || process.env.SMTP_USER || process.env.EMAIL_USER);
-  const p = cleanPassword(process.env.SMTP_PASS || process.env.EMAIL_PASS);
+  const config = getSmtpConfig();
+  const u = cleanEnv(senderEmail || config.user);
+  const p = config.pass;
   const fromAddress = cleanEnv(process.env.EMAIL_FROM || process.env.SMTP_FROM || process.env.MAIL_FROM) || `Smart Lunch Generator <${u}>`;
 
   if (!u || !p) {
@@ -285,10 +290,10 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
     };
   }
 
-  console.log(`[EmailService] 📤 Dispatching reset email to: ${toEmail} via Gmail SMTP (${u}) [IPv4, Port 587]`);
+  console.log(`[EmailService] 📤 Dispatching reset email to: ${toEmail} via Nodemailer (${u}) [Host: ${config.host}:${config.port}]`);
 
   try {
-    const activeTransporter = (senderEmail && senderEmail !== (process.env.SMTP_USER || process.env.EMAIL_USER))
+    const activeTransporter = (senderEmail && senderEmail !== config.user)
       ? createTransporter(u, p)
       : transporter;
 
@@ -305,7 +310,7 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
       }
     });
 
-    console.log(`[EmailService] ✅ Gmail SMTP server accepted the email`);
+    console.log(`[EmailService] ✅ SMTP server accepted the email`);
     console.log(`[EmailService]    • Message ID : ${info.messageId}`);
     console.log(`[EmailService]    • Recipient  : ${toEmail}`);
     console.log(`[EmailService]    • Accepted   : ${JSON.stringify(info.accepted)}`);
@@ -316,7 +321,7 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
     const wasRejected = Array.isArray(info.rejected) && info.rejected.length > 0 && info.rejected.includes(toEmail);
 
     if (wasRejected && !wasAccepted) {
-      console.warn(`[EmailService] ❌ Gmail SMTP server explicitly rejected recipient: ${toEmail}`);
+      console.warn(`[EmailService] ❌ SMTP server explicitly rejected recipient: ${toEmail}`);
       return {
         success: false,
         mode: 'smtp',
@@ -325,7 +330,7 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
         accepted: info.accepted,
         rejected: info.rejected,
         response: info.response,
-        error: `Gmail SMTP server rejected recipient: ${toEmail}`
+        error: `SMTP server rejected recipient: ${toEmail}`
       };
     }
 
@@ -339,19 +344,19 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
       response: info.response
     };
   } catch (err) {
-    logSafeSmtpError(`Gmail SMTP submission failed for ${u} -> ${toEmail}`, err);
+    logSafeSmtpError(`Nodemailer SMTP submission failed for ${u} -> ${toEmail}`, err);
 
     let friendlyError = 'Failed to send reset email. Please try again later.';
     const code = err.code;
     const resp = err.responseCode;
     if (code === 'EAUTH' || resp === 535 || (err.message || '').includes('Invalid login') || (err.message || '').includes('BadCredentials')) {
-      friendlyError = 'Gmail SMTP Authentication failed (535 BadCredentials). Please ensure 2-Step Verification is enabled on your Google Account and generate a new 16-letter App Password at https://myaccount.google.com/apppasswords.';
+      friendlyError = 'SMTP Authentication failed. Please verify your credentials/App Password.';
     } else if (code === 'ETIMEDOUT' || code === 'ESOCKET') {
-      friendlyError = 'Gmail SMTP connection timed out. Please try again later.';
+      friendlyError = 'SMTP connection timed out. Please check your SMTP host/port configuration on Render.';
     } else if (code === 'ECONNREFUSED') {
-      friendlyError = 'Could not connect to Gmail SMTP server. Please try again later.';
+      friendlyError = 'Could not connect to SMTP server. Please try again later.';
     } else if (code === 'ENETUNREACH') {
-      friendlyError = 'Gmail SMTP network unreachable. Please try again later.';
+      friendlyError = 'Network unreachable. Please check server connectivity.';
     }
 
     return {
