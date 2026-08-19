@@ -28,24 +28,38 @@ export const cleanPassword = (val) => {
 
 const user = cleanEnv(process.env.SMTP_USER || process.env.EMAIL_USER);
 const pass = cleanPassword(process.env.SMTP_PASS || process.env.EMAIL_PASS);
+const host = cleanEnv(process.env.SMTP_HOST) || 'smtp.gmail.com';
+const rawPort = cleanEnv(process.env.SMTP_PORT);
+const port = rawPort ? parseInt(rawPort, 10) : 587;
+const secure = cleanEnv(process.env.SMTP_SECURE) === 'true';
 
 /**
- * Primary Nodemailer Transporter using Gmail service definition
+ * Primary Nodemailer Transporter configured with forced IPv4 (family: 4)
+ * to prevent ENETUNREACH errors on cloud hosting platforms (e.g. Render).
  */
 export const transporter = nodemailer.createTransport({
-  service: 'gmail', // Uses Google's pre-configured host & port
+  host: host,
+  port: port,
+  secure: secure, // false for port 587 (STARTTLS)
   auth: {
     user: user,
     pass: pass,
   },
+  family: 4, // CRITICAL: Force IPv4 to prevent IPv6 ENETUNREACH errors on cloud hosting
+  connectionTimeout: 15000, // 15 seconds timeout
+  greetingTimeout: 15000,
+  socketTimeout: 15000,
+  tls: {
+    rejectUnauthorized: true,
+  },
 });
 
-// Lightweight startup verification check
+// Verify connection on startup
 transporter.verify((error, success) => {
   if (error) {
-    console.error('[EmailService] ❌ Gmail SMTP connection failed:', error.message);
+    console.error('[EmailService] ❌ Gmail SMTP verification failed:', error.message);
   } else {
-    console.log('[EmailService] ✅ Gmail SMTP connected successfully and ready to send');
+    console.log('[EmailService] ✅ Gmail SMTP connected successfully via IPv4 (Port 587)');
   }
 });
 
@@ -53,28 +67,25 @@ transporter.verify((error, success) => {
 // SMTP Config & Credentials Resolvers
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Resolves SMTP configuration dynamically from environment variables.
- */
 export const getSmtpConfig = () => {
   const u = cleanEnv(process.env.SMTP_USER || process.env.EMAIL_USER);
   const p = cleanPassword(process.env.SMTP_PASS || process.env.EMAIL_PASS);
+  const h = cleanEnv(process.env.SMTP_HOST) || 'smtp.gmail.com';
+  const prt = cleanEnv(process.env.SMTP_PORT) ? parseInt(cleanEnv(process.env.SMTP_PORT), 10) : 587;
+  const sec = cleanEnv(process.env.SMTP_SECURE) === 'true';
   const from = cleanEnv(process.env.EMAIL_FROM || process.env.SMTP_FROM || process.env.MAIL_FROM);
 
   return {
-    service: 'gmail',
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
+    host: h,
+    port: prt,
+    secure: sec,
+    family: 4,
     user: u,
     pass: p,
     from: from
   };
 };
 
-/**
- * Resolves SMTP credentials with fallback support.
- */
 export const getEmailCredentials = (selectedSender = null) => {
   const config = getSmtpConfig();
   const smtpUser = config.user;
@@ -103,14 +114,10 @@ export const getEmailCredentials = (selectedSender = null) => {
   };
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Diagnostic Loggers
-// ─────────────────────────────────────────────────────────────────────────────
-
 export const logSmtpDiagnostics = () => {
   const config = getSmtpConfig();
   console.log('[EmailService] 📋 Gmail SMTP Environment Diagnostics:');
-  console.log(`   • Service    : gmail`);
+  console.log(`   • Host       : ${config.host}:${config.port} (secure: ${config.secure}, family: ${config.family})`);
   console.log(`   • SMTP_USER  : ${config.user ? 'configured (' + config.user + ')' : 'NOT CONFIGURED (missing SMTP_USER / EMAIL_USER)'}`);
   console.log(`   • SMTP_PASS  : ${config.pass ? 'configured (' + config.pass.length + ' chars, sanitized)' : 'NOT CONFIGURED (missing SMTP_PASS / EMAIL_PASS)'}`);
   console.log(`   • EMAIL_FROM : ${config.from ? 'configured' : 'NOT CONFIGURED (will default to Smart Lunch Generator <user>)'}`);
@@ -126,37 +133,39 @@ export const logSafeSmtpError = (prefix, err) => {
   if (err.response) console.error(`   • Response    : ${err.response}`);
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Transporter Factory & Startup Verification
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Transporter factory for dynamic or custom options
- */
-export const createTransporter = (customUser = null, customPass = null) => {
-  const u = customUser ? cleanEnv(customUser) : cleanEnv(process.env.SMTP_USER || process.env.EMAIL_USER);
-  const p = customPass ? cleanPassword(customPass) : cleanPassword(process.env.SMTP_PASS || process.env.EMAIL_PASS);
+export const createTransporter = (customUser = null, customPass = null, customPort = null, customSecure = null) => {
+  const config = getSmtpConfig();
+  const u = customUser ? cleanEnv(customUser) : config.user;
+  const p = customPass ? cleanPassword(customPass) : config.pass;
+  const prt = customPort !== null && customPort !== undefined ? customPort : config.port;
+  const sec = customSecure !== null && customSecure !== undefined ? customSecure : config.secure;
 
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: config.host,
+    port: prt,
+    secure: sec,
     auth: {
       user: u,
       pass: p,
-    }
+    },
+    family: 4, // CRITICAL: Force IPv4
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 15000,
+    tls: {
+      rejectUnauthorized: true,
+    },
   });
 };
 
-/**
- * Verifies SMTP connection (callable asynchronously during server startup)
- */
 export const verifySmtpConnection = async () => {
   return new Promise((resolve) => {
     transporter.verify((error, success) => {
       if (error) {
-        console.error('[EmailService] ❌ Gmail SMTP connection failed:', error.message);
+        console.error('[EmailService] ❌ Gmail SMTP verification failed:', error.message);
         resolve(false);
       } else {
-        console.log('[EmailService] ✅ Gmail SMTP connected successfully and ready to send');
+        console.log('[EmailService] ✅ Gmail SMTP connected successfully via IPv4 (Port 587)');
         resolve(true);
       }
     });
@@ -181,8 +190,6 @@ const buildEmailHtml = (resetLink) => `
       <td align="center">
         <table width="100%" cellpadding="0" cellspacing="0"
           style="background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;max-width:540px;width:100%;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
-
-          <!-- Brand Header -->
           <tr>
             <td style="background-color:#059669;padding:28px 32px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.2px;">
@@ -193,18 +200,12 @@ const buildEmailHtml = (resetLink) => `
               </p>
             </td>
           </tr>
-
-          <!-- Content Body -->
           <tr>
             <td style="padding:32px 32px 24px;">
-              <p style="margin:0 0 16px;color:#334155;font-size:15px;line-height:1.6;">
-                Hello,
-              </p>
+              <p style="margin:0 0 16px;color:#334155;font-size:15px;line-height:1.6;">Hello,</p>
               <p style="margin:0 0 24px;color:#334155;font-size:15px;line-height:1.6;">
                 We received a request to reset your password. Click the button below to choose a new password. This link will expire in <strong>15 minutes</strong>.
               </p>
-
-              <!-- CTA Button -->
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding:8px 0 24px;">
@@ -219,21 +220,17 @@ const buildEmailHtml = (resetLink) => `
                   </td>
                 </tr>
               </table>
-
               <p style="margin:0 0 8px;color:#64748b;font-size:13px;line-height:1.5;">
                 If the button doesn't work, copy and paste this link into your browser:
               </p>
               <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px 14px;word-break:break-all;">
                 <a href="${resetLink}" target="_blank" rel="noopener noreferrer" style="color:#059669;font-size:12px;text-decoration:underline;">${resetLink}</a>
               </div>
-
               <p style="margin:24px 0 0;color:#64748b;font-size:13px;line-height:1.5;">
                 If you did not request this password reset, please disregard this email. Your password will remain unchanged.
               </p>
             </td>
           </tr>
-
-          <!-- Footer -->
           <tr>
             <td style="background-color:#f8fafc;padding:16px 32px;text-align:center;border-top:1px solid #e2e8f0;">
               <p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.4;">
@@ -241,7 +238,6 @@ const buildEmailHtml = (resetLink) => `
               </p>
             </td>
           </tr>
-
         </table>
       </td>
     </tr>
@@ -282,7 +278,7 @@ export const sendPasswordResetEmail = async (toEmail, resetLink, senderEmail = n
     };
   }
 
-  console.log(`[EmailService] 📤 Dispatching reset email to: ${toEmail} via Gmail SMTP (${u})`);
+  console.log(`[EmailService] 📤 Dispatching reset email to: ${toEmail} via Gmail SMTP (${u}) [IPv4, Port 587]`);
 
   try {
     const activeTransporter = (senderEmail && senderEmail !== (process.env.SMTP_USER || process.env.EMAIL_USER))
