@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 import dns from 'dns';
 
-// 1. Force Node.js DNS resolver to prioritize IPv4 globally (prevents IPv6 ENETUNREACH on Render)
+// 1. Force global DNS resolution to IPv4 first
 if (dns.setDefaultResultOrder) {
   try {
     dns.setDefaultResultOrder('ipv4first');
@@ -9,6 +9,11 @@ if (dns.setDefaultResultOrder) {
     // Ignore if not supported in runtime
   }
 }
+
+// 2. Custom DNS lookup handler to strictly enforce IPv4 resolution for Nodemailer sockets
+export const forceIpv4Lookup = (hostname, options, callback) => {
+  return dns.lookup(hostname, { family: 4, all: false }, callback);
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Utility & Sanitization Helpers
@@ -36,20 +41,19 @@ export const cleanPassword = (val) => {
 // Resolved Credentials & Transporter Setup
 // ─────────────────────────────────────────────────────────────────────────────
 
-// 2. Sanitize environment credentials (strip accidental spaces/quotes)
+// 3. Sanitize environment credentials (strip whitespace/quotes)
 const user = (process.env.SMTP_USER || process.env.EMAIL_USER || '').trim();
 const pass = (process.env.SMTP_PASS || process.env.EMAIL_PASS || '').replace(/\s+/g, '').replace(/^["']|["']$/g, '');
 
-// 3. Configure Transporter explicitly for IPv4 on Port 587 (STARTTLS)
 export const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 587,
-  secure: false, // Must be false for 587 (STARTTLS)
+  secure: false, // Standard STARTTLS
+  lookup: forceIpv4Lookup, // Enforces strict IPv4 addressing
   auth: {
     user: user,
     pass: pass,
   },
-  family: 4, // Strict IPv4 socket enforcement
   tls: {
     rejectUnauthorized: true,
     minVersion: 'TLSv1.2',
@@ -59,12 +63,12 @@ export const transporter = nodemailer.createTransport({
   socketTimeout: 20000,
 });
 
-// 4. Verify connection status on startup
+// Startup verification check
 transporter.verify((error, success) => {
   if (error) {
     console.error('[EmailService] ❌ Nodemailer verification failed:', error.message);
   } else {
-    console.log('[EmailService] ✅ Nodemailer connected via IPv4 (smtp.gmail.com:587)');
+    console.log('[EmailService] ✅ Nodemailer successfully connected to Gmail via IPv4 (Port 587)');
   }
 });
 
@@ -81,7 +85,7 @@ export const getSmtpConfig = () => {
     host: 'smtp.gmail.com',
     port: 587,
     secure: false,
-    family: 4,
+    lookup: forceIpv4Lookup,
     user: u,
     pass: p,
     from: from
@@ -119,7 +123,7 @@ export const getEmailCredentials = (selectedSender = null) => {
 export const logSmtpDiagnostics = () => {
   const config = getSmtpConfig();
   console.log('[EmailService] 📋 Gmail SMTP Environment Diagnostics:');
-  console.log(`   • Host       : ${config.host}:${config.port} (secure: ${config.secure}, family: ${config.family})`);
+  console.log(`   • Host       : ${config.host}:${config.port} (secure: ${config.secure})`);
   console.log(`   • SMTP_USER  : ${config.user ? 'configured (' + config.user + ')' : 'NOT CONFIGURED (missing SMTP_USER / EMAIL_USER)'}`);
   console.log(`   • SMTP_PASS  : ${config.pass ? 'configured (' + config.pass.length + ' chars, sanitized)' : 'NOT CONFIGURED (missing SMTP_PASS / EMAIL_PASS)'}`);
   console.log(`   • EMAIL_FROM : ${config.from ? 'configured' : 'NOT CONFIGURED (will default to Smart Lunch Generator <user>)'}`);
@@ -143,14 +147,14 @@ export const createTransporter = (customUser = null, customPass = null, customPo
   const sec = customSecure !== null && customSecure !== undefined ? customSecure : config.secure;
 
   return nodemailer.createTransport({
-    host: config.host,
+    host: 'smtp.gmail.com',
     port: prt,
     secure: sec,
+    lookup: forceIpv4Lookup, // Strict IPv4 socket enforcement
     auth: {
       user: u,
       pass: p,
     },
-    family: 4, // Strict IPv4 socket enforcement
     tls: {
       rejectUnauthorized: true,
       minVersion: 'TLSv1.2',
@@ -168,7 +172,7 @@ export const verifySmtpConnection = async () => {
         console.error('[EmailService] ❌ Nodemailer verification failed:', error.message);
         resolve(false);
       } else {
-        console.log('[EmailService] ✅ Nodemailer connected via IPv4 (smtp.gmail.com:587)');
+        console.log('[EmailService] ✅ Nodemailer successfully connected to Gmail via IPv4 (Port 587)');
         resolve(true);
       }
     });
