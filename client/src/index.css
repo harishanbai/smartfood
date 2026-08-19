@@ -90,10 +90,12 @@
   color: #0F172A !important;
 }
 
+:root.light .glass-panel .text-gray-100:not(button *),
+:root.light .glass-panel .text-gray-200:not(button *),
 :root.light .glass-panel .text-gray-300:not(button *),
 :root.light .glass-panel .text-gray-400:not(button *),
 :root.light .glass-panel .text-gray-500:not(button *) {
-  color: #334155 !important;
+  color: #1E293B !important;
 }
 
 :root.light input,
