@@ -121,24 +121,24 @@ const TopSection = () => {
           <button
             onClick={toggleTheme}
             aria-label="Toggle Theme"
-            className="glass-panel theme-toggle flex items-center justify-center bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-title cursor-pointer shadow-sm relative overflow-hidden"
+            className="glass-panel theme-toggle flex items-center justify-center border border-[rgba(34,197,94,0.45)] hover:border-[rgba(34,197,94,0.7)] transition-all text-title cursor-pointer shadow-sm relative overflow-hidden"
           >
             <div className="relative h-4.5 w-4.5 flex items-center justify-center">
               <Sun className={`h-4.5 w-4.5 text-accentOrange absolute transition-all duration-500 transform ${theme === 'light' ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'}`} />
-              <Moon className={`h-4.5 w-4.5 text-accentPurple absolute transition-all duration-500 transform ${theme === 'dark' ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'}`} />
+              <Moon className={`h-4.5 w-4.5 text-accentGreen absolute transition-all duration-500 transform ${theme === 'dark' ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'}`} />
             </div>
           </button>
         </div>
 
         {/* 3. Date Card */}
-        <div className="glass-panel date-card flex items-center gap-2.5 bg-white/5 border border-white/10 text-xs font-semibold text-title shadow-sm">
+        <div className="glass-panel date-card flex items-center gap-2.5 border border-[rgba(212,175,55,0.45)] text-xs font-semibold text-title shadow-sm">
           <Calendar className="h-4 w-4 text-accentOrange flex-shrink-0" />
           <span className="hidden sm:inline">{formatDate(time)}</span>
           <span className="sm:hidden">{time.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { month: 'short', day: 'numeric' })}</span>
         </div>
 
         {/* 4. Generation Mode Badge */}
-        <div className="glass-panel status-badge-card flex items-center gap-2 bg-white/5 border border-white/10 shadow-sm">
+        <div className="glass-panel autogen-card flex items-center gap-2 border border-[rgba(34,197,94,0.45)] shadow-sm shadow-emerald-500/10">
           <span className="h-2 w-2 rounded-full bg-accentGreen animate-pulse shadow-[0_0_8px_#22C55E]" />
           <span className="text-[11px] font-extrabold uppercase tracking-wider text-accentGreen flex items-center gap-1.5">
             {t('topSection.autoGeneration')}
@@ -176,7 +176,7 @@ const TopSection = () => {
 
             {/* Profile Dropdown Popover */}
             {profileDropdownOpen && (
-              <div className="absolute right-0 mt-3 w-64 glass-panel rounded-2xl border border-white/10 bg-bgCard/95 p-4 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="absolute right-0 mt-3 w-64 glass-panel rounded-2xl border border-[rgba(34,197,94,0.45)] bg-bgCard/95 p-4 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="flex items-center gap-3 pb-3 mb-3 border-b border-white/10">
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center flex-shrink-0 shadow-md">
                     {userPhoto && !imgError ? (

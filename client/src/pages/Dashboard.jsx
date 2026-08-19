@@ -42,7 +42,7 @@ const RuleBadge = ({ ruleCode, ruleApplied }) => {
 const TamilCalendarCard = ({ data, loading }) => {
   if (loading) {
     return (
-      <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-white/5 relative overflow-hidden animate-pulse">
+      <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-[rgba(34,197,94,0.45)] relative overflow-hidden animate-pulse">
         <div className="h-4 w-36 bg-white/10 rounded mb-4" />
         <div className="grid grid-cols-2 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -67,7 +67,7 @@ const TamilCalendarCard = ({ data, loading }) => {
   ];
 
   return (
-    <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-white/5 relative overflow-hidden group hover:shadow-[0_0_30px_rgba(168,85,247,0.08)] transition-all duration-500">
+    <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-[rgba(34,197,94,0.45)] relative overflow-hidden group hover:shadow-[0_0_30px_rgba(168,85,247,0.08)] transition-all duration-500">
       {/* Background glow */}
       <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-purple-500/8 rounded-full blur-[80px] pointer-events-none" />
 
@@ -388,28 +388,28 @@ const Dashboard = () => {
       <div className="flex justify-end mb-6 relative">
         <button
           onClick={() => setNotifOpen(!notifOpen)}
-          className="relative glass-panel p-3 rounded-xl hover:bg-white/10 transition-all border border-white/10 text-gray-300 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="relative glass-panel p-3 rounded-xl hover:bg-white/10 transition-all border border-[rgba(34,197,94,0.45)] text-accentGreen hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center shadow-sm"
         >
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-accentPurple animate-pulse" />
+          <Bell className="h-5 w-5 text-accentGreen" />
+          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-accentGreen animate-pulse" />
         </button>
         <NotificationsPanel isOpen={notifOpen} onClose={() => setNotifOpen(false)} />
       </div>
 
       {/* Quick Billing Alert */}
-      <div className="mb-6 rounded-2xl border border-[#D4AF37]/40 bg-bgCard p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl transition-all">
+      <div className="mb-6 rounded-2xl border border-[rgba(34,197,94,0.45)] bg-bgCard p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl transition-all">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37]">
-            <CreditCard className="h-5 w-5" />
+          <div className="h-9 w-9 rounded-xl bg-accentGreen/10 flex items-center justify-center text-accentOrange border border-accentOrange/30">
+            <CreditCard className="h-5 w-5 text-accentOrange" />
           </div>
           <div>
             <h4 className="text-sm font-bold text-title">{language === 'ta' ? 'மதிய உணவு சந்தா கணக்கு' : 'Active Meal Subscription Account'}</h4>
-            <p className="text-xs text-body mt-0.5">{language === 'ta' ? 'கட்டண விவரங்களை சரிபார்த்து, UPI QR அல்லது வங்கிப் பரிமாற்றம் மூலம் தொகையைச் செலுத்தவும்.' : 'Check payment details or scan UPI QR code to keep your meal subscription active.'}</p>
+            <p className="text-xs text-body-muted mt-0.5">{language === 'ta' ? 'கட்டண விவரங்களை சரிபார்த்து, UPI QR அல்லது வங்கிப் பரிமாற்றம் மூலம் தொகையைச் செலுத்தவும்.' : 'Check payment details or scan UPI QR code to keep your meal subscription active.'}</p>
           </div>
         </div>
         <button
           onClick={() => navigate('/payment')}
-          className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-[#D4AF37] via-[#E5C158] to-[#D4AF37] text-black font-extrabold text-xs rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(212,175,55,0.4)] cursor-pointer min-h-[38px] text-center border-none shadow-md"
+          className="w-full sm:w-auto px-5 py-2.5 bg-[#D4AF37] hover:bg-[#E5C158] text-black font-extrabold text-xs rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(212,175,55,0.4)] cursor-pointer min-h-[38px] text-center border-none shadow-md"
         >
           {language === 'ta' ? 'பணம் செலுத்து' : 'Pay Now'}
         </button>
@@ -423,7 +423,7 @@ const Dashboard = () => {
         <div className="col-span-1 xl:col-span-7 flex flex-col gap-6">
 
           {/* ── Today's Lunch Card ── */}
-          <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-white/5 relative overflow-hidden group hover:shadow-[0_0_30px_rgba(34,197,94,0.1)] transition-all duration-500">
+          <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-[rgba(34,197,94,0.45)] relative overflow-hidden group hover:shadow-[0_0_30px_rgba(34,197,94,0.1)] transition-all duration-500">
             <div className="absolute -right-20 -top-20 w-48 h-48 bg-accentGreen/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-accentGreen/20 transition-colors duration-500" />
 
             <div className="flex items-center justify-between mb-4">
@@ -490,7 +490,7 @@ const Dashboard = () => {
           </div>
 
           {/* ── Tomorrow's Lunch Card ── */}
-          <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-white/5 relative overflow-hidden group hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] transition-all duration-500">
+          <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-[rgba(34,197,94,0.45)] relative overflow-hidden group hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] transition-all duration-500">
             <div className="absolute -right-20 -top-20 w-48 h-48 bg-accentOrange/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-accentOrange/20 transition-colors duration-500" />
 
             <div className="flex items-center justify-between mb-4">
@@ -630,7 +630,7 @@ const Dashboard = () => {
 
         {/* Right Side: Premium 3D Carousel Panel */}
         <div className="col-span-1 xl:col-span-5 flex flex-col gap-6">
-          <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-white/5 flex flex-col justify-between relative overflow-hidden">
+          <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-[rgba(34,197,94,0.45)] flex flex-col justify-between relative overflow-hidden">
             <div className="mb-4">
               <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-accentPurple" />

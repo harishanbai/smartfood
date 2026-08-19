@@ -6,23 +6,23 @@
 @tailwind utilities;
 
 :root {
-  --bg-main: #062419;
-  --bg-secondary: #0A3022;
-  --bg-card: #0E3C2B;
-  --bg-elevated: #124835;
-  --bg-scrollbar: #062419;
+  --bg-main: #041d14;
+  --bg-secondary: #072b1e;
+  --bg-card: #0a2d1f;
+  --bg-elevated: #0f3927;
+  --bg-scrollbar: #041d14;
   --bg-scrollbar-thumb: rgba(212, 175, 55, 0.4);
 
-  --sidebar-bg: #041D14;
-  --sidebar-hover: #0A3626;
+  --sidebar-bg: #03170f;
+  --sidebar-hover: #082d1f;
   --sidebar-active: rgba(212, 175, 55, 0.22);
-  --sidebar-border: rgba(212, 175, 55, 0.4);
+  --sidebar-border: rgba(34, 197, 94, 0.35);
   --sidebar-text: #F8FAFC;
   --sidebar-text-muted: #A7B0BE;
 
-  --accent-purple: #16A34A; /* Emerald */
-  --accent-purple-bright: #22C55E;
-  --accent-purple-soft: #34D399;
+  --accent-purple: #22C55E; /* Emerald */
+  --accent-purple-bright: #4ade80;
+  --accent-purple-soft: #86efac;
 
   --accent-orange: #D4AF37; /* Metallic Gold */
   --accent-orange-bright: #E5C158;
@@ -36,12 +36,12 @@
   --text-muted: #84AA9B;
   --text-muted-dark: #658F7F;
 
-  --glass-bg: rgba(14, 60, 43, 0.88);
-  --glass-border: rgba(212, 175, 55, 0.45);
-  --glass-border-gold: rgba(212, 175, 55, 0.55);
-  --glass-border-emerald: rgba(34, 197, 94, 0.4);
-  --glass-hover-bg: rgba(18, 72, 53, 0.95);
-  --glass-hover-border: rgba(212, 175, 55, 0.7);
+  --glass-bg: rgba(10, 45, 31, 0.85);
+  --glass-border: rgba(34, 197, 94, 0.45);
+  --glass-border-gold: rgba(212, 175, 55, 0.45);
+  --glass-border-emerald: rgba(34, 197, 94, 0.45);
+  --glass-hover-bg: rgba(14, 58, 40, 0.92);
+  --glass-hover-border: rgba(34, 197, 94, 0.65);
   --shadow-hover: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
 

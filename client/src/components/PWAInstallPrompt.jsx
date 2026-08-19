@@ -70,7 +70,7 @@ const PWAInstallPrompt = () => {
   if (!isVisible || !deferredPrompt) return null;
 
   return (
-    <div className="fixed bottom-24 left-4 right-4 lg:bottom-6 lg:right-6 lg:left-auto lg:w-96 glass-panel p-5 rounded-2xl border border-white/10 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-5 duration-300 bg-slate-900/90 text-white backdrop-blur-md">
+    <div className="fixed bottom-24 left-4 right-4 lg:bottom-6 lg:right-6 lg:left-auto lg:w-96 glass-panel p-5 rounded-2xl border border-[rgba(34,197,94,0.45)] shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-5 duration-300 bg-[#0a2d1f]/95 text-white backdrop-blur-md">
       <div className="flex gap-4">
         {/* Decorative Icon */}
         <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/25 flex-shrink-0">

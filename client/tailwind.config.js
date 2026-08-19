@@ -12,7 +12,7 @@ export default {
           500: '#D4AF37',
           600: '#B8962E',
         },
-        darkBg: '#03140E',
+        darkBg: '#041d14',
         sidebarBg: 'var(--sidebar-bg)',
         bgMain: 'var(--bg-main)',
         bgCard: 'var(--bg-card)',

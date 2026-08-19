@@ -67,29 +67,29 @@ export const NotificationProvider = ({ children }) => {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto flex items-start gap-3 p-4 rounded-2xl glass-panel border shadow-2xl backdrop-blur-md animate-toast-in bg-white/95 dark:bg-[#0E3C2B]/95 text-slate-900 dark:text-white ${
+            className={`pointer-events-auto flex items-start gap-3 p-4 rounded-2xl glass-panel border shadow-2xl backdrop-blur-md animate-toast-in bg-[#0a2d1f]/95 text-white ${
               toast.type === 'success'
-                ? 'border-emerald-500/30 bg-emerald-50/95 dark:bg-emerald-950/80'
+                ? 'border-emerald-500/40 bg-emerald-950/90 text-white'
                 : toast.type === 'warning'
-                ? 'border-amber-500/30 bg-amber-50/95 dark:bg-amber-950/80'
-                : 'border-blue-500/30 bg-blue-50/95 dark:bg-slate-900/90'
+                ? 'border-amber-500/40 bg-amber-950/90 text-white'
+                : 'border-emerald-500/40 bg-[#0a2d1f]/95 text-white'
             }`}
           >
             <div className="mt-0.5 flex-shrink-0">
               {toast.type === 'success' ? (
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold">✓</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold">✓</span>
               ) : toast.type === 'warning' ? (
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold">!</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold">!</span>
               ) : (
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 text-xs font-bold">i</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold">i</span>
               )}
             </div>
-            <div className="flex-1 text-xs font-semibold leading-relaxed pr-2 text-slate-800 dark:text-gray-100">
+            <div className="flex-1 text-xs font-semibold leading-relaxed pr-2 text-white">
               {toast.text}
             </div>
             <button
               onClick={() => removeToast(toast.id)}
-              className="text-slate-400 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-200/60 dark:hover:bg-white/5 cursor-pointer flex-shrink-0"
+              className="text-gray-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5 cursor-pointer flex-shrink-0"
               aria-label="Dismiss notification"
             >
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
