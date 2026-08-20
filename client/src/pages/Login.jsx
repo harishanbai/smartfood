@@ -30,15 +30,15 @@ import { useLanguage } from '../context/LanguageContext';
 const DISH_IMAGES = [
   {
     url: "https://images.unsplash.com/photo-1610192244261-3f33de3f55e4?auto=format&fit=crop&w=800&q=80",
-    label: "🌿 Fresh & Balanced Daily Meals"
+    label: "🔥 FRESH & BALANCED DAILY MEALS"
   },
   {
     url: "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=800&q=80",
-    label: "🍛 Traditional South Indian Delicacies"
+    label: "🔥 FRESH & BALANCED DAILY MEALS"
   },
   {
     url: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=800&q=80",
-    label: "✨ Premium Biryani & Feasts"
+    label: "🔥 FRESH & BALANCED DAILY MEALS"
   }
 ];
 
@@ -208,9 +208,14 @@ const Login = () => {
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-950 overflow-x-hidden font-sans relative">
 
-      {/* LEFT PANEL: Branding & Feature Highlights */}
-      <div className="hidden md:flex w-full md:w-[50%] lg:w-[55%] bg-gradient-to-br from-emerald-900 via-slate-950 to-teal-950 p-8 sm:p-12 text-white flex-col justify-between relative overflow-hidden">
-        {/* Animated Glow Blobs */}
+      {/* LEFT PANEL: Modern Dark Emerald Green Branding & Feature Highlights Sidebar (TechVaseegrah Theme) */}
+      <div
+        className="hidden md:flex w-full md:w-[50%] lg:w-[55%] p-8 sm:p-10 lg:p-12 text-white flex-col justify-between relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(155deg, #052617 0%, #031a0f 50%, #010d07 100%)'
+        }}
+      >
+        {/* Animated Ambient Glow Blobs */}
         <motion.div
           animate={{
             scale: [1, 1.2, 1],
@@ -222,7 +227,7 @@ const Login = () => {
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="absolute top-0 right-0 -mt-12 -mr-12 w-[350px] h-[350px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"
+          className="absolute top-0 right-0 -mt-12 -mr-12 w-[350px] h-[350px] bg-[#1B9D4A]/15 rounded-full blur-3xl pointer-events-none"
         />
         <motion.div
           animate={{
@@ -235,78 +240,31 @@ const Login = () => {
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="absolute bottom-0 left-0 -mb-12 -ml-12 w-[350px] h-[350px] bg-teal-500/10 rounded-full blur-3xl pointer-events-none"
+          className="absolute bottom-0 left-0 -mb-12 -ml-12 w-[350px] h-[350px] bg-[#16803C]/15 rounded-full blur-3xl pointer-events-none"
         />
 
-        {/* Top Branding Logo */}
+        {/* 1. TOP SECTION: App Header at the top left */}
         <div className="relative z-10 flex items-center gap-3">
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="w-12 h-12 rounded-2xl bg-emerald-500/25 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shadow-lg shadow-emerald-950/50 backdrop-blur-sm"
+            className="w-12 h-12 rounded-2xl bg-[#1B9D4A]/20 border border-[#1B9D4A]/40 flex items-center justify-center text-[#1B9D4A] shadow-lg shadow-[#010d07]/50 backdrop-blur-sm"
           >
             <ChefHat className="h-7 w-7" />
           </motion.div>
           <div>
-            <h1 className="font-extrabold text-xl tracking-tight text-white leading-none">
-              Vaseegrah Veda
+            <h1 className="font-black text-xl tracking-tight text-white leading-none">
+              Smart Lunch Generator
             </h1>
-            <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest block mt-1">
-              Catering • Smart Lunch
+            <span className="text-[10px] text-[#1B9D4A] font-bold uppercase tracking-widest block mt-1">
+              AUTOMATED DAILY MENUS
             </span>
           </div>
         </div>
 
-        {/* Center Slogan & Features */}
-        <div className="relative z-10 my-8 space-y-6">
-          <div className="space-y-3">
-            <motion.h2
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.1] text-white"
-            >
-              Plan Smarter. <br />
-              <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">
-                Serve Better.
-              </span>
-            </motion.h2>
-            <p className="text-emerald-300/80 font-semibold text-base sm:text-lg">
-              Every Lunch, Perfect!
-            </p>
-          </div>
-
-          {/* Feature Highlights - redesigned as micro-cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            {[
-              { icon: Calendar, label: "Auto Generate Menu", desc: "Instantly create weekly lunch plans" },
-              { icon: HeartHandshake, label: "Veg & Non-Veg Rules", desc: "Custom configurations per day" },
-              { icon: Globe, label: "Tamil & English Support", desc: "Full bilingual interface accessibility" },
-              { icon: Clock, label: "Saves Time & Effort", desc: "Automate kitchen administrative tasks" }
-            ].map((feat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
-                whileHover={{ y: -2, backgroundColor: "rgba(255, 255, 255, 0.06)", borderColor: "rgba(16, 185, 129, 0.25)" }}
-                className="p-3 bg-white/[0.03] border border-white/5 rounded-2xl flex gap-3 transition-all duration-300 backdrop-blur-md"
-              >
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/20 flex items-center justify-center text-emerald-300 flex-shrink-0">
-                  <feat.icon className="h-4.5 w-4.5" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-100">{feat.label}</h4>
-                  <p className="text-[10px] text-slate-400 font-medium mt-0.5">{feat.desc}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* Meal Display Image Carousel */}
-        <div className="relative z-10 mt-4 flex justify-center items-center h-48 sm:h-56">
-          <div className="relative w-full max-w-sm h-full flex justify-center items-center">
-            <div className="absolute inset-0 bg-emerald-500/20 rounded-3xl blur-xl pointer-events-none" />
+        {/* 2. UPPER-MIDDLE SECTION (Shifted Up): Food Showcase Image Card */}
+        <div className="relative z-10 my-2 lg:my-4 flex justify-center items-center">
+          <div className="relative w-full max-w-sm flex justify-center items-center">
+            <div className="absolute inset-0 bg-[#1B9D4A]/20 rounded-3xl blur-xl pointer-events-none" />
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentDishIndex}
@@ -314,22 +272,102 @@ const Login = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.05 }}
                 transition={{ duration: 0.8 }}
-                className="w-full h-full relative"
+                className="w-full h-36 md:h-40 lg:h-48 xl:h-52 relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-emerald-950/40"
               >
                 <img
                   src={DISH_IMAGES[currentDishIndex].url}
-                  alt="Vaseegrah Catering Dishes"
-                  className="w-full h-full object-cover rounded-3xl shadow-2xl border border-white/10"
+                  alt="Delicious food showcase"
+                  className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-85 pointer-events-none" />
-                <div className="absolute bottom-3 left-3 right-3 text-center">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-200 bg-slate-950/70 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-emerald-500/30 inline-block shadow-lg">
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent pointer-events-none" />
+                <div className="absolute bottom-2.5 left-2.5 right-2.5 text-center pointer-events-none">
+                  <span className="text-[10px] lg:text-[11px] font-bold uppercase tracking-wider text-emerald-200 bg-slate-950/80 backdrop-blur-md px-3 py-1 lg:px-3.5 lg:py-1.5 rounded-full border border-[#1B9D4A]/40 inline-block shadow-lg shadow-[#1B9D4A]/20">
                     {DISH_IMAGES[currentDishIndex].label}
                   </span>
                 </div>
               </motion.div>
             </AnimatePresence>
           </div>
+        </div>
+
+        {/* 3. LOWER-MIDDLE SECTION (Shifted Down): Centered Bold Hero Title & Subtitle */}
+        <div className="relative z-10 my-1 lg:my-2 text-center space-y-1">
+          <motion.h2
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-[1.1] text-white"
+          >
+            Plan Smarter. <br />
+            <span className="text-[#1B9D4A] bg-gradient-to-r from-[#1B9D4A] via-[#34d399] to-[#1B9D4A] bg-clip-text text-transparent">
+              Serve Better.
+            </span>
+          </motion.h2>
+          <p className="text-[#34d399] font-semibold text-xs md:text-sm lg:text-base xl:text-lg">
+            Every Lunch, Perfect!
+          </p>
+        </div>
+
+        {/* 4. BOTTOM SECTION: 2x2 Grid of Feature Cards (Matching Image 1) */}
+        <div className="relative z-10 grid grid-cols-2 gap-2 lg:gap-3 pt-1">
+          {[
+            {
+              icon: Calendar,
+              title: "Auto Generate Menu",
+              desc: "Instantly create weekly lunch plans"
+            },
+            {
+              icon: HeartHandshake,
+              title: "Veg & Non-Veg Rules",
+              desc: "Custom configurations per day"
+            },
+            {
+              icon: Globe,
+              title: "Tamil & English Support",
+              desc: "Full bilingual interface accessibility"
+            },
+            {
+              icon: Clock,
+              title: "Saves Time & Effort",
+              desc: "Automate kitchen administrative tasks"
+            }
+          ].map((feat, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 + index * 0.08 }}
+              whileHover={{ y: -2, backgroundColor: "rgba(255, 255, 255, 0.07)", borderColor: "rgba(27, 157, 74, 0.4)" }}
+              className="p-2.5 lg:p-3 bg-white/[0.04] border border-white/10 rounded-2xl flex items-center gap-2.5 lg:gap-3 transition-all duration-300 backdrop-blur-md"
+            >
+              <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-[#1B9D4A]/15 border border-[#1B9D4A]/30 flex items-center justify-center text-[#1B9D4A] flex-shrink-0 shadow-sm shadow-[#1B9D4A]/10">
+                <feat.icon className="h-4 w-4 lg:h-5 lg:w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="text-[11px] lg:text-xs xl:text-sm font-bold text-white leading-snug truncate lg:whitespace-normal">{feat.title}</h4>
+                <p className="text-[9px] lg:text-[10px] xl:text-[11px] text-slate-300/80 font-normal mt-0.5 leading-snug line-clamp-2">{feat.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* 5. BACKGROUND: Clean decorative white wave curves along the bottom */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 sm:h-20 pointer-events-none overflow-hidden z-0 opacity-15">
+          <svg
+            viewBox="0 0 1200 120"
+            preserveAspectRatio="none"
+            className="w-full h-full"
+          >
+            <path
+              d="M0,0 C150,90 350,-40 500,45 C650,130 900,10 1200,60 L1200,120 L0,120 Z"
+              fill="#ffffff"
+            />
+            <path
+              d="M0,30 C200,100 450,10 700,70 C950,130 1100,50 1200,80 L1200,120 L0,120 Z"
+              fill="#ffffff"
+              fillOpacity="0.5"
+            />
+          </svg>
         </div>
       </div>
 
@@ -338,15 +376,15 @@ const Login = () => {
         <motion.svg
           viewBox="0 0 80 900"
           preserveAspectRatio="none"
-          className="w-full h-full drop-shadow-[0_0_15px_rgba(16,185,129,0.25)]"
+          className="w-full h-full drop-shadow-[0_0_15px_rgba(27,157,74,0.25)]"
           animate={{ y: [0, -10, 10, 0] }}
           transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
         >
           <defs>
             <linearGradient id="suWaveFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#064e3b" stopOpacity="0.5" />
-              <stop offset="50%" stopColor="#0d9488" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#064e3b" stopOpacity="0.5" />
+              <stop offset="0%" stopColor="#052617" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#1B9D4A" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#052617" stopOpacity="0.8" />
             </linearGradient>
           </defs>
           <path d="M 80 0 C 30 120, 10 200, 35 320 C 60 440, 5 520, 25 640 C 45 760, 15 840, 80 900 L 80 0 Z" fill="white" />

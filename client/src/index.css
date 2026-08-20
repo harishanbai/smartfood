@@ -20,11 +20,13 @@
   --sidebar-text: #F8FAFC;
   --sidebar-text-muted: #A7B0BE;
 
-  --accent-purple: #22C55E; /* Emerald */
+  --accent-purple: #22C55E;
+  /* Emerald */
   --accent-purple-bright: #4ade80;
   --accent-purple-soft: #86efac;
 
-  --accent-orange: #D4AF37; /* Metallic Gold */
+  --accent-orange: #D4AF37;
+  /* Metallic Gold */
   --accent-orange-bright: #E5C158;
   --accent-orange-soft: #F3D77A;
 
@@ -60,11 +62,13 @@
   --sidebar-text: #0F172A;
   --sidebar-text-muted: #334155;
 
-  --accent-purple: #16A34A; /* Emerald */
+  --accent-purple: #16A34A;
+  /* Emerald */
   --accent-purple-bright: #15803D;
   --accent-purple-soft: #22C55E;
 
-  --accent-orange: #B8962E; /* Metallic Gold */
+  --accent-orange: #B8962E;
+  /* Metallic Gold */
   --accent-orange-bright: #D4AF37;
   --accent-orange-soft: #E5C158;
 
@@ -132,9 +136,17 @@
 
 /* Unique Shimmering Animated Gradient Text for Brand Name */
 @keyframes gradientText {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .animate-gradient-text {

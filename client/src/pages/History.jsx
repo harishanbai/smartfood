@@ -154,55 +154,38 @@ const History = () => {
                 </thead>
                 <tbody className="divide-y divide-white/5 text-sm">
                   {history.map(menu => {
-                    const vegFood = menu.vegFoodId || menu.foodId;
-                    const nonVegFood = menu.nonVegFoodId;
-                    if (!vegFood) return null;
+                    const food = menu.foodId || menu.vegFoodId || menu.nonVegFoodId;
+                    if (!food) return null;
+                    const isNonVeg = food.foodType === 'non-veg' || (food.category || '').toLowerCase().includes('non');
                     return (
-                      <tr key={menu._id} className="hover:bg-white/5 transition-colors align-top">
+                      <tr key={menu._id} className="hover:bg-white/5 transition-colors align-middle">
                         <td className="p-4">
-                          {/* Veg Option */}
                           <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
-                              {vegFood.image ? (
-                                <img src={getImageUrl(vegFood)} alt={vegFood.name} className="w-full h-full object-cover" loading="lazy" />
+                            <div className="h-11 w-11 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
+                              {food.image ? (
+                                <img src={getImageUrl(food)} alt={food.name} className="w-full h-full object-cover" loading="lazy" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-[9px] text-gray-500">No Image</div>
                               )}
                             </div>
                             <div>
-                              <span className="font-bold text-white block text-xs">🌿 {vegFood.name}</span>
-                              <span className="text-[10px] text-gray-400 max-w-xs truncate block mt-0.5">{vegFood.description}</span>
+                              <span className="font-bold text-white block text-xs flex items-center gap-1.5">
+                                <span>{isNonVeg ? '🍗' : '🌿'}</span>
+                                <span>{food.name}</span>
+                              </span>
+                              <span className="text-[10px] text-gray-400 max-w-xs truncate block mt-0.5">{food.description}</span>
                             </div>
                           </div>
-
-                          {/* Non-Veg Option */}
-                          {nonVegFood ? (
-                            <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/5">
-                              <div className="h-10 w-10 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
-                                {nonVegFood.image ? (
-                                  <img src={getImageUrl(nonVegFood)} alt={nonVegFood.name} className="w-full h-full object-cover" loading="lazy" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-[9px] text-gray-500">No Image</div>
-                                )}
-                              </div>
-                              <div>
-                                <span className="font-bold text-white block text-xs">🍗 {nonVegFood.name}</span>
-                                <span className="text-[10px] text-gray-400 max-w-xs truncate block mt-0.5">{nonVegFood.description}</span>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-[10px] text-gray-500 italic mt-2 pl-1.5">Vegetarian only</div>
-                          )}
                         </td>
                         <td className="p-4">
-                          <span className="text-[9px] bg-accentGreen/10 border border-accentGreen/30 text-accentGreen px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider whitespace-nowrap">
-                            {tc(vegFood.category)}
+                          <span className={`inline-flex items-center gap-1 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider whitespace-nowrap ${
+                            isNonVeg
+                              ? 'bg-red-500/15 border border-red-500/30 text-red-400'
+                              : 'bg-accentGreen/15 border border-accentGreen/30 text-accentGreen'
+                          }`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${isNonVeg ? 'bg-red-400' : 'bg-accentGreen'}`} />
+                            {isNonVeg ? 'NON-VEG' : 'VEG'} • {tc(food.category)}
                           </span>
-                          {nonVegFood && (
-                            <span className="text-[9px] bg-red-500/10 border border-red-500/30 text-red-400 px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider whitespace-nowrap block mt-2 w-max">
-                              {tc(nonVegFood.category)}
-                            </span>
-                          )}
                         </td>
                         <td className="p-4 font-semibold text-gray-200">{formatDateLabel(menu.date)}</td>
                         <td className="p-4 font-mono text-gray-300">
@@ -228,56 +211,34 @@ const History = () => {
           {/* Mobile Card List View */}
           <div className="space-y-4 md:hidden">
             {history.map(menu => {
-              const vegFood = menu.vegFoodId || menu.foodId;
-              const nonVegFood = menu.nonVegFoodId;
-              if (!vegFood) return null;
+              const food = menu.foodId || menu.vegFoodId || menu.nonVegFoodId;
+              if (!food) return null;
+              const isNonVeg = food.foodType === 'non-veg' || (food.category || '').toLowerCase().includes('non');
               return (
                 <div
                   key={menu._id}
                   className="glass-panel rounded-2xl p-4 border border-white/5 flex flex-col items-stretch gap-4 hover:border-white/10 hover:shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-all"
                 >
-                  <div className="flex flex-col gap-4">
-                    {/* Veg Option */}
-                    <div className="flex flex-row items-center gap-4">
-                      <div className="h-14 w-14 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
-                        {vegFood.image ? (
-                          <img src={getImageUrl(vegFood)} alt={vegFood.name} className="w-full h-full object-cover" loading="lazy" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[9px] text-gray-500">No Image</div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="inline-block text-[9px] bg-accentGreen/15 border border-accentGreen/30 text-accentGreen px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                          🌿 VEG • {tc(vegFood.category)}
-                        </span>
-                        <h4 className="text-sm font-bold text-white mt-1 truncate">{vegFood.name}</h4>
-                        <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">{vegFood.description}</p>
-                      </div>
+                  <div className="flex flex-row items-center gap-4">
+                    <div className="h-14 w-14 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
+                      {food.image ? (
+                        <img src={getImageUrl(food)} alt={food.name} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[9px] text-gray-500">No Image</div>
+                      )}
                     </div>
-
-                    {/* Non-Veg Option */}
-                    {nonVegFood ? (
-                      <div className="flex flex-row items-center gap-4 pt-3 border-t border-white/5">
-                        <div className="h-14 w-14 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
-                          {nonVegFood.image ? (
-                            <img src={getImageUrl(nonVegFood)} alt={nonVegFood.name} className="w-full h-full object-cover" loading="lazy" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[9px] text-gray-500">No Image</div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <span className="inline-block text-[9px] bg-red-500/15 border border-red-500/30 text-red-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                            🍗 NON-VEG • {tc(nonVegFood.category)}
-                          </span>
-                          <h4 className="text-sm font-bold text-white mt-1 truncate">{nonVegFood.name}</h4>
-                          <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">{nonVegFood.description}</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-xs text-accentGreen font-semibold bg-accentGreen/5 border border-accentGreen/10 rounded-xl p-2 text-center">
-                        🌿 Vegetarian Only Served
-                      </div>
-                    )}
+                    <div className="flex-1 min-w-0">
+                      <span className={`inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                        isNonVeg
+                          ? 'bg-red-500/15 border border-red-500/30 text-red-400'
+                          : 'bg-accentGreen/15 border border-accentGreen/30 text-accentGreen'
+                      }`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${isNonVeg ? 'bg-red-400' : 'bg-accentGreen'}`} />
+                        {isNonVeg ? '🍗 NON-VEG' : '🌿 VEG'} • {tc(food.category)}
+                      </span>
+                      <h4 className="text-sm font-bold text-white mt-1 truncate">{food.name}</h4>
+                      <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">{food.description}</p>
+                    </div>
                   </div>
 
                   {/* Right section: Generation metadata */}
@@ -290,11 +251,21 @@ const History = () => {
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <div className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">{t('history.generatedAt')}</div>
-                      <span className="text-gray-300 font-mono font-medium">
-                        {new Date(menu.generatedAt).toLocaleTimeString(locales[language] || 'en-US', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <div className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">{t('history.generatedAt')}</div>
+                        <span className="text-gray-300 font-mono font-medium">
+                          {new Date(menu.generatedAt).toLocaleTimeString(locales[language] || 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+
+                      <button
+                        onClick={() => handleDeleteHistory(menu._id)}
+                        className="p-1.5 text-red-500 hover:text-red-400 hover:bg-white/5 rounded-lg transition-all cursor-pointer"
+                        title={t('common.delete')}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
                 </div>

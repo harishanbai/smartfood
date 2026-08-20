@@ -224,18 +224,18 @@ const Calendar = () => {
           </div>
 
           {/* Dish preview — visible only on sm+ */}
-          {menu ? (
-            <div className="text-left mt-auto hidden sm:block w-full overflow-hidden">
-              <p className="text-[9px] font-semibold text-green-400 truncate max-w-full">
-                🌿 {menu.vegFoodId?.name || menu.foodId?.name}
-              </p>
-              {menu.nonVegFoodId && (
-                <p className="text-[9px] font-semibold text-red-400 truncate max-w-full mt-0.5">
-                  🍗 {menu.nonVegFoodId?.name}
+          {menu ? (() => {
+            const food = menu.foodId || menu.vegFoodId || menu.nonVegFoodId;
+            if (!food) return null;
+            const isNonVeg = food.foodType === 'non-veg' || (food.category || '').toLowerCase().includes('non');
+            return (
+              <div className="text-left mt-auto hidden sm:block w-full overflow-hidden">
+                <p className={`text-[9px] font-semibold truncate max-w-full ${isNonVeg ? 'text-red-400' : 'text-green-400'}`}>
+                  {isNonVeg ? '🍗' : '🌿'} {food.name}
                 </p>
-              )}
-            </div>
-          ) : null}
+              </div>
+            );
+          })() : null}
           {/* Dot indicator on tiny screens */}
           {menu && (
             <div className="sm:hidden mt-auto">
@@ -309,57 +309,44 @@ const Calendar = () => {
 
             {selectedDayMenu ? (
               <div className="space-y-4 max-h-[calc(100vh-250px)] overflow-y-auto pr-1">
-                {/* Veg Option Details */}
-                {(selectedDayMenu.vegFoodId || selectedDayMenu.foodId) && (
-                  <div className="p-4 rounded-2xl bg-white/3 border border-white/5 space-y-3">
-                    <div className="w-full h-32 rounded-xl overflow-hidden bg-black/20 border border-white/10">
-                      {(selectedDayMenu.vegFoodId?.image || selectedDayMenu.foodId?.image) ? (
-                        <img 
-                          src={getImageUrl(selectedDayMenu.vegFoodId || selectedDayMenu.foodId)} 
-                          alt={selectedDayMenu.vegFoodId?.name || selectedDayMenu.foodId?.name || 'Food'} 
-                          className="w-full h-full object-cover" 
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
-                      )}
+                {(() => {
+                  const food = selectedDayMenu.foodId || selectedDayMenu.vegFoodId || selectedDayMenu.nonVegFoodId;
+                  if (!food) return (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <ChefHat className="h-10 w-10 text-gray-600 mb-2" />
+                      <p className="text-xs text-gray-500">{t('calendar.noMenuScheduled')}</p>
                     </div>
-                    <div>
-                      <span className="inline-flex items-center gap-1 text-[9px] bg-accentGreen/15 border border-accentGreen/30 text-accentGreen px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                        🌿 VEG • {tc(selectedDayMenu.vegFoodId?.category || selectedDayMenu.foodId?.category)}
-                      </span>
-                      <h4 className="text-base font-bold text-white mt-1.5 mb-1">{selectedDayMenu.vegFoodId?.name || selectedDayMenu.foodId?.name}</h4>
-                      <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{selectedDayMenu.vegFoodId?.description || selectedDayMenu.foodId?.description}</p>
-                    </div>
-                  </div>
-                )}
+                  );
+                  const isNonVeg = food.foodType === 'non-veg' || (food.category || '').toLowerCase().includes('non');
 
-                {/* Non-Veg Option Details */}
-                {selectedDayMenu.nonVegFoodId ? (
-                  <div className="p-4 rounded-2xl bg-white/3 border border-white/5 space-y-3">
-                    <div className="w-full h-32 rounded-xl overflow-hidden bg-black/20 border border-white/10">
-                      {selectedDayMenu.nonVegFoodId?.image ? (
-                        <img 
-                          src={getImageUrl(selectedDayMenu.nonVegFoodId)} 
-                          alt={selectedDayMenu.nonVegFoodId?.name || 'Food'} 
-                          className="w-full h-full object-cover" 
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
-                      )}
+                  return (
+                    <div className="p-4 rounded-2xl bg-white/3 border border-white/5 space-y-3">
+                      <div className="w-full h-36 rounded-xl overflow-hidden bg-black/20 border border-white/10">
+                        {food.image ? (
+                          <img 
+                            src={getImageUrl(food)} 
+                            alt={food.name || 'Food'} 
+                            className="w-full h-full object-cover" 
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
+                        )}
+                      </div>
+                      <div>
+                        <span className={`inline-flex items-center gap-1 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                          isNonVeg
+                            ? 'bg-red-500/15 border border-red-500/30 text-red-400'
+                            : 'bg-accentGreen/15 border border-accentGreen/30 text-accentGreen'
+                        }`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${isNonVeg ? 'bg-red-400' : 'bg-accentGreen'}`} />
+                          {isNonVeg ? '🍗 NON-VEG' : '🌿 VEG'} • {tc(food.category)}
+                        </span>
+                        <h4 className="text-base font-bold text-white mt-1.5 mb-1">{food.name}</h4>
+                        <p className="text-xs text-gray-400 leading-relaxed line-clamp-3">{food.description}</p>
+                      </div>
                     </div>
-                    <div>
-                      <span className="inline-flex items-center gap-1 text-[9px] bg-red-500/15 border border-red-500/30 text-red-400 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                        🍗 NON-VEG • {tc(selectedDayMenu.nonVegFoodId?.category)}
-                      </span>
-                      <h4 className="text-base font-bold text-white mt-1.5 mb-1">{selectedDayMenu.nonVegFoodId?.name}</h4>
-                      <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{selectedDayMenu.nonVegFoodId?.description}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-3 rounded-xl bg-accentGreen/5 border border-accentGreen/15 text-center text-xs text-accentGreen font-semibold">
-                    🌿 Vegetarian Only Today
-                  </div>
-                )}
+                  );
+                })()}
 
                 <div className="pt-3 border-t border-white/5 text-[10px] text-gray-500 flex justify-between font-mono">
                   <span>Date: {selectedDayMenu.date}</span>

@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  ChefHat, 
-  Calendar, 
-  HeartHandshake, 
-  Globe, 
-  Clock, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  AlertCircle, 
-  CheckCircle2, 
-  ArrowLeft 
+import {
+  ChefHat,
+  Calendar,
+  HeartHandshake,
+  Globe,
+  Clock,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  CheckCircle2,
+  ArrowLeft
 } from 'lucide-react';
 import { auth, confirmPasswordReset, verifyPasswordResetCode } from '../firebase';
 import { authApi } from '../services/api';
@@ -183,78 +183,118 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-900 overflow-x-hidden font-sans relative">
-      
-      {/* LEFT PANEL */}
-      <div className="w-full md:w-[55%] bg-gradient-to-br from-emerald-800 via-teal-900 to-slate-900 p-8 sm:p-12 md:pr-16 text-white flex flex-col justify-between relative overflow-visible">
+
+      {/* LEFT PANEL: Modern Dark Emerald Green Branding & Feature Highlights Sidebar */}
+      <div
+        className="hidden md:flex w-full md:w-[55%] p-8 sm:p-10 lg:p-12 text-white flex-col justify-between relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(155deg, #062c22 0%, #041f18 55%, #02130e 100%)'
+        }}
+      >
+        {/* Animated Background Ambient Glows */}
         <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
+        {/* 1. TOP SECTION: App Header at the top left */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shadow-inner">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/25 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shadow-lg shadow-emerald-950/50 backdrop-blur-sm">
             <ChefHat className="h-7 w-7" />
           </div>
           <div>
-            <h1 className="font-black text-xl tracking-tight text-white">Smart Lunch Generator</h1>
-            <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest block">Automated Daily Menus</span>
+            <h1 className="font-black text-xl tracking-tight text-white leading-none">Smart Lunch Generator</h1>
+            <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest block mt-1">AUTOMATED DAILY MENUS</span>
           </div>
         </div>
 
-        <div className="relative z-10 my-8 space-y-6">
-          <div className="space-y-2">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
-              Plan Smarter. <br />
-              <span className="text-emerald-400">Serve Better.</span>
-            </h2>
-            <p className="text-emerald-300 font-semibold text-base sm:text-lg">
-              Every Lunch, Perfect!
-            </p>
-          </div>
-
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center gap-3 text-sm font-medium text-emerald-100/90">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 flex-shrink-0">
-                <Calendar className="h-4 w-4" />
-              </div>
-              <span>Auto Generate Menu</span>
-            </div>
-
-            <div className="flex items-center gap-3 text-sm font-medium text-emerald-100/90">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 flex-shrink-0">
-                <HeartHandshake className="h-4 w-4" />
-              </div>
-              <span>Veg &amp; Non-Veg Rules</span>
-            </div>
-
-            <div className="flex items-center gap-3 text-sm font-medium text-emerald-100/90">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 flex-shrink-0">
-                <Globe className="h-4 w-4" />
-              </div>
-              <span>Tamil &amp; English Support</span>
-            </div>
-
-            <div className="flex items-center gap-3 text-sm font-medium text-emerald-100/90">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 flex-shrink-0">
-                <Clock className="h-4 w-4" />
-              </div>
-              <span>Saves Time &amp; Effort</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative z-10 mt-4 flex justify-center items-center">
+        {/* 2. UPPER-MIDDLE SECTION (Shifted Up): Food Showcase Image Card */}
+        <div className="relative z-10 my-2 lg:my-4 flex justify-center items-center">
           <div className="relative group w-full max-w-sm">
-            <img 
-              src="https://images.unsplash.com/photo-1610192244261-3f33de3f55e4?auto=format&fit=crop&w=800&q=80" 
-              alt="Indian Thali Meal" 
-              className="w-full h-48 sm:h-56 object-cover rounded-3xl shadow-2xl border-2 border-emerald-500/30 group-hover:scale-[1.02] transition-all duration-500"
-            />
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
-            <div className="absolute bottom-3 left-3 right-3 text-center">
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-emerald-300 bg-black/60 backdrop-blur-md px-3.5 py-1 rounded-full border border-emerald-400/30 inline-block">
-                🌿 Fresh &amp; Balanced Daily Meals
-              </span>
+            <div className="absolute inset-0 bg-emerald-500/20 rounded-3xl blur-xl pointer-events-none" />
+            <div className="relative overflow-hidden rounded-3xl border border-white/10 shadow-2xl bg-emerald-950/40">
+              <img
+                src="https://images.unsplash.com/photo-1610192244261-3f33de3f55e4?auto=format&fit=crop&w=800&q=80"
+                alt="Delicious food showcase"
+                className="w-full h-36 md:h-40 lg:h-48 xl:h-52 object-cover rounded-3xl group-hover:scale-[1.03] transition-all duration-500"
+              />
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent pointer-events-none" />
+              <div className="absolute bottom-2.5 left-2.5 right-2.5 text-center pointer-events-none">
+                <span className="text-[10px] lg:text-[11px] font-bold uppercase tracking-wider text-emerald-200 bg-slate-950/80 backdrop-blur-md px-3 py-1 lg:px-3.5 lg:py-1.5 rounded-full border border-emerald-500/30 inline-block shadow-lg">
+                  🔥 FRESH & BALANCED DAILY MEALS
+                </span>
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* 3. LOWER-MIDDLE SECTION (Shifted Down): Centered Bold Hero Title & Subtitle */}
+        <div className="relative z-10 my-1 lg:my-2 text-center space-y-1">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-[1.1] text-white">
+            Plan Smarter. <br />
+            <span className="text-emerald-400 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">
+              Serve Better.
+            </span>
+          </h2>
+          <p className="text-emerald-300 font-semibold text-xs md:text-sm lg:text-base xl:text-lg">
+            Every Lunch, Perfect!
+          </p>
+        </div>
+
+        {/* 4. BOTTOM SECTION: 2x2 Grid of Feature Cards (Matching Image 1) */}
+        <div className="relative z-10 grid grid-cols-2 gap-2 lg:gap-3 pt-1">
+          {[
+            {
+              icon: Calendar,
+              title: "Auto Generate Menu",
+              desc: "Instantly create weekly lunch plans"
+            },
+            {
+              icon: HeartHandshake,
+              title: "Veg & Non-Veg Rules",
+              desc: "Custom configurations per day"
+            },
+            {
+              icon: Globe,
+              title: "Tamil & English Support",
+              desc: "Full bilingual interface accessibility"
+            },
+            {
+              icon: Clock,
+              title: "Saves Time & Effort",
+              desc: "Automate kitchen administrative tasks"
+            }
+          ].map((feat, index) => (
+            <div
+              key={index}
+              className="p-2.5 lg:p-3 bg-white/[0.04] border border-white/10 rounded-2xl flex items-center gap-2.5 lg:gap-3 transition-all duration-300 backdrop-blur-md hover:bg-white/[0.07] hover:border-emerald-500/30"
+            >
+              <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center text-emerald-400 flex-shrink-0 shadow-sm">
+                <feat.icon className="h-4 w-4 lg:h-5 lg:w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="text-[11px] lg:text-xs xl:text-sm font-bold text-white leading-snug truncate lg:whitespace-normal">{feat.title}</h4>
+                <p className="text-[9px] lg:text-[10px] xl:text-[11px] text-slate-300/80 font-normal mt-0.5 leading-snug line-clamp-2">{feat.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 5. BACKGROUND: Clean decorative white wave curves along the bottom */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 sm:h-20 pointer-events-none overflow-hidden z-0 opacity-15">
+          <svg
+            viewBox="0 0 1200 120"
+            preserveAspectRatio="none"
+            className="w-full h-full"
+          >
+            <path
+              d="M0,0 C150,90 350,-40 500,45 C650,130 900,10 1200,60 L1200,120 L0,120 Z"
+              fill="#ffffff"
+            />
+            <path
+              d="M0,30 C200,100 450,10 700,70 C950,130 1100,50 1200,80 L1200,120 L0,120 Z"
+              fill="#ffffff"
+              fillOpacity="0.5"
+            />
+          </svg>
         </div>
 
       </div>
@@ -280,25 +320,27 @@ const ResetPassword = () => {
         </motion.svg>
       </div>
 
-      {/* MOBILE HORIZONTAL WAVE */}
-      <div className="md:hidden relative -mt-3 w-full h-10 z-30 pointer-events-none">
-        <motion.svg
-          viewBox="0 0 1440 120"
-          preserveAspectRatio="none"
-          className="w-full h-full"
-          animate={{ x: [0, -15, 0] }}
-          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <path d="M0,40 C240,100 480,0 720,60 C960,120 1200,20 1440,80 L1440,120 L0,120 Z" fill="white" />
-        </motion.svg>
-      </div>
-
       {/* RIGHT PANEL */}
       <div className="w-full md:w-[45%] bg-white p-6 sm:p-10 md:p-12 flex items-center justify-center relative min-h-screen md:min-h-0">
-        
+
         {/* Main Form Area */}
         <div className="max-w-md w-full my-auto space-y-5 text-center">
-          
+
+          {/* Logo & Branding - Visible ONLY on mobile view since left panel is hidden */}
+          <div className="flex flex-col items-center gap-2 mb-2 md:hidden">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm">
+              <ChefHat className="h-6 w-6" />
+            </div>
+            <div className="text-center">
+              <h1 className="font-extrabold text-lg text-slate-900 leading-none">
+                Smart Lunch Generator
+              </h1>
+              <span className="text-[9px] text-emerald-600 font-bold uppercase tracking-wider block mt-1">
+                AUTOMATED DAILY MENUS
+              </span>
+            </div>
+          </div>
+
           <div className="space-y-1">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               Create New Password 🔒
@@ -324,7 +366,7 @@ const ResetPassword = () => {
               </div>
 
               <h3 className="text-base font-bold text-slate-900">Password Changed Successfully!</h3>
-              
+
               <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-left">
                 Your password has been updated. You will be redirected to the login page automatically in a few seconds...
               </p>
@@ -344,7 +386,7 @@ const ResetPassword = () => {
               </div>
 
               <h3 className="text-base font-bold text-slate-900">Invalid Reset Link</h3>
-              
+
               <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-xs font-medium rounded-xl text-left">
                 {error || 'This password reset link is invalid or has expired.'}
               </div>
