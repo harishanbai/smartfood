@@ -26,12 +26,24 @@
         window.dispatchEvent(new Event('pwa-prompt-available'));
       });
 
-      if ('serviceWorker' in navigator) {
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+      if ('serviceWorker' in navigator && !isLocalhost) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
             .then((reg) => console.log('Service Worker registered successfully:', reg.scope))
             .catch((err) => console.error('Service Worker registration failed:', err));
         });
+      } else if ('serviceWorker' in navigator && isLocalhost) {
+        // In local development, unregister any stale service workers and clear cache storage
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const registration of registrations) {
+            registration.unregister();
+          }
+        });
+        if ('caches' in window) {
+          caches.keys().then((keys) => keys.forEach((key) => caches.delete(key)));
+        }
       }
     </script>
   </body>

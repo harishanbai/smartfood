@@ -20,14 +20,14 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
   const { language, t } = useLanguage();
   const { currentUser, logout } = useAuth();
 
-  const [profileName, setProfileName] = useState(() => localStorage.getItem('profileName') || 'Smart Lunch');
-  const [profileDesignation, setProfileDesignation] = useState(() => localStorage.getItem('profileDesignation') || 'MESS MASTER');
+  const [profileName, setProfileName] = useState(() => (localStorage.getItem('profileName') || '').trim() || 'Smart Lunch');
+  const [profileDesignation, setProfileDesignation] = useState(() => (localStorage.getItem('profileDesignation') || '').trim() || 'MESS MASTER');
   const [appLogo, setAppLogo] = useState(() => localStorage.getItem('appLogo') || '');
 
   useEffect(() => {
     const handleProfileChange = () => {
-      setProfileName(localStorage.getItem('profileName') || 'Smart Lunch');
-      setProfileDesignation(localStorage.getItem('profileDesignation') || 'MESS MASTER');
+      setProfileName((localStorage.getItem('profileName') || '').trim() || 'Smart Lunch');
+      setProfileDesignation((localStorage.getItem('profileDesignation') || '').trim() || 'MESS MASTER');
       setAppLogo(localStorage.getItem('appLogo') || '');
     };
     window.addEventListener('profile-change', handleProfileChange);
@@ -72,10 +72,10 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
           )}
         </div>
         <div className={`min-w-0 transition-all duration-300 ${isCollapsed ? 'w-0 h-0 overflow-hidden opacity-0' : 'w-auto opacity-100'}`}>
-          <h1 className="font-extrabold text-base tracking-tight bg-gradient-to-r from-[#D4AF37] via-[#F3D77A] to-[#22C55E] bg-[length:200%_auto] animate-gradient-text bg-clip-text text-transparent truncate max-w-[140px] drop-shadow-[0_2px_8px_rgba(212,175,55,0.2)]">
-            {profileName}
+          <h1 className="font-extrabold text-base tracking-tight text-[#D4AF37] truncate max-w-[140px] drop-shadow-[0_2px_8px_rgba(212,175,55,0.3)]">
+            {profileName || 'Smart Lunch'}
           </h1>
-          <span className="text-[10px] text-accentOrange font-bold uppercase tracking-wider block truncate max-w-[140px] mt-0.5">{profileDesignation}</span>
+          <span className="text-[10px] text-accentOrange font-bold uppercase tracking-wider block truncate max-w-[140px] mt-0.5">{profileDesignation || 'MESS MASTER'}</span>
         </div>
       </Link>
 

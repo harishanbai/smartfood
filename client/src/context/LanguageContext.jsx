@@ -30,6 +30,7 @@ const translations = {
       master: "Master",
       subtitle: "Manage tomorrow's lunch and configure recipes in real-time.",
       autoGen: "Auto Generation",
+      autoGeneration: "Auto Generation",
       active: "Active"
     },
     dashboard: {
@@ -213,6 +214,7 @@ const translations = {
       master: "மாஸ்டர்",
       subtitle: "நாளை மதிய உணவை நிர்வகித்து, உண்மையான நேரத்தில் சமையல் குறிப்புகளை உள்ளமைக்கவும்.",
       autoGen: "தானியக்கம்",
+      autoGeneration: "தானியக்கம்",
       active: "செயலில்"
     },
     dashboard: {

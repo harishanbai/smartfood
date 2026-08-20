@@ -54,7 +54,7 @@ const Login = () => {
 
   // WhatsApp Auth State
   const [countryCode, setCountryCode] = useState('+91');
-  const [phoneInput, setPhoneInput] = useState('9043882817');
+  const [phoneInput, setPhoneInput] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpStep, setOtpStep] = useState('phone'); // 'phone' | 'otp'
   const [whatsappLoading, setWhatsappLoading] = useState(false);

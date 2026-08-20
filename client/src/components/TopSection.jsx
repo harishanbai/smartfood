@@ -131,10 +131,9 @@ const TopSection = () => {
         </div>
 
         {/* 3. Date Card */}
-        <div className="glass-panel date-card flex items-center gap-2.5 border border-[rgba(212,175,55,0.45)] text-xs font-semibold text-title shadow-sm">
+        <div className="glass-panel date-card flex items-center gap-2.5 border border-[rgba(212,175,55,0.45)] text-xs font-semibold text-title shadow-sm px-3.5 py-2 rounded-xl">
           <Calendar className="h-4 w-4 text-accentOrange flex-shrink-0" />
-          <span className="hidden sm:inline">{formatDate(time)}</span>
-          <span className="sm:hidden">{time.toLocaleDateString(language === 'ta' ? 'ta-IN' : 'en-US', { month: 'short', day: 'numeric' })}</span>
+          <span className="whitespace-nowrap font-medium text-xs text-title">{formatDate(time)}</span>
         </div>
 
         {/* 4. Generation Mode Badge */}
@@ -147,32 +146,31 @@ const TopSection = () => {
         </div>
 
         {/* 5. User Profile Avatar */}
-        {currentUser && (
-          <div className="avatar-container" ref={profileRef}>
-            <button
-              onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-              title={currentUser.displayName || 'User Profile'}
-              className="relative avatar-button flex-shrink-0 rounded-full bg-gradient-to-tr from-accentPurple to-accentOrange p-[2px] transition-all duration-300 hover:scale-105 cursor-pointer shadow-lg hover:shadow-[0_4px_16px_rgba(212,175,55,0.25)] group"
-            >
-              {/* Circular Avatar */}
-              <div className="w-full h-full rounded-full overflow-hidden bg-slate-900 flex items-center justify-center">
-                {userPhoto && !imgError ? (
-                  <img
-                    src={userPhoto}
-                    alt={currentUser.displayName || 'User'}
-                    onError={() => setImgError(true)}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full rounded-full bg-accentPurple/20 flex items-center justify-center text-accentPurple font-black text-sm">
-                    {getUserInitials(currentUser.displayName)}
-                  </div>
-                )}
-              </div>
-              
-              {/* Online Status Indicator */}
-              <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-accentGreen border-2 border-slate-900 rounded-full shadow-md" />
-            </button>
+        <div className="avatar-container" ref={profileRef}>
+          <button
+            onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+            title={currentUser?.displayName || chefName || 'User Profile'}
+            className="relative avatar-button flex-shrink-0 rounded-full bg-gradient-to-tr from-accentPurple to-accentOrange p-[2px] transition-all duration-300 hover:scale-105 cursor-pointer shadow-lg hover:shadow-[0_4px_16px_rgba(212,175,55,0.25)] group"
+          >
+            {/* Circular Avatar */}
+            <div className="w-full h-full rounded-full overflow-hidden bg-slate-900 flex items-center justify-center">
+              {userPhoto && !imgError ? (
+                <img
+                  src={userPhoto}
+                  alt={currentUser?.displayName || chefName || 'User'}
+                  onError={() => setImgError(true)}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full rounded-full bg-accentPurple/20 flex items-center justify-center text-accentPurple font-black text-sm">
+                  {getUserInitials(currentUser?.displayName || chefName || 'Harish')}
+                </div>
+              )}
+            </div>
+            
+            {/* Online Status Indicator */}
+            <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-accentGreen border-2 border-slate-900 rounded-full shadow-md" />
+          </button>
 
             {/* Profile Dropdown Popover */}
             {profileDropdownOpen && (
@@ -227,7 +225,6 @@ const TopSection = () => {
               </div>
             )}
           </div>
-        )}
       </div>
     </header>
   );

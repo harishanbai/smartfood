@@ -41,6 +41,11 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
+  // Do NOT intercept any local development requests
+  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+    return;
+  }
+
   // Do NOT intercept non-GET requests or API/auth/reset-password endpoints
   if (
     event.request.method !== 'GET' ||

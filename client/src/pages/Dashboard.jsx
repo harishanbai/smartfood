@@ -397,7 +397,7 @@ const Dashboard = () => {
       </div>
 
       {/* Quick Billing Alert */}
-      <div className="mb-6 rounded-2xl border border-[rgba(34,197,94,0.45)] bg-bgCard p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl transition-all">
+      <div className="mb-6 rounded-2xl border border-[var(--glass-border)] bg-bgCard p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl transition-all">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-xl bg-accentGreen/10 flex items-center justify-center text-accentOrange border border-accentOrange/30">
             <CreditCard className="h-5 w-5 text-accentOrange" />
@@ -409,7 +409,8 @@ const Dashboard = () => {
         </div>
         <button
           onClick={() => navigate('/payment')}
-          className="w-full sm:w-auto px-5 py-2.5 bg-[#D4AF37] hover:bg-[#E5C158] text-black font-extrabold text-xs rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(212,175,55,0.4)] cursor-pointer min-h-[38px] text-center border-none shadow-md"
+          className="w-full sm:w-auto px-6 py-2.5 bg-[#D4AF37] hover:bg-[#E5C158] text-black font-extrabold text-xs rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(212,175,55,0.4)] cursor-pointer min-h-[38px] text-center border-none shadow-md"
+          style={{ backgroundColor: '#D4AF37', color: '#000000', fontWeight: 800 }}
         >
           {language === 'ta' ? 'பணம் செலுத்து' : 'Pay Now'}
         </button>
