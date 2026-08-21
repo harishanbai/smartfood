@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  UtensilsCrossed, 
-  History, 
-  Calendar, 
-  BarChart3, 
-  Settings, 
+import logoImg from '../assets/logo.png';
+import {
+  LayoutDashboard,
+  UtensilsCrossed,
+  History,
+  Calendar,
+  BarChart3,
+  Settings,
   ChefHat,
   LogOut,
   ChevronLeft,
@@ -60,16 +61,16 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
       </button>
 
       {/* Brand Header */}
-      <Link 
-        to="/profile" 
+      <Link
+        to="/profile"
         className={`flex items-center gap-3 mb-10 px-2 group hover:opacity-90 transition-all cursor-pointer ${isCollapsed ? 'justify-center mb-8' : ''}`}
       >
-        <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-accentPurple to-accentOrange flex items-center justify-center shadow-lg shadow-emerald-500/20 overflow-hidden flex-shrink-0 border border-sidebarBorder group-hover:border-accentPurple/45 transition-all duration-300">
-          {appLogo ? (
-            <img src={appLogo} alt={profileName} className="w-full h-full object-cover" />
-          ) : (
-            <ChefHat className="h-5 w-5 text-white" />
-          )}
+        <div className="h-11 w-11 rounded-xl bg-[#0a2318] flex items-center justify-center shadow-lg shadow-emerald-950/40 overflow-hidden flex-shrink-0 border border-emerald-500/30 group-hover:border-emerald-400/60 transition-all duration-300">
+          <img
+            src={appLogo || logoImg}
+            alt={profileName || 'Smart Lunch'}
+            className="w-full h-full object-cover rounded-lg"
+          />
         </div>
         <div className={`min-w-0 transition-all duration-300 ${isCollapsed ? 'w-0 h-0 overflow-hidden opacity-0' : 'w-auto opacity-100'}`}>
           <h1 className="font-extrabold text-base tracking-tight text-[#D4AF37] truncate max-w-[140px] drop-shadow-[0_2px_8px_rgba(212,175,55,0.3)]">
@@ -89,8 +90,8 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
               to={item.path}
               className={({ isActive }) => `
                 flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-4 px-4 py-3.5'} rounded-xl text-sm font-semibold transition-all duration-300 group relative overflow-hidden transform hover:-translate-y-0.5
-                ${isActive 
-                  ? 'active text-accentOrange bg-sidebarActive border border-accentOrange/40 shadow-[0_0_16px_rgba(212,175,55,0.25)]' 
+                ${isActive
+                  ? 'active text-accentOrange bg-sidebarActive border border-accentOrange/40 shadow-[0_0_16px_rgba(212,175,55,0.25)]'
                   : 'text-sidebarText hover:text-sidebarText hover:bg-sidebarHover border border-transparent'
                 }
               `}
@@ -100,7 +101,7 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
                 <>
                   {/* Subtle animated shimmer background on hover */}
                   <span className="absolute inset-0 bg-gradient-to-r from-accentOrange/10 via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                  
+
                   <Icon className={`h-5 w-5 transition-all duration-300 group-hover:scale-115 group-hover:rotate-3 ${isActive ? 'text-accentOrange drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]' : 'text-sidebarText/80 group-hover:text-sidebarText'}`} />
                   <span className={`relative z-10 transition-all duration-300 font-bold ${isCollapsed ? 'w-0 h-0 overflow-hidden opacity-0' : 'opacity-100'}`}>{item.name}</span>
 

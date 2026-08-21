@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import logoImg from '../assets/logo.png';
 import {
   ChefHat,
   Calendar,
@@ -197,8 +198,8 @@ const ResetPassword = () => {
 
         {/* 1. TOP SECTION: App Header at the top left */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/25 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shadow-lg shadow-emerald-950/50 backdrop-blur-sm">
-            <ChefHat className="h-7 w-7" />
+          <div className="h-12 w-12 rounded-2xl bg-[#0a2318] border border-emerald-400/40 flex items-center justify-center shadow-lg shadow-emerald-950/50 backdrop-blur-sm overflow-hidden">
+            <img src={logoImg} alt="Smart Lunch Logo" className="w-full h-full object-cover rounded-xl" />
           </div>
           <div>
             <h1 className="font-black text-xl tracking-tight text-white leading-none">Smart Lunch Generator</h1>
@@ -328,12 +329,12 @@ const ResetPassword = () => {
 
           {/* Logo & Branding - Visible ONLY on mobile view since left panel is hidden */}
           <div className="flex flex-col items-center gap-2 mb-2 md:hidden">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm">
-              <ChefHat className="h-6 w-6" />
+            <div className="h-12 w-12 rounded-2xl bg-[#0a2318] border border-emerald-500/20 flex items-center justify-center shadow-sm overflow-hidden">
+              <img src={logoImg} alt="Smart Lunch Logo" className="w-full h-full object-cover rounded-xl" />
             </div>
             <div className="text-center">
               <h1 className="font-extrabold text-lg text-slate-900 leading-none">
-                Smart Lunch Generator
+                Smart Lunch
               </h1>
               <span className="text-[9px] text-emerald-600 font-bold uppercase tracking-wider block mt-1">
                 AUTOMATED DAILY MENUS

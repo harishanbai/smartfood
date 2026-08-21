@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, Globe, Camera, Save, ArrowLeft, ShieldCheck, Calendar, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import logoImg from '../assets/logo.png';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -43,7 +44,7 @@ const Profile = () => {
     }
 
     setSaving(true);
-    
+
     // Save local-only customizations independently
     localStorage.setItem('profileName', brandName.trim());
     localStorage.setItem('profileDesignation', designation.trim());
@@ -76,12 +77,12 @@ const Profile = () => {
       } else {
         // Show sync warning but still acknowledge local changes
         addNotification(`Local changes saved, but could not sync with database: ${res.error || 'Unauthorized'}`, 'warning');
-        
+
         // Also sync local language preference anyway so it feels responsive
         if (userLang !== currentLang) {
           setLanguage(userLang);
         }
-        
+
         navigate('/');
       }
     } catch (err) {
@@ -364,12 +365,12 @@ const Profile = () => {
                   <Camera className="h-3.5 w-3.5 text-accentOrange" /> Application / Company Logo
                 </label>
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-accentPurple to-accentOrange flex items-center justify-center overflow-hidden border border-white/20 shadow-md">
-                    {appLogo ? (
-                      <img src={appLogo} alt="App Logo" className="w-full h-full object-cover" />
-                    ) : (
-                      <Camera className="h-5 w-5 text-white" />
-                    )}
+                  <div className="h-12 w-12 rounded-xl bg-[#0a2318] flex items-center justify-center overflow-hidden border border-emerald-500/30 shadow-md">
+                    <img
+                      src={appLogo || logoImg}
+                      alt="App Logo"
+                      className="w-full h-full object-cover rounded-xl"
+                    />
                   </div>
                   <div className="flex-1">
                     <input
@@ -384,7 +385,7 @@ const Profile = () => {
                       className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-semibold text-white hover:bg-white/10 cursor-pointer transition-all"
                     >
                       <Camera className="h-3.5 w-3.5 text-accentOrange" />
-                      {appLogo ? 'Change Application Logo' : 'Upload Application Logo'}
+                      {appLogo ? 'Change Custom Logo' : 'Upload Custom Logo'}
                     </label>
                     {appLogo && (
                       <button
@@ -392,7 +393,7 @@ const Profile = () => {
                         onClick={() => setAppLogo('')}
                         className="ml-2 text-xs text-red-400 hover:text-red-300 font-semibold cursor-pointer"
                       >
-                        Reset to Default Icon
+                        Reset to Default Logo
                       </button>
                     )}
                   </div>

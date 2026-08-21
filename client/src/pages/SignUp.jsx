@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  ChefHat, 
-  Calendar, 
-  HeartHandshake, 
-  Globe, 
-  Clock, 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  User, 
-  AlertCircle, 
-  CheckCircle2, 
-  ArrowRight 
+import logoImg from '../assets/logo.png';
+import {
+  ChefHat,
+  Calendar,
+  HeartHandshake,
+  Globe,
+  Clock,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  User,
+  AlertCircle,
+  CheckCircle2,
+  ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
@@ -108,9 +109,9 @@ const SignUp = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-900 overflow-x-hidden font-sans relative">
-      
+
       {/* LEFT PANEL: Modern Dark Emerald Green Branding & Feature Highlights Sidebar */}
-      <div 
+      <div
         className="hidden md:flex w-full md:w-[55%] p-8 sm:p-10 lg:p-12 text-white flex-col justify-between relative overflow-hidden"
         style={{
           background: 'linear-gradient(155deg, #062c22 0%, #041f18 55%, #02130e 100%)'
@@ -122,8 +123,8 @@ const SignUp = () => {
 
         {/* 1. TOP SECTION: App Header at the top left */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/25 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shadow-lg shadow-emerald-950/50 backdrop-blur-sm">
-            <ChefHat className="h-7 w-7" />
+          <div className="h-12 w-12 rounded-2xl bg-[#0a2318] border border-emerald-400/40 flex items-center justify-center shadow-lg shadow-emerald-950/50 backdrop-blur-sm overflow-hidden">
+            <img src={logoImg} alt="Smart Lunch Logo" className="w-full h-full object-cover rounded-xl" />
           </div>
           <div>
             <h1 className="font-black text-xl tracking-tight text-white leading-none">Smart Lunch Generator</h1>
@@ -136,9 +137,9 @@ const SignUp = () => {
           <div className="relative group w-full max-w-sm">
             <div className="absolute inset-0 bg-emerald-500/20 rounded-3xl blur-xl pointer-events-none" />
             <div className="relative overflow-hidden rounded-3xl border border-white/10 shadow-2xl bg-emerald-950/40">
-              <img 
-                src="https://images.unsplash.com/photo-1610192244261-3f33de3f55e4?auto=format&fit=crop&w=800&q=80" 
-                alt="Delicious food showcase" 
+              <img
+                src="https://images.unsplash.com/photo-1610192244261-3f33de3f55e4?auto=format&fit=crop&w=800&q=80"
+                alt="Delicious food showcase"
                 className="w-full h-36 md:h-40 lg:h-48 xl:h-52 object-cover rounded-3xl group-hover:scale-[1.03] transition-all duration-500"
               />
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent pointer-events-none" />
@@ -247,25 +248,25 @@ const SignUp = () => {
 
       {/* RIGHT PANEL: Clean White Authentication Section */}
       <div className="w-full md:w-[45%] bg-white p-6 sm:p-10 md:p-12 flex items-center justify-center relative min-h-screen md:min-h-0">
-        
+
         {/* Main Form Area */}
         <div className="max-w-md w-full my-auto space-y-5 text-center">
-          
+
           {/* Logo & Branding - Visible ONLY on mobile view since left panel is hidden */}
           <div className="flex flex-col items-center gap-2 mb-2 md:hidden">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm">
-              <ChefHat className="h-6 w-6" />
+            <div className="h-12 w-12 rounded-2xl bg-[#0a2318] border border-emerald-500/20 flex items-center justify-center shadow-sm overflow-hidden">
+              <img src={logoImg} alt="Smart Lunch Logo" className="w-full h-full object-cover rounded-xl" />
             </div>
             <div className="text-center">
               <h1 className="font-extrabold text-lg text-slate-900 leading-none">
-                Smart Lunch Generator
+                Smart Lunch
               </h1>
               <span className="text-[9px] text-emerald-600 font-bold uppercase tracking-wider block mt-1">
                 AUTOMATED DAILY MENUS
               </span>
             </div>
           </div>
-          
+
           {/* Heading */}
           <div className="space-y-1">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center justify-center gap-2">

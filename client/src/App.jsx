@@ -22,6 +22,7 @@ import SignUp from './pages/SignUp';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
+import SplashScreen from './components/SplashScreen';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -133,6 +134,7 @@ function App() {
         <NotificationProvider>
           <AuthProvider>
             <ConfirmProvider>
+              <SplashScreen />
               <Router>
                 <AppRoutes />
               </Router>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import logoImg from '../assets/logo.png';
 import {
   ChefHat,
   Calendar,
@@ -247,9 +248,9 @@ const Login = () => {
         <div className="relative z-10 flex items-center gap-3">
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="w-12 h-12 rounded-2xl bg-[#1B9D4A]/20 border border-[#1B9D4A]/40 flex items-center justify-center text-[#1B9D4A] shadow-lg shadow-[#010d07]/50 backdrop-blur-sm"
+            className="h-12 w-12 rounded-2xl bg-[#0a2318] border border-[#1B9D4A]/40 flex items-center justify-center shadow-lg shadow-[#010d07]/50 backdrop-blur-sm overflow-hidden"
           >
-            <ChefHat className="h-7 w-7" />
+            <img src={logoImg} alt="Smart Lunch Logo" className="w-full h-full object-cover rounded-xl" />
           </motion.div>
           <div>
             <h1 className="font-black text-xl tracking-tight text-white leading-none">
@@ -402,12 +403,12 @@ const Login = () => {
 
           {/* Logo & Branding - Visible ONLY on mobile view since left panel is hidden */}
           <div className="flex flex-col items-center gap-2 mb-2 md:hidden">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm">
-              <ChefHat className="h-6 w-6" />
+            <div className="h-12 w-12 rounded-2xl bg-[#0a2318] border border-emerald-500/20 flex items-center justify-center shadow-sm overflow-hidden">
+              <img src={logoImg} alt="Smart Lunch Logo" className="w-full h-full object-cover rounded-xl" />
             </div>
             <div className="text-center">
               <h1 className="font-extrabold text-lg text-slate-900 leading-none">
-                Vaseegrah Veda
+                Smart Lunch
               </h1>
               <span className="text-[9px] text-emerald-600 font-bold uppercase tracking-wider block mt-1">
                 Catering • Smart Lunch

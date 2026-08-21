@@ -1,12 +1,12 @@
 {
-  "short_name": "Veda Catering",
-  "name": "Vaseegrah Veda Catering - Smart Lunch",
+  "short_name": "Smart Lunch",
+  "name": "Smart Lunch - Automated Daily Menus",
   "description": "Premium lunch scheduling and smart recipe recommendation manager.",
   "icons": [
     {
-      "src": "/favicon.svg",
-      "type": "image/svg+xml",
-      "sizes": "any",
+      "src": "/favicon.png",
+      "type": "image/png",
+      "sizes": "512x512",
       "purpose": "any"
     },
     {
