@@ -173,6 +173,86 @@ export const googleAuth = async (req, res) => {
 };
 
 /**
+ * @desc    Apple Sign-In backend sync
+ * @route   POST /api/auth/apple
+ * @access  Public / Protected
+ */
+export const appleAuth = async (req, res) => {
+  try {
+    const { idToken, uid: bodyUid, displayName, name, email: bodyEmail, photo, photoURL, language } = req.body;
+
+    let uid = bodyUid;
+    let email = bodyEmail;
+    let userName = (name || displayName || (email ? email.split('@')[0] : 'Apple User')).trim();
+    let userPhoto = photo || photoURL || '';
+
+    // Verify Firebase ID token if provided
+    if (idToken) {
+      try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        uid = decodedToken.uid;
+        email = decodedToken.email || email;
+        userName = (decodedToken.name || userName || (email ? email.split('@')[0] : 'Apple User')).trim();
+        userPhoto = decodedToken.picture || userPhoto;
+      } catch (tokenErr) {
+        console.warn('Apple Auth Token Verification Warning:', tokenErr.message);
+      }
+    }
+
+    if (!uid) {
+      return res.status(400).json({ success: false, message: 'Apple UID is required.' });
+    }
+
+    if (!email) {
+      email = `${uid}@privaterelay.appleid.com`;
+    }
+
+    let user = await User.findOne({ $or: [{ uid }, { email: email.toLowerCase() }] });
+
+    if (user) {
+      // Update existing user
+      user.uid = uid;
+      user.lastLogin = new Date();
+      if (!user.name) user.name = userName;
+      if (!user.displayName) user.displayName = userName;
+      if (userPhoto && !user.photo) user.photo = userPhoto;
+      if (language) user.language = language;
+      await user.save();
+
+      return res.status(200).json({
+        success: true,
+        message: 'Apple login successful. Last login updated.',
+        isNewUser: false,
+        user
+      });
+    }
+
+    // Create new user for Apple login
+    user = await User.create({
+      uid,
+      name: userName,
+      displayName: userName,
+      email: email.toLowerCase(),
+      photo: userPhoto,
+      language: language || 'en',
+      role: 'user',
+      isVerified: true,
+      lastLogin: new Date()
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Apple user registered and authenticated successfully.',
+      isNewUser: true,
+      user
+    });
+  } catch (error) {
+    console.error('Apple Auth API Error:', error);
+    return res.status(500).json({ success: false, message: 'Server error during Apple Authentication.', error: error.message });
+  }
+};
+
+/**
  * @desc    Get Current User Profile
  * @route   GET /api/user/profile or GET /api/users/me
  * @access  Protected

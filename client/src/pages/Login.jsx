@@ -61,6 +61,7 @@ const Login = () => {
   const [whatsappLoading, setWhatsappLoading] = useState(false);
   const [whatsappError, setWhatsappError] = useState('');
   const [whatsappSuccess, setWhatsappSuccess] = useState('');
+  const [appleLoading, setAppleLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [currentDishIndex, setCurrentDishIndex] = useState(0);
 
@@ -75,6 +76,7 @@ const Login = () => {
   const {
     loginWithEmailPassword,
     loginWithGoogle,
+    loginWithApple,
     requestWhatsappOtp,
     verifyWhatsappOtp
   } = useAuth();
@@ -147,6 +149,27 @@ const Login = () => {
     } else {
       setGoogleLoading(false);
       setError(res.error || 'Google Sign-In failed.');
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    if (appleLoading) return;
+    setAppleLoading(true);
+    setError('');
+
+    const res = await loginWithApple();
+
+    if (res.success) {
+      if (res.redirecting) {
+        // App is redirecting to Apple, don't show success banner or navigate yet
+        return;
+      }
+      setAppleLoading(false);
+      addNotification('Apple Sign-In Successful! Welcome 🎉', 'success');
+      navigate('/');
+    } else {
+      setAppleLoading(false);
+      setError(res.error || 'Apple Sign-In failed.');
     }
   };
 
@@ -717,7 +740,7 @@ const Login = () => {
                     setWhatsappError('');
                     setWhatsappSuccess('');
                   }}
-                  disabled={loading || googleLoading || whatsappLoading}
+                  disabled={loading || googleLoading || whatsappLoading || appleLoading}
                   className="w-full py-3 px-6 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-sm rounded-xl shadow-sm hover:shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-60 min-h-[44px]"
                 >
                   <svg className="w-5 h-5 flex-shrink-0 fill-current" viewBox="0 0 24 24">
@@ -727,10 +750,22 @@ const Login = () => {
                   <span>Continue with WhatsApp</span>
                 </button>
 
+                {/* Apple SSO Button */}
+                <button
+                  onClick={handleAppleSignIn}
+                  disabled={loading || googleLoading || whatsappLoading || appleLoading}
+                  className="w-full py-3 px-6 bg-black hover:bg-neutral-900 text-white font-bold text-sm rounded-xl shadow-sm hover:shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-60 min-h-[44px]"
+                >
+                  <svg className="w-5 h-5 flex-shrink-0 fill-current" viewBox="0 0 24 24">
+                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 1.01-2.87-.96.04-2.1.64-2.77 1.42-.58.67-.99 1.74-.95 2.78 1.07.08 2.1-.58 2.71-1.33z" />
+                  </svg>
+                  <span>Continue with Apple</span>
+                </button>
+
                 {/* Google SSO Button */}
                 <button
                   onClick={handleGoogleSignIn}
-                  disabled={loading || googleLoading || whatsappLoading}
+                  disabled={loading || googleLoading || whatsappLoading || appleLoading}
                   className="w-full py-3 px-6 bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold text-sm rounded-xl shadow-sm hover:shadow-md active:scale-[0.99] transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-60 min-h-[44px]"
                 >
                   <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">

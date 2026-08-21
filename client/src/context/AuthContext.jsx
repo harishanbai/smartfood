@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   auth,
   googleProvider,
+  appleProvider,
   signInWithPopup,
   signOut,
   onAuthStateChanged,
@@ -51,7 +52,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }, 2500);
 
-    // Process redirect result if any
+    // Process redirect result if any (Google & Apple OAuth)
     const handleRedirect = async () => {
       try {
         const result = await Promise.race([
@@ -60,27 +61,29 @@ export const AuthProvider = ({ children }) => {
         ]);
         if (result?.user) {
           const user = result.user;
-          const googlePayload = {
+          const isApple = result.providerId === 'apple.com' || user.providerData?.some(p => p.providerId === 'apple.com');
+
+          const payload = {
             uid: user.uid,
-            displayName: user.displayName || user.email?.split('@')[0],
-            email: user.email,
+            displayName: user.displayName || (user.email ? user.email.split('@')[0] : (isApple ? 'Apple User' : 'User')),
+            email: user.email || (isApple ? `${user.uid}@privaterelay.appleid.com` : ''),
             photoURL: user.photoURL || '',
             language: localStorage.getItem('language') || 'en'
           };
 
           let dbUser = null;
           try {
-            const res = await authApi.google(googlePayload);
+            const res = isApple ? await authApi.apple(payload) : await authApi.google(payload);
             dbUser = res?.data?.user || null;
           } catch (e) {
-            console.warn("Google redirect backend sync notice:", e);
+            console.warn(`${isApple ? 'Apple' : 'Google'} redirect backend sync notice:`, e);
           }
 
           const userData = {
             uid: user.uid,
-            displayName: user.displayName || googlePayload.displayName,
-            email: user.email,
-            photoURL: user.photoURL,
+            displayName: user.displayName || payload.displayName,
+            email: user.email || payload.email,
+            photoURL: user.photoURL || '',
             emailVerified: true
           };
 
@@ -90,7 +93,7 @@ export const AuthProvider = ({ children }) => {
           if (dbUser) localStorage.setItem('smart_lunch_mongo_user', JSON.stringify(dbUser));
         }
       } catch (err) {
-        console.warn("Google Redirect Result handling notice:", err.message);
+        console.warn("Redirect Result handling notice:", err.message);
       }
     };
 
@@ -326,6 +329,72 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // 3a. Apple Sign-In Flow (Works on both desktop and mobile)
+  const loginWithApple = async () => {
+    console.log("[Apple Sign-In] Initiating authentication...");
+    try {
+      const result = await signInWithPopup(auth, appleProvider);
+      const user = result.user;
+
+      console.log("[Apple Sign-In] Success! Authenticated user:", user.email || user.uid);
+
+      let idToken = '';
+      try {
+        idToken = await user.getIdToken();
+      } catch (tokenErr) {
+        console.warn("[Apple Sign-In] Could not fetch ID Token:", tokenErr.message);
+      }
+
+      const applePayload = {
+        idToken,
+        uid: user.uid,
+        displayName: user.displayName || (user.email ? user.email.split('@')[0] : 'Apple User'),
+        email: user.email || `${user.uid}@privaterelay.appleid.com`,
+        photoURL: user.photoURL || '',
+        language: localStorage.getItem('language') || 'en'
+      };
+
+      let dbUser = null;
+      try {
+        const res = await authApi.apple(applePayload);
+        dbUser = res?.data?.user || null;
+        console.log("[Apple Sign-In] Backend Sync Success.");
+      } catch (e) {
+        console.warn("[Apple Sign-In] Backend Sync Notice:", e.message || e);
+      }
+
+      const userData = {
+        uid: user.uid,
+        displayName: user.displayName || applePayload.displayName,
+        email: user.email || applePayload.email,
+        photoURL: user.photoURL || '',
+        emailVerified: true
+      };
+
+      setCurrentUser(userData);
+      if (dbUser) setMongoUser(dbUser);
+      localStorage.setItem('smart_lunch_user', JSON.stringify(userData));
+      if (dbUser) localStorage.setItem('smart_lunch_mongo_user', JSON.stringify(dbUser));
+
+      return { success: true, user: userData, dbUser };
+    } catch (error) {
+      console.error("[Apple Sign-In] Error:", error.code, error.message);
+
+      if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+        console.warn("[Apple Sign-In] Popup blocked/closed, falling back to Redirect...");
+        try {
+          await signInWithRedirect(auth, appleProvider);
+          return { success: true, redirecting: true };
+        } catch (redirectErr) {
+          console.error("[Apple Sign-In] Redirect Error:", redirectErr.code, redirectErr.message);
+          return { success: false, error: getFriendlyError(redirectErr) };
+        }
+      }
+
+      return { success: false, error: getFriendlyError(error) };
+    }
+  };
+
   // 3b. WhatsApp OTP Flow
   const requestWhatsappOtp = async (phone) => {
     try {
@@ -520,6 +589,7 @@ export const AuthProvider = ({ children }) => {
         loginWithEmailPassword,
         registerWithEmailPassword,
         loginWithGoogle,
+        loginWithApple,
         requestWhatsappOtp,
         verifyWhatsappOtp,
         sendPasswordReset,
