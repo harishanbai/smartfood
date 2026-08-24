@@ -27,6 +27,7 @@ export const getStats = async (req, res) => {
       const food = await Food.findById(mostGeneratedAggregation[0]._id).select('-image.data');
       if (food) {
         mostGeneratedFood = {
+          _id: food._id,
           name: food.name,
           category: food.category,
           image: food.image,
@@ -49,7 +50,7 @@ export const getStats = async (req, res) => {
       .populate('foodId', '-image.data')
       .sort({ date: -1 })
       .limit(7);
-    
+
     const weeklyStats = recentMenus.map(menu => ({
       date: menu.date,
       food: menu.foodId ? menu.foodId.name : 'Unknown'

@@ -34,7 +34,7 @@ export const getTodayMenu = async (req, res) => {
       .populate('foodId', '-image.data')
       .populate('vegFoodId', '-image.data')
       .populate('nonVegFoodId', '-image.data');
-    
+
     if (!menu) {
       try {
         menu = await generateLunchForDate(todayStr, 'automatic');

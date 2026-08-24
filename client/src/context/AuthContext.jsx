@@ -55,10 +55,7 @@ export const AuthProvider = ({ children }) => {
     // Process redirect result if any (Google & Apple OAuth)
     const handleRedirect = async () => {
       try {
-        const result = await Promise.race([
-          getRedirectResult(auth),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Redirect timeout')), 2000))
-        ]);
+        const result = await getRedirectResult(auth);
         if (result?.user) {
           const user = result.user;
           const isApple = result.providerId === 'apple.com' || user.providerData?.some(p => p.providerId === 'apple.com');
@@ -135,9 +132,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Map Firebase errors to human-friendly messages
-  const getFriendlyError = (error) => {
-    const code = error.code || '';
-    const msg = error.message || '';
+  const getFriendlyError = (error, provider = '') => {
+    const code = error?.code || '';
+    const msg = error?.message || '';
 
     if (code === 'auth/email-already-in-use') {
       return 'This email is already registered. Please sign in instead.';
@@ -152,19 +149,29 @@ export const AuthProvider = ({ children }) => {
     } else if (code === 'auth/wrong-password') {
       return 'Incorrect password.';
     } else if (code === 'auth/operation-not-allowed') {
-      return 'Email and password authentication is not enabled.';
+      if (provider === 'Apple' || provider === 'apple') {
+        return 'Apple Sign-In is not enabled in Firebase Console. Please enable the Apple provider in Firebase Console under Authentication -> Sign-in method.';
+      }
+      if (provider === 'Google' || provider === 'google') {
+        return 'Google Sign-In is not enabled in Firebase Console. Please enable the Google provider in Firebase Console under Authentication -> Sign-in method.';
+      }
+      return 'This sign-in method is not enabled. Please enable it in Firebase Console -> Authentication -> Sign-in method.';
     } else if (code === 'auth/too-many-requests') {
       return 'Too many reset requests. Please try again later.';
     } else if (code === 'auth/popup-closed-by-user') {
       return 'Sign-In popup was closed before completing.';
+    } else if (code === 'auth/popup-blocked') {
+      return 'Sign-In popup was blocked by browser. Please allow popups or use redirect.';
+    } else if (code === 'auth/account-exists-with-different-credential') {
+      return 'An account already exists with this email address using a different sign-in method. Please sign in with your original provider.';
     } else if (code === 'auth/network-request-failed') {
       return 'Network error. Please check your internet connection and try again.';
     } else if (code === 'auth/unauthorized-domain') {
-      return 'This domain is not authorized for Google Sign-In. Please add it to Firebase Console -> Authentication -> Settings -> Authorized Domains.';
+      return 'This domain is not authorized for Authentication. Please add it to Firebase Console -> Authentication -> Settings -> Authorized Domains.';
     } else if (code === 'auth/internal-error') {
       return 'An internal authentication error occurred. Please try again.';
     }
-    return 'An error occurred during authentication. Please try again.';
+    return msg || 'An error occurred during authentication. Please try again.';
   };
 
   // 1. Email & Password Registration Flow
@@ -221,7 +228,7 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: userData, dbUser };
     } catch (error) {
       console.error("Registration Error:", error);
-      return { success: false, error: getFriendlyError(error) };
+      return { success: false, error: getFriendlyError(error, 'Email') };
     }
   };
 
@@ -256,7 +263,7 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: userData, dbUser };
     } catch (error) {
       console.error("Login Error:", error);
-      return { success: false, error: getFriendlyError(error) };
+      return { success: false, error: getFriendlyError(error, 'Email') };
     }
   };
 
@@ -313,19 +320,19 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("[Google Sign-In] Error:", error.code, error.message);
 
-      // If popup is blocked by mobile browser popup blocker, fall back to redirect
-      if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
-        console.warn("[Google Sign-In] Popup blocked/closed, falling back to Redirect...");
+      // If popup is blocked by browser popup blocker, fall back to redirect
+      if (error.code === 'auth/popup-blocked') {
+        console.warn("[Google Sign-In] Popup blocked, falling back to Redirect...");
         try {
           await signInWithRedirect(auth, googleProvider);
           return { success: true, redirecting: true };
         } catch (redirectErr) {
           console.error("[Google Sign-In] Redirect Error:", redirectErr.code, redirectErr.message);
-          return { success: false, error: getFriendlyError(redirectErr) };
+          return { success: false, error: getFriendlyError(redirectErr, 'Google') };
         }
       }
 
-      return { success: false, error: getFriendlyError(error) };
+      return { success: false, error: getFriendlyError(error, 'Google') };
     }
   };
 
@@ -380,18 +387,19 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("[Apple Sign-In] Error:", error.code, error.message);
 
-      if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
-        console.warn("[Apple Sign-In] Popup blocked/closed, falling back to Redirect...");
+      // If popup is blocked by browser popup blocker, fall back to redirect
+      if (error.code === 'auth/popup-blocked') {
+        console.warn("[Apple Sign-In] Popup blocked, falling back to Redirect...");
         try {
           await signInWithRedirect(auth, appleProvider);
           return { success: true, redirecting: true };
         } catch (redirectErr) {
           console.error("[Apple Sign-In] Redirect Error:", redirectErr.code, redirectErr.message);
-          return { success: false, error: getFriendlyError(redirectErr) };
+          return { success: false, error: getFriendlyError(redirectErr, 'Apple') };
         }
       }
 
-      return { success: false, error: getFriendlyError(error) };
+      return { success: false, error: getFriendlyError(error, 'Apple') };
     }
   };
 

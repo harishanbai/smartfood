@@ -33,7 +33,7 @@ export const protect = async (req, res, next) => {
     // Pass both the found MongoDB user (if any) and the raw decoded token
     req.user = user || null;
     req.decodedToken = decodedToken;
-    
+
     console.log('--- protect middleware ---');
     console.log('Token verified. UID:', uid);
     console.log('MongoDB user found:', !!user);

@@ -42,7 +42,7 @@ const NON_VEG_KEYWORDS = [
 const isVegFood = (food) => {
   if (food.foodType) return food.foodType === 'veg';
   const name = (food.name || '').toLowerCase();
-  const cat  = (food.category || '').toLowerCase();
+  const cat = (food.category || '').toLowerCase();
   return !NON_VEG_KEYWORDS.some(kw => name.includes(kw) || cat.includes(kw));
 };
 
@@ -56,7 +56,7 @@ const isNonVegFood = (food) => !isVegFood(food);
  */
 const isFestiveSpecial = (food) => {
   const name = (food.name || '').toLowerCase();
-  const cat  = (food.category || '').toLowerCase();
+  const cat = (food.category || '').toLowerCase();
   return FESTIVE_KEYWORDS.some(kw => name.includes(kw))
     || cat === 'special';
 };
@@ -89,9 +89,9 @@ const getPreviousDates = (dateStr, days = 15) => {
 export const selectFood = async (dateStr, ruleResult = {}, extraSkips = []) => {
   const {
     allowedCategory = 'any',
-    ruleCode        = 'normal',
-    isStrictVeg     = false,
-    isStrictNonVeg  = false,
+    ruleCode = 'normal',
+    isStrictVeg = false,
+    isStrictNonVeg = false,
   } = ruleResult;
 
   // 1. Build 15-day history exclusion list
@@ -103,8 +103,8 @@ export const selectFood = async (dateStr, ruleResult = {}, extraSkips = []) => {
 
   const historyIds = new Set();
   recentMenus.forEach(m => {
-    if (m.foodId)       historyIds.add(m.foodId.toString());
-    if (m.vegFoodId)    historyIds.add(m.vegFoodId.toString());
+    if (m.foodId) historyIds.add(m.foodId.toString());
+    if (m.vegFoodId) historyIds.add(m.vegFoodId.toString());
     if (m.nonVegFoodId) historyIds.add(m.nonVegFoodId.toString());
   });
 
@@ -113,8 +113,8 @@ export const selectFood = async (dateStr, ruleResult = {}, extraSkips = []) => {
     .select('foodId vegFoodId nonVegFoodId');
   const skippedIds = new Set();
   todayMenus.forEach(m => {
-    if (m.foodId)       skippedIds.add(m.foodId.toString());
-    if (m.vegFoodId)    skippedIds.add(m.vegFoodId.toString());
+    if (m.foodId) skippedIds.add(m.foodId.toString());
+    if (m.vegFoodId) skippedIds.add(m.vegFoodId.toString());
     if (m.nonVegFoodId) skippedIds.add(m.nonVegFoodId.toString());
   });
 

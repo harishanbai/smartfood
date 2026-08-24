@@ -156,6 +156,7 @@ export const googleAuth = async (req, res) => {
       photo: userPhoto,
       language: language || 'en',
       role: 'user',
+      provider: 'google',
       isVerified: true,
       lastLogin: new Date()
     });
@@ -236,6 +237,7 @@ export const appleAuth = async (req, res) => {
       photo: userPhoto,
       language: language || 'en',
       role: 'user',
+      provider: 'apple',
       isVerified: true,
       lastLogin: new Date()
     });

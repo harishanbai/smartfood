@@ -58,14 +58,14 @@ const NAKSHATRA_NAMES = [
  * These are matched against computed Tamil month + date range.
  */
 const FIXED_FESTIVALS = [
-  { month: 9, dayMin: 1,  dayMax: 1,  name: 'Pongal' },          // Thai 1
-  { month: 0, dayMin: 1,  dayMax: 1,  name: 'Tamil New Year' },   // Chithirai 1
+  { month: 9, dayMin: 1, dayMax: 1, name: 'Pongal' },          // Thai 1
+  { month: 0, dayMin: 1, dayMax: 1, name: 'Tamil New Year' },   // Chithirai 1
   { month: 3, dayMin: 18, dayMax: 18, name: 'Aadi Perukku' },     // Aadi 18
-  { month: 5, dayMin: 1,  dayMax: 9,  name: 'Navratri' },         // Purattasi 1–9
-  { month: 5, dayMin: 9,  dayMax: 9,  name: 'Ayudha Pooja' },     // Purattasi 9
-  { month: 6, dayMin: 1,  dayMax: 1,  name: 'Deepavali' },        // Aippasi 1
-  { month: 7, dayMin: 1,  dayMax: 1,  name: 'Karthigai Deepam' }, // Karthigai 1
-  { month: 8, dayMin: 1,  dayMax: 1,  name: 'Margazhi Thiruvizha' }, // Margazhi 1
+  { month: 5, dayMin: 1, dayMax: 9, name: 'Navratri' },         // Purattasi 1–9
+  { month: 5, dayMin: 9, dayMax: 9, name: 'Ayudha Pooja' },     // Purattasi 9
+  { month: 6, dayMin: 1, dayMax: 1, name: 'Deepavali' },        // Aippasi 1
+  { month: 7, dayMin: 1, dayMax: 1, name: 'Karthigai Deepam' }, // Karthigai 1
+  { month: 8, dayMin: 1, dayMax: 1, name: 'Margazhi Thiruvizha' }, // Margazhi 1
   { month: 10, dayMin: 14, dayMax: 14, name: 'Maha Shivaratri' },  // Maasi 14
   { month: 11, dayMin: 14, dayMax: 14, name: 'Panguni Uthiram' }, // Panguni 14
 ];
@@ -103,11 +103,11 @@ const normAngle = (deg) => ((deg % 360) + 360) % 360;
 const sunLongitude = (jd) => {
   const T = (jd - J2000) / 36525; // Julian centuries from J2000
   const L0 = normAngle(280.46646 + 36000.76983 * T + 0.0003032 * T * T);
-  const M  = normAngle(357.52911 + 35999.05029 * T - 0.0001537 * T * T);
+  const M = normAngle(357.52911 + 35999.05029 * T - 0.0001537 * T * T);
   const Mrad = M * Math.PI / 180;
   const C = (1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(Mrad)
-          + (0.019993 - 0.000101 * T) * Math.sin(2 * Mrad)
-          + 0.000289 * Math.sin(3 * Mrad);
+    + (0.019993 - 0.000101 * T) * Math.sin(2 * Mrad)
+    + 0.000289 * Math.sin(3 * Mrad);
   const sunLon = normAngle(L0 + C);
   // Convert tropical to sidereal (subtract ayanamsa ~23.85° for Lahiri)
   const ayanamsa = 23.85 + 0.0136 * T; // approximate Lahiri ayanamsa
@@ -136,15 +136,15 @@ const moonLongitude = (jd) => {
 
   // Main periodic terms (degrees)
   const dL = 6.288774 * Math.sin(toRad(M))
-            + 1.274027 * Math.sin(toRad(2*D - M))
-            + 0.658314 * Math.sin(toRad(2*D))
-            + 0.213618 * Math.sin(toRad(2*M))
-            - 0.185116 * Math.sin(toRad(Ms))
-            - 0.114332 * Math.sin(toRad(2*F))
-            + 0.058793 * Math.sin(toRad(2*D - 2*M))
-            + 0.057066 * Math.sin(toRad(2*D - Ms - M))
-            + 0.053322 * Math.sin(toRad(2*D + M))
-            + 0.045758 * Math.sin(toRad(2*D - Ms));
+    + 1.274027 * Math.sin(toRad(2 * D - M))
+    + 0.658314 * Math.sin(toRad(2 * D))
+    + 0.213618 * Math.sin(toRad(2 * M))
+    - 0.185116 * Math.sin(toRad(Ms))
+    - 0.114332 * Math.sin(toRad(2 * F))
+    + 0.058793 * Math.sin(toRad(2 * D - 2 * M))
+    + 0.057066 * Math.sin(toRad(2 * D - Ms - M))
+    + 0.053322 * Math.sin(toRad(2 * D + M))
+    + 0.045758 * Math.sin(toRad(2 * D - Ms));
 
   const tropicalMoon = normAngle(L + dL);
   // Lahiri ayanamsa correction
@@ -162,7 +162,7 @@ const moonLongitude = (jd) => {
 const getAstronomicalPanchang = (dateStr) => {
   const jd = dateToJD(dateStr);
   const jdNoon = jd + 0.5; // Approximate noon JD (IST ~UTC+5:30 → JD + 0.229)
-  const jdIST  = jd + 0.229; // More accurate IST noon
+  const jdIST = jd + 0.229; // More accurate IST noon
 
   // ── Tamil Date & Month (Solar) ─────────────────────────────────────────────
   const sunLon = sunLongitude(jdIST);
@@ -178,7 +178,7 @@ const getAstronomicalPanchang = (dateStr) => {
   const sunLonTropical = (() => {
     const T = (jdIST - J2000) / 36525;
     const L0 = normAngle(280.46646 + 36000.76983 * T);
-    const M  = normAngle(357.52911 + 35999.05029 * T);
+    const M = normAngle(357.52911 + 35999.05029 * T);
     const Mrad = M * Math.PI / 180;
     const C = 1.914602 * Math.sin(Mrad) + 0.019993 * Math.sin(2 * Mrad);
     return normAngle(L0 + C);
@@ -194,11 +194,11 @@ const getAstronomicalPanchang = (dateStr) => {
     const D = normAngle(297.8501921 + 445267.1114034 * T);
     const toRad = (d) => d * Math.PI / 180;
     const dL = 6.288774 * Math.sin(toRad(M))
-              + 1.274027 * Math.sin(toRad(2*D - M))
-              + 0.658314 * Math.sin(toRad(2*D))
-              + 0.213618 * Math.sin(toRad(2*M))
-              - 0.185116 * Math.sin(toRad(Ms))
-              - 0.114332 * Math.sin(toRad(2*F));
+      + 1.274027 * Math.sin(toRad(2 * D - M))
+      + 0.658314 * Math.sin(toRad(2 * D))
+      + 0.213618 * Math.sin(toRad(2 * M))
+      - 0.185116 * Math.sin(toRad(Ms))
+      - 0.114332 * Math.sin(toRad(2 * F));
     return normAngle(L + dL);
   })();
 
@@ -216,17 +216,17 @@ const getAstronomicalPanchang = (dateStr) => {
   const isPournami = tithiIndex === 14; // 15th tithi = Pournami
 
   // Viratham detection from tithi index
-  const isEkadashi     = tithiIndex === 10 || tithiIndex === 25; // 11th and 26th
-  const isSashti       = tithiIndex === 5  || tithiIndex === 20; // 6th and 21st
-  const isPradosham    = tithiIndex === 12 || tithiIndex === 27; // 13th and 28th
-  const isSankatahara  = tithiIndex === 3;                       // 4th of Krishna paksha
+  const isEkadashi = tithiIndex === 10 || tithiIndex === 25; // 11th and 26th
+  const isSashti = tithiIndex === 5 || tithiIndex === 20; // 6th and 21st
+  const isPradosham = tithiIndex === 12 || tithiIndex === 27; // 13th and 28th
+  const isSankatahara = tithiIndex === 3;                       // 4th of Krishna paksha
 
   const isViratham = isEkadashi || isSashti || isPradosham || isSankatahara;
   const virathamName = isEkadashi ? 'Ekadashi'
     : isSashti ? 'Sashti'
-    : isPradosham ? 'Pradosham'
-    : isSankatahara ? 'Sankatahara Chaturthi'
-    : null;
+      : isPradosham ? 'Pradosham'
+        : isSankatahara ? 'Sankatahara Chaturthi'
+          : null;
 
   // ── Festival Detection ─────────────────────────────────────────────────────
   let isFestival = false;
@@ -260,13 +260,13 @@ const getAstronomicalPanchang = (dateStr) => {
   // ── Sunrise / Sunset (approximate for Chennai lat ~13°N) ──────────────────
   // Simple constant approximation (real implementation would use SPA algorithm)
   const sunrise = '06:08';
-  const sunset  = '18:22';
+  const sunset = '18:22';
 
   return {
-    tamilDate:    String(tamilDate),
+    tamilDate: String(tamilDate),
     tamilMonth,
-    tamilYear:    'Sobakiruthu', // Tamil year (60-year cycle) — can be computed but kept static for stability
-    day:          dayOfWeek,
+    tamilYear: 'Sobakiruthu', // Tamil year (60-year cycle) — can be computed but kept static for stability
+    day: dayOfWeek,
     tithi,
     nakshatra,
     festivalName: festivalName || null,
@@ -277,7 +277,7 @@ const getAstronomicalPanchang = (dateStr) => {
     virathamName: virathamName || null,
     sunrise,
     sunset,
-    _source:      'astronomical', // helps distinguish from mock/api
+    _source: 'astronomical', // helps distinguish from mock/api
   };
 };
 
@@ -301,26 +301,26 @@ const normaliseApiResponse = (raw, dateStr = null) => {
   const hasVirathamTithi = /pradosham|sashti|shashti|ekadashi|ekadasi|sankatahara/i.test(tithiStr);
   const deducedVirathamName = tithiStr.toLowerCase().includes('pradosham') ? 'Pradosham'
     : (tithiStr.toLowerCase().includes('sashti') || tithiStr.toLowerCase().includes('shashti')) ? 'Sashti'
-    : (tithiStr.toLowerCase().includes('ekadashi') || tithiStr.toLowerCase().includes('ekadasi')) ? 'Ekadashi'
-    : tithiStr.toLowerCase().includes('sankatahara') ? 'Sankatahara Chaturthi'
-    : null;
+      : (tithiStr.toLowerCase().includes('ekadashi') || tithiStr.toLowerCase().includes('ekadasi')) ? 'Ekadashi'
+        : tithiStr.toLowerCase().includes('sankatahara') ? 'Sankatahara Chaturthi'
+          : null;
 
   return {
-    tamilDate:    d.tamil_date    || d.tamilDate    || (d.tamil_day !== undefined ? `${d.tamil_day}` : null) || astro?.tamilDate  || null,
-    tamilMonth:   d.tamil_month   || d.tamilMonth   || d.month         || astro?.tamilMonth  || null,
-    tamilYear:    d.tamil_year    || d.tamilYear    || d.year           || astro?.tamilYear   || null,
-    day:          d.day           || d.weekday      || d.day_of_week   || astro?.day          || null,
-    tithi:        d.tithi         || d.thithi       || astro?.tithi     || null,
-    nakshatra:    d.nakshatra     || d.natchathiram || astro?.nakshatra  || null,
-    festivalName: d.festival_name || d.festivalName || d.festival      || astro?.festivalName || null,
-    isFestival:   !!(d.is_festival || d.isFestival  || d.festival_name || d.festivalName || astro?.isFestival),
-    isAmavasai:   !!(d.is_amavasai || d.isAmavasai  || d.amavasai      || tithiStr.toLowerCase().includes('amavasai') || astro?.isAmavasai),
-    isPournami:   !!(d.is_pournami || d.isPournami   || d.pournami      || tithiStr.toLowerCase().includes('pournami') || astro?.isPournami),
-    isViratham:   !!(d.is_viratham || d.isViratham  || d.is_viratham_day || d.isVirathamDay || hasVirathamTithi || astro?.isViratham),
+    tamilDate: d.tamil_date || d.tamilDate || (d.tamil_day !== undefined ? `${d.tamil_day}` : null) || astro?.tamilDate || null,
+    tamilMonth: d.tamil_month || d.tamilMonth || d.month || astro?.tamilMonth || null,
+    tamilYear: d.tamil_year || d.tamilYear || d.year || astro?.tamilYear || null,
+    day: d.day || d.weekday || d.day_of_week || astro?.day || null,
+    tithi: d.tithi || d.thithi || astro?.tithi || null,
+    nakshatra: d.nakshatra || d.natchathiram || astro?.nakshatra || null,
+    festivalName: d.festival_name || d.festivalName || d.festival || astro?.festivalName || null,
+    isFestival: !!(d.is_festival || d.isFestival || d.festival_name || d.festivalName || astro?.isFestival),
+    isAmavasai: !!(d.is_amavasai || d.isAmavasai || d.amavasai || tithiStr.toLowerCase().includes('amavasai') || astro?.isAmavasai),
+    isPournami: !!(d.is_pournami || d.isPournami || d.pournami || tithiStr.toLowerCase().includes('pournami') || astro?.isPournami),
+    isViratham: !!(d.is_viratham || d.isViratham || d.is_viratham_day || d.isVirathamDay || hasVirathamTithi || astro?.isViratham),
     virathamName: d.viratham_name || d.virathamName || d.viratham || deducedVirathamName || astro?.virathamName || null,
-    sunrise:      d.sunrise       || astro?.sunrise  || null,
-    sunset:       d.sunset        || astro?.sunset   || null,
-    _source:      'api',
+    sunrise: d.sunrise || astro?.sunrise || null,
+    sunset: d.sunset || astro?.sunset || null,
+    _source: 'api',
   };
 };
 
