@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Sparkles, RefreshCw, AlertCircle, CalendarRange, Bell, CheckCircle,
-  Sun, Moon, Star, Flame, Info, Calendar, MessageSquare, CreditCard
+  Sun, Moon, Star, Flame, Info, Calendar, MessageSquare, CreditCard, ShoppingBag
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { menuApi, foodApi, tamilCalendarApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
-import { getImageUrl } from '../utils/imageUtils';
+import { getImageUrl, getFallbackFoodImage } from '../utils/imageUtils';
 import PremiumCarousel from '../components/PremiumCarousel';
 import NotificationsPanel from '../components/NotificationsPanel';
 import { useLanguage } from '../context/LanguageContext';
@@ -444,16 +444,16 @@ const Dashboard = () => {
                   return (
                     <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start p-4 rounded-2xl bg-white/3 border border-white/5 hover:bg-white/5 transition-all duration-300 w-full">
                       <div className="w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
-                        {todayFood.image ? (
-                          <img
-                            src={getImageUrl(todayFood)}
-                            alt={todayFood.name}
-                            className="w-full h-full object-cover transition-transform duration-500"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
-                        )}
+                        <img
+                          src={getImageUrl(todayFood)}
+                          alt={todayFood.name}
+                          className="w-full h-full object-cover transition-transform duration-500"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = getFallbackFoodImage(todayFood);
+                          }}
+                        />
                       </div>
                       <div className="flex-1 text-center sm:text-left">
                         <span className={`inline-flex items-center gap-1.5 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${isNonVeg
@@ -470,15 +470,24 @@ const Dashboard = () => {
                   );
                 })()}
 
-                <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start pt-2 border-t border-white/5">
-                  <div className="inline-flex items-center gap-2 text-xs font-semibold text-accentGreen bg-accentGreen/10 border border-accentGreen/20 px-3 py-1.5 rounded-lg">
-                    <CheckCircle className="h-3.5 w-3.5 text-accentGreen" />
-                    <span>Prepared &amp; Served</span>
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="inline-flex items-center gap-2 text-xs font-semibold text-accentGreen bg-accentGreen/10 border border-accentGreen/20 px-3 py-1.5 rounded-lg">
+                      <CheckCircle className="h-3.5 w-3.5 text-accentGreen" />
+                      <span>Prepared &amp; Served</span>
+                    </div>
+                    {/* Rule badge for today's menu */}
+                    {todayMenu.ruleCode && (
+                      <RuleBadge ruleCode={todayMenu.ruleCode} ruleApplied={todayMenu.ruleApplied} />
+                    )}
                   </div>
-                  {/* Rule badge for today's menu */}
-                  {todayMenu.ruleCode && (
-                    <RuleBadge ruleCode={todayMenu.ruleCode} ruleApplied={todayMenu.ruleApplied} />
-                  )}
+                  <button
+                    onClick={() => navigate('/ingredients')}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white/5 hover:bg-white/10 text-gold-400 border border-gold-500/30 transition-all cursor-pointer"
+                  >
+                    <ShoppingBag className="h-3.5 w-3.5" />
+                    <span>{t('common.ingredients') || 'Ingredients'}</span>
+                  </button>
                 </div>
               </div>
             ) : (
@@ -525,16 +534,16 @@ const Dashboard = () => {
                   return (
                     <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start p-4 rounded-2xl bg-white/3 border border-white/5 hover:bg-white/5 transition-all duration-300 w-full">
                       <div className="w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
-                        {tomorrowFood.image ? (
-                          <img
-                            src={getImageUrl(tomorrowFood)}
-                            alt={tomorrowFood.name}
-                            className="w-full h-full object-cover transition-transform duration-500"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
-                        )}
+                        <img
+                          src={getImageUrl(tomorrowFood)}
+                          alt={tomorrowFood.name}
+                          className="w-full h-full object-cover transition-transform duration-500"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = getFallbackFoodImage(tomorrowFood);
+                          }}
+                        />
                       </div>
                       <div className="flex-1 text-center sm:text-left">
                         <span className={`inline-flex items-center gap-1.5 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${isNonVeg
@@ -575,6 +584,13 @@ const Dashboard = () => {
                     >
                       <RefreshCw className={`h-3.5 w-3.5 ${isSpinning ? 'animate-spin' : ''}`} />
                       {t('dashboard.btnRollSelect')}
+                    </button>
+                    <button
+                      onClick={() => navigate('/ingredients')}
+                      className="w-full xs:w-auto px-4 py-3 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-gold-400 border border-gold-500/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]"
+                    >
+                      <ShoppingBag className="h-4 w-4" />
+                      <span>{t('common.ingredients') || 'Ingredients'}</span>
                     </button>
                   </div>
                 </div>

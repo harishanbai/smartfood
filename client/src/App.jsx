@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 import TopSection from './components/TopSection';
 import Dashboard from './pages/Dashboard';
+import Ingredients from './pages/Ingredients';
 import Foods from './pages/Foods';
 import History from './pages/History';
 import Calendar from './pages/Calendar';
@@ -79,6 +80,7 @@ const MainLayout = () => {
           <div className="mt-2">
             <Routes>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/ingredients" element={<Ingredients />} />
               <Route path="/foods" element={<Foods />} />
               <Route path="/history" element={<History />} />
               <Route path="/calendar" element={<Calendar />} />

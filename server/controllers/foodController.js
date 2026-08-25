@@ -150,7 +150,7 @@ export const getFoodImage = async (req, res) => {
       return res.status(404).json({ message: 'Image not found' });
     }
 
-    res.set('Content-Type', food.image.contentType);
+    res.set('Content-Type', food.image.contentType || 'image/jpeg');
     res.set('Cache-Control', 'public, max-age=86400'); // cache 24h
     res.send(food.image.data);
   } catch (error) {

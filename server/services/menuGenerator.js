@@ -162,16 +162,46 @@ export const selectFood = async (dateStr, ruleResult = {}, extraSkips = []) => {
     }
   }
 
-  // 7. No candidates remaining
+  // 7. If no candidates remaining due to strict history, relax to exclude only immediate previous day
   if (candidates.length === 0) {
-    console.warn(`[MenuGenerator] No eligible foods for ${dateStr} (rule: ${ruleCode}, allowedCategory: ${allowedCategory}). All foods served in last 15 days.`);
+    console.warn(`[MenuGenerator] Relaxing history constraint for ${dateStr} — excluding only immediate previous day.`);
+    const prev1Date = getPreviousDates(dateStr, 1);
+    const prevMenu = await Menu.findOne({ date: { $in: prev1Date }, status: 'active' }).select('foodId vegFoodId nonVegFoodId');
+    const immediatePrevIds = [];
+    if (prevMenu) {
+      if (prevMenu.foodId) immediatePrevIds.push(prevMenu.foodId.toString());
+      if (prevMenu.vegFoodId) immediatePrevIds.push(prevMenu.vegFoodId.toString());
+      if (prevMenu.nonVegFoodId) immediatePrevIds.push(prevMenu.nonVegFoodId.toString());
+    }
+
+    candidates = await Food.find({
+      available: true,
+      _id: { $nin: immediatePrevIds }
+    });
+
+    if (isStrictVeg || allowedCategory === 'veg') {
+      candidates = candidates.filter(isVegFood);
+    } else if (allowedCategory === 'non-veg') {
+      candidates = candidates.filter(isNonVegFood);
+    }
+  }
+
+  // 8. If still empty, fetch any available food matching category
+  if (candidates.length === 0) {
+    candidates = await Food.find({ available: true });
+    if (isStrictVeg || allowedCategory === 'veg') {
+      candidates = candidates.filter(isVegFood);
+    }
+  }
+
+  if (candidates.length === 0) {
     throw Object.assign(
-      new Error(`No eligible foods available for menu generation. All available foods matching rule constraints (${allowedCategory}) were served within the previous 15 days.`),
+      new Error(`No available foods found in database.`),
       { code: 'NO_ELIGIBLE_FOODS', allowedCategory, ruleCode }
     );
   }
 
-  // 8. Select exactly ONE food randomly
+  // 9. Select exactly ONE food randomly
   const selected = candidates[Math.floor(Math.random() * candidates.length)];
   console.log(`[MenuGenerator] Selected: "${selected.name}" (${selected.foodType || selected.category}) for ${dateStr} — Rule: ${ruleCode}`);
   return selected;

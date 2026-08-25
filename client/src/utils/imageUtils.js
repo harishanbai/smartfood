@@ -5,17 +5,16 @@ let envApiUrl = API_URL.trim().replace(/\/+$/, '');
 const API_BASE = envApiUrl ? (envApiUrl.endsWith('/api') ? envApiUrl.slice(0, -4) : envApiUrl) : '';
 
 /**
- * Get a displayable image URL for a food item.
+ * Get a displayable image URL for a food item from MongoDB.
  * Supports:
  *   - Food object with `_id` (image served from /api/foods/:id/image)
  *   - Absolute URLs (http/https/data:)
  *   - Legacy /uploads/ paths (backward compat)
- *   - null/undefined → placeholder
  */
 export const getImageUrl = (pathOrFood) => {
-  if (!pathOrFood) return 'https://placehold.co/600x400/png?text=No+Image';
+  if (!pathOrFood) return '';
 
-  // If it's a food object with _id, use the image endpoint
+  // If it's a food object with _id, serve from MongoDB /api/foods/:id/image
   if (typeof pathOrFood === 'object' && pathOrFood._id) {
     return `${API_BASE}/api/foods/${pathOrFood._id}/image`;
   }
@@ -25,17 +24,26 @@ export const getImageUrl = (pathOrFood) => {
     if (pathOrFood.startsWith('http') || pathOrFood.startsWith('data:')) {
       return pathOrFood;
     }
-    // Legacy /uploads/ path fallback
-    return `${API_BASE}${pathOrFood}`;
+    if (pathOrFood.startsWith('/uploads/')) {
+      return `${API_BASE}${pathOrFood}`;
+    }
+    if (pathOrFood.length === 24) {
+      // 24-character ObjectId string
+      return `${API_BASE}/api/foods/${pathOrFood}/image`;
+    }
   }
 
-  return 'https://placehold.co/600x400/png?text=No+Image';
+  return '';
 };
 
 /**
  * Get image URL directly from a food document ID.
  */
 export const getFoodImageUrl = (foodId) => {
-  if (!foodId) return 'https://placehold.co/600x400/png?text=No+Image';
+  if (!foodId) return '';
   return `${API_BASE}/api/foods/${foodId}/image`;
+};
+
+export const getFallbackFoodImage = (foodOrName) => {
+  return '';
 };

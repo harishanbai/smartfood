@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
+  ShoppingBag,
   UtensilsCrossed, 
   History, 
   Calendar, 
@@ -15,6 +16,7 @@ const BottomNav = () => {
 
   const menuItems = [
     { name: t('common.dashboard'), path: '/', icon: LayoutDashboard },
+    { name: t('common.ingredients'), path: '/ingredients', icon: ShoppingBag },
     { name: t('common.foods'), path: '/foods', icon: UtensilsCrossed },
     { name: t('common.history'), path: '/history', icon: History },
     { name: t('common.calendar'), path: '/calendar', icon: Calendar },

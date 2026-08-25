@@ -11,8 +11,12 @@ import systemRoutes from './routes/systemRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import webhookRoutes from './routes/webhookRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
+import ingredientRoutes from './routes/ingredientRoutes.js';
+import recipeRoutes from './routes/recipeRoutes.js';
+import requirementRoutes from './routes/requirementRoutes.js';
 import { clearCache } from './services/tamilCalendarService.js';
 import { verifySmtpConnection } from './services/emailService.js';
+import { seedIngredientMasterData } from './services/seedIngredientData.js';
 import mongoose from 'mongoose';
 import { initScheduler } from './services/schedulerService.js';
 import { getKolkataDateStr } from './utils/dateUtils.js';
@@ -75,6 +79,9 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/ingredients', ingredientRoutes);
+app.use('/api/recipes', recipeRoutes);
+app.use('/api/requirements', requirementRoutes);
 app.use('/api/calendar', tamilCalendarRoutes);
 app.use('/api/tamil-calendar', tamilCalendarRoutes);
 app.use('/api/system', systemRoutes);
@@ -119,6 +126,8 @@ const server = app.listen(PORT, () => {
 
   // Initialize Auto Lunch Scheduler
   initScheduler();
+  // Initialize Ingredient Master Data & 28 Authentic Recipes
+  seedIngredientMasterData();
   // Verify SMTP connection after server starts
   verifySmtpConnection();
 });

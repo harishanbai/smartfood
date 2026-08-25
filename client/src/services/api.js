@@ -146,4 +146,30 @@ export const paymentApi = {
   deletePayment: (id) => api.delete(`/payments/${id}`)
 };
 
+export const ingredientApi = {
+  getIngredients: (params = {}) => api.get('/ingredients', { params }),
+  getStorageInventory: () => api.get('/ingredients/storage'),
+  addIngredient: (data) => api.post('/ingredients', data),
+  updateStock: (id, data) => api.put(`/ingredients/${id}/stock`, data),
+  getTransactions: (params = {}) => api.get('/ingredients/transactions', { params })
+};
+
+export const recipeApi = {
+  getRecipes: (params = {}) => api.get('/recipes', { params }),
+  getRecipe: (idOrNumber) => api.get(`/recipes/${idOrNumber}`),
+  updateRecipe: (id, data) => api.put(`/recipes/${id}`, data)
+};
+
+export const requirementApi = {
+  getDailyRequirement: (date, employees = '', mealNumber = '') => {
+    let url = `/requirements/daily?date=${date}`;
+    if (employees !== '' && employees !== undefined) url += `&employees=${employees}`;
+    if (mealNumber !== '' && mealNumber !== undefined) url += `&mealNumber=${mealNumber}`;
+    return api.get(url);
+  },
+  saveDailyRequirement: (data) => api.post('/requirements/daily/save', data),
+  confirmStockDeduction: (data) => api.post('/requirements/daily/deduct-stock', data)
+};
+
 export default api;
+

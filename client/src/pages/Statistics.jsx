@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getImageUrl } from '../utils/imageUtils';
+import { getImageUrl, getFallbackFoodImage } from '../utils/imageUtils';
 import { ChefHat, TrendingUp, Sparkles, PieChart as PieIcon, BarChart2, LineChart as LineIcon } from 'lucide-react';
 import { statsApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
@@ -273,11 +273,15 @@ const Statistics = () => {
             {mostGeneratedFood ? (
               <div className="flex items-center gap-4">
                 <div className="h-20 w-20 rounded-2xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
-                  {mostGeneratedFood.image ? (
-                    <img src={getImageUrl(mostGeneratedFood)} alt={mostGeneratedFood.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
-                  )}
+                  <img
+                    src={getImageUrl(mostGeneratedFood)}
+                    alt={mostGeneratedFood.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = getFallbackFoodImage(mostGeneratedFood);
+                    }}
+                  />
                 </div>
                 <div>
                   <span className="text-[10px] bg-accentPurple/25 border border-accentPurple/40 text-accentPurple px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider">

@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { ShieldAlert, Sparkles, ChefHat } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useLanguage } from '../context/LanguageContext';
-import { getImageUrl } from '../utils/imageUtils';
+import { getImageUrl, getFallbackFoodImage } from '../utils/imageUtils';
 
 const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpinning }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -207,20 +207,17 @@ const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpi
               >
                 {/* Image Section */}
                 <div className="relative w-full h-[180px] rounded-2xl overflow-hidden mb-3 group bg-black/20">
-                  {item.image ? (
-                    <motion.img 
-                      src={getImageUrl(item)} 
-                      alt={item.name} 
-                      className="w-full h-full object-cover"
-                      animate={isCenter && !isSpinning ? { scale: [1, 1.03, 1] } : {}}
-                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 gap-2">
-                      <ChefHat className="h-10 w-10 text-gray-600" />
-                      <span className="text-xs">No image</span>
-                    </div>
-                  )}
+                  <motion.img 
+                    src={getImageUrl(item)} 
+                    alt={item.name} 
+                    className="w-full h-full object-cover"
+                    animate={isCenter && !isSpinning ? { scale: [1, 1.03, 1] } : {}}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = getFallbackFoodImage(item);
+                    }}
+                  />
 
                   {/* Category tag */}
                   <span className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-[10px] text-accentOrange px-2.5 py-1 rounded-full border border-accentOrange/30 font-semibold uppercase tracking-wider">

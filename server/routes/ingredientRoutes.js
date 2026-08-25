@@ -1,0 +1,18 @@
+import express from 'express';
+import {
+  getIngredients,
+  getStorageInventory,
+  addIngredient,
+  updateStock,
+  getTransactions
+} from '../controllers/ingredientController.js';
+
+const router = express.Router();
+
+router.get('/', getIngredients);
+router.get('/storage', getStorageInventory);
+router.post('/', addIngredient);
+router.put('/:id/stock', updateStock);
+router.get('/transactions', getTransactions);
+
+export default router;

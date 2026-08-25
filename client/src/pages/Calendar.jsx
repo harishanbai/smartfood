@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles, ChefHat } from 'lucide-react';
 import { menuApi, foodApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
-import { getImageUrl } from '../utils/imageUtils';
+import { getImageUrl, getFallbackFoodImage } from '../utils/imageUtils';
 import { useLanguage } from '../context/LanguageContext';
 
 const Calendar = () => {
@@ -322,15 +322,15 @@ const Calendar = () => {
                   return (
                     <div className="p-4 rounded-2xl bg-white/3 border border-white/5 space-y-3">
                       <div className="w-full h-36 rounded-xl overflow-hidden bg-black/20 border border-white/10">
-                        {food.image ? (
-                          <img 
-                            src={getImageUrl(food)} 
-                            alt={food.name || 'Food'} 
-                            className="w-full h-full object-cover" 
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No Image</div>
-                        )}
+                        <img 
+                          src={getImageUrl(food)} 
+                          alt={food.name || 'Food'} 
+                          className="w-full h-full object-cover" 
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = getFallbackFoodImage(food);
+                          }}
+                        />
                       </div>
                       <div>
                         <span className={`inline-flex items-center gap-1 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${

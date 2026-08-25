@@ -12,7 +12,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  CreditCard
+  CreditCard,
+  ShoppingBag
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -37,6 +38,7 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
 
   const menuItems = [
     { name: t('common.dashboard'), path: '/', icon: LayoutDashboard },
+    { name: t('common.ingredients'), path: '/ingredients', icon: ShoppingBag },
     { name: t('common.foods'), path: '/foods', icon: UtensilsCrossed },
     { name: t('common.history'), path: '/history', icon: History },
     { name: t('common.calendar'), path: '/calendar', icon: Calendar },

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Calendar, ChefHat, Filter, Trash2 } from 'lucide-react';
 import { menuApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
-import { getImageUrl } from '../utils/imageUtils';
+import { getImageUrl, getFallbackFoodImage } from '../utils/imageUtils';
 import { useLanguage } from '../context/LanguageContext';
 import { useConfirm } from '../context/ConfirmContext';
 
@@ -162,11 +162,16 @@ const History = () => {
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                             <div className="h-11 w-11 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
-                              {food.image ? (
-                                <img src={getImageUrl(food)} alt={food.name} className="w-full h-full object-cover" loading="lazy" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-[9px] text-gray-500">No Image</div>
-                              )}
+                              <img
+                                src={getImageUrl(food)}
+                                alt={food.name}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = getFallbackFoodImage(food);
+                                }}
+                              />
                             </div>
                             <div>
                               <span className="font-bold text-white block text-xs flex items-center gap-1.5">
@@ -221,11 +226,16 @@ const History = () => {
                 >
                   <div className="flex flex-row items-center gap-4">
                     <div className="h-14 w-14 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
-                      {food.image ? (
-                        <img src={getImageUrl(food)} alt={food.name} className="w-full h-full object-cover" loading="lazy" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[9px] text-gray-500">No Image</div>
-                      )}
+                      <img
+                        src={getImageUrl(food)}
+                        alt={food.name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = getFallbackFoodImage(food);
+                        }}
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className={`inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { foodApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
-import { getImageUrl } from '../utils/imageUtils';
+import { getImageUrl, getFallbackFoodImage } from '../utils/imageUtils';
 import { useLanguage } from '../context/LanguageContext';
 import { useConfirm } from '../context/ConfirmContext';
 
@@ -307,11 +307,16 @@ const Foods = () => {
                     <tr key={food._id} className={`hover:bg-white/5 transition-colors ${!food.available ? 'opacity-70' : ''}`}>
                       <td className="p-4 flex items-center gap-3">
                         <div className="h-12 w-12 rounded-xl overflow-hidden bg-black/20 border border-white/10 flex-shrink-0">
-                          {food.image ? (
-                            <img src={getImageUrl(food)} alt={food.name} className="w-full h-full object-cover" loading="lazy" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-500">No Image</div>
-                          )}
+                          <img
+                            src={getImageUrl(food)}
+                            alt={food.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = getFallbackFoodImage(food);
+                            }}
+                          />
                         </div>
                         <span className="font-bold text-white">{food.name}</span>
                       </td>
@@ -373,14 +378,16 @@ const Foods = () => {
               >
                 {/* Image Section */}
                 <div className="w-full h-[180px] rounded-2xl overflow-hidden bg-black/20 relative mb-3">
-                  {food.image ? (
-                    <img src={getImageUrl(food)} alt={food.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103" loading="lazy" />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-600 gap-2">
-                      <ImageIcon className="h-8 w-8 text-gray-700" />
-                      <span className="text-xs">No Image</span>
-                    </div>
-                  )}
+                  <img
+                    src={getImageUrl(food)}
+                    alt={food.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-103"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = getFallbackFoodImage(food);
+                    }}
+                  />
 
                   {/* Category tag */}
                   <span className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-[10px] text-accentOrange px-2.5 py-1 rounded-full border border-accentOrange/30 font-semibold uppercase tracking-wider">
