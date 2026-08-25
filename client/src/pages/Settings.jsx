@@ -16,12 +16,12 @@ const Settings = () => {
   });
   const [chefPhone, setChefPhone] = useState(() => localStorage.getItem('chefPhone') || '');
 
-  const [upiId, setUpiId] = useState(() => localStorage.getItem('payment_upiId') || 'vaseegrahveda@okaxis');
+  const [upiId, setUpiId] = useState(() => localStorage.getItem('payment_upiId') || 'harishanbai06-2@oksbi');
   const [upiName, setUpiName] = useState(() => localStorage.getItem('payment_upiName') || 'Vaseegrah Veda Catering');
   const [upiAmount, setUpiAmount] = useState(() => localStorage.getItem('payment_upiAmount') || '120');
   const [bankName, setBankName] = useState(() => localStorage.getItem('payment_bankName') || 'State Bank of India');
-  const [bankAcc, setBankAcc] = useState(() => localStorage.getItem('payment_bankAcc') || '34567890123');
-  const [bankIfsc, setBankIfsc] = useState(() => localStorage.getItem('payment_bankIfsc') || 'SBIN0001234');
+  const [bankAcc, setBankAcc] = useState(() => localStorage.getItem('payment_bankAcc') || '43868513959');
+  const [bankIfsc, setBankIfsc] = useState(() => localStorage.getItem('payment_bankIfsc') || '92038944816');
 
   useEffect(() => {
     const lang = language || 'en';
@@ -110,7 +110,7 @@ const Settings = () => {
                   required
                   value={upiId}
                   onChange={(e) => setUpiId(e.target.value)}
-                  placeholder="e.g. name@okaxis"
+                  placeholder="e.g. harishanbai06-2@oksbi"
                   className="w-full glass-panel px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all"
                 />
               </div>
@@ -165,7 +165,7 @@ const Settings = () => {
                   required
                   value={bankAcc}
                   onChange={(e) => setBankAcc(e.target.value)}
-                  placeholder="e.g. 34567890123"
+                  placeholder="e.g. 43868513959"
                   className="w-full glass-panel px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all"
                 />
               </div>
@@ -176,7 +176,7 @@ const Settings = () => {
                   required
                   value={bankIfsc}
                   onChange={(e) => setBankIfsc(e.target.value)}
-                  placeholder="e.g. SBIN0001234"
+                  placeholder="e.g. 92038944816"
                   className="w-full glass-panel px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all"
                 />
               </div>
@@ -185,7 +185,8 @@ const Settings = () => {
             <div className="flex justify-end">
               <button
                 type="submit"
-                className="px-5 py-2.5 bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs font-bold rounded-xl shadow-lg transition-all cursor-pointer min-h-[44px]"
+                className="px-6 py-2.5 bg-gradient-to-r from-gold-500 to-gold-400 hover:from-gold-400 hover:to-gold-500 text-black font-extrabold text-xs rounded-xl shadow-lg shadow-gold-500/20 hover:shadow-glowGold hover:-translate-y-0.5 transition-all duration-200 cursor-pointer min-h-[44px] flex items-center justify-center gap-2 border border-gold-400/30"
+                style={{ backgroundColor: '#D4AF37', color: '#000000', fontWeight: 800 }}
               >
                 {t('settings.btnSavePayment')}
               </button>

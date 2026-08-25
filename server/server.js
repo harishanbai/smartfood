@@ -10,6 +10,7 @@ import tamilCalendarRoutes from './routes/tamilCalendarRoutes.js';
 import systemRoutes from './routes/systemRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import webhookRoutes from './routes/webhookRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 import { clearCache } from './services/tamilCalendarService.js';
 import { verifySmtpConnection } from './services/emailService.js';
 import mongoose from 'mongoose';
@@ -70,6 +71,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api', authRoutes);
 app.use('/api', webhookRoutes);
+app.use('/api/payments', paymentRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/stats', statsRoutes);

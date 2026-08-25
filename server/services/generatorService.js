@@ -54,7 +54,7 @@ export const generateLunchForDate = async (dateStr, generationType = 'automatic'
     generatedAt: new Date(),
     status: 'active',
     generationType,
-    scheduledTime,
+    scheduledTime: generationType === 'automatic' ? (scheduledTime || '20:00') : null,
     ruleApplied: ruleResult.ruleApplied,
     ruleCode: ruleResult.ruleCode,
     tamilCalendarSnapshot: tamilData,

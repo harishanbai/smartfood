@@ -11,9 +11,10 @@
  */
 
 import cron from 'node-cron';
+import mongoose from 'mongoose';
 import Menu from '../models/Menu.js';
 import { generateLunchForDate } from './generatorService.js';
-import { getKolkataDateStr } from '../utils/dateUtils.js';
+import { getKolkataDateStr, getCurrentISTHour } from '../utils/dateUtils.js';
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -21,9 +22,11 @@ const SCHEDULER_TIMEZONE = 'Asia/Kolkata';
 const SCHEDULED_CRON    = '0 20 * * *';  // 8:00 PM daily
 const SCHEDULED_TIME    = '20:00';
 
-let schedulerRunning = false;
-let lastRun          = null;   // ISO string of last successful auto-generation run
-let schedulerTask    = null;   // node-cron task reference
+let schedulerRunning    = false;
+let lastRun             = null;   // ISO string of last successful auto-generation run
+let schedulerTask       = null;   // node-cron task reference
+let backupTask          = null;   // backup periodic check task
+let isCheckingMissed    = false;  // Mutex flag to prevent overlapping catchup runs
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -31,39 +34,10 @@ let schedulerTask    = null;   // node-cron task reference
  * Returns the next 8:00 PM IST as a human-readable string.
  */
 const getNextRunIST = () => {
-  const now = new Date();
-  // Find next 20:00 IST = 14:30 UTC
-  const todayIST = new Date(
-    new Date().toLocaleString('en-US', { timeZone: SCHEDULER_TIMEZONE })
-  );
-  const nextRun = new Date(now);
-
-  // Set to 20:00 IST today (14:30 UTC)
-  nextRun.setUTCHours(14, 30, 0, 0);
-
-  // If we're already past 20:00 IST today, schedule for tomorrow
-  if (todayIST.getHours() >= 20) {
-    nextRun.setUTCDate(nextRun.getUTCDate() + 1);
-  }
-
-  return nextRun.toLocaleString('en-IN', {
-    timeZone: SCHEDULER_TIMEZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  }) + ' IST';
-};
-
-/**
- * Returns current IST hour (0–23).
- */
-const getCurrentISTHour = () => {
-  const nowIST = new Date().toLocaleString('en-US', { timeZone: SCHEDULER_TIMEZONE, hour: 'numeric', hour12: false });
-  return parseInt(nowIST, 10);
+  const currentHour = getCurrentISTHour();
+  const targetDateStr = currentHour >= 20 ? getKolkataDateStr(1) : getKolkataDateStr(0);
+  const [year, month, day] = targetDateStr.split('-');
+  return `${day}/${month}/${year}, 20:00:00 IST`;
 };
 
 // ─── Core Auto-Generation Logic ───────────────────────────────────────────────
@@ -93,7 +67,7 @@ export const runAutoGeneration = async (overrideDateStr = null) => {
     }
 
     // Run generation
-    const menu = await generateLunchForDate(tomorrowStr, 'AUTO', { scheduledTime: SCHEDULED_TIME });
+    const menu = await generateLunchForDate(tomorrowStr, 'automatic', { scheduledTime: SCHEDULED_TIME });
 
     const foodName =
       menu.foodId?.name ||
@@ -122,30 +96,43 @@ export const runAutoGeneration = async (overrideDateStr = null) => {
 // ─── Missed Generation Detection ─────────────────────────────────────────────
 
 /**
- * Checks if the server missed the 8 PM generation (e.g. after a restart).
- * If current IST time >= 20:00 and tomorrow has no active menu, generate now.
+ * Checks if the server missed scheduled generations (e.g. after a restart or downtime).
+ * 1. Checks if today's menu exists (recovers if yesterday's 8 PM run was missed).
+ * 2. If current IST time >= 20:00, checks if tomorrow's menu exists (recovers if today's 8 PM run was missed).
  */
-const checkMissedGeneration = async () => {
+export const checkMissedGeneration = async () => {
+  if (isCheckingMissed) return;
+  isCheckingMissed = true;
+
   try {
+    // 1. Ensure today's active menu exists
+    const todayStr = getKolkataDateStr(0);
+    const todayMenu = await Menu.findOne({ date: todayStr, status: 'active' });
+    if (!todayMenu) {
+      console.log(`[Scheduler] ⚠️  Missed generation detected! No active menu for today (${todayStr}). Running catch-up...`);
+      await runAutoGeneration(todayStr);
+    }
+
+    // 2. If past 8:00 PM IST, ensure tomorrow's active menu exists
     const istHour = getCurrentISTHour();
-    if (istHour < 20) {
-      console.log(`[Scheduler] Current IST hour: ${istHour}:xx — 8 PM not yet reached, no missed generation.`);
-      return;
+    if (istHour >= 20) {
+      const tomorrowStr = getKolkataDateStr(1);
+      const tomorrowMenu = await Menu.findOne({ date: tomorrowStr, status: 'active' });
+
+      if (!tomorrowMenu) {
+        console.log(`[Scheduler] ⚠️  Missed generation detected! IST hour=${istHour} (>= 20), no menu for tomorrow (${tomorrowStr}). Running catch-up...`);
+        await runAutoGeneration(tomorrowStr);
+      } else {
+        console.log(`[Scheduler] Menu for tomorrow (${tomorrowStr}) already exists — no catch-up needed.`);
+      }
+    } else {
+      console.log(`[Scheduler] Current IST hour: ${istHour}:xx — 8 PM not yet reached today.`);
     }
-
-    const tomorrowStr = getKolkataDateStr(1);
-    const existing = await Menu.findOne({ date: tomorrowStr, status: 'active' });
-
-    if (existing) {
-      console.log(`[Scheduler] Menu for tomorrow (${tomorrowStr}) already exists — no catch-up needed.`);
-      return;
-    }
-
-    console.log(`[Scheduler] ⚠️  Missed generation detected! IST hour=${istHour}, no menu for ${tomorrowStr}. Running catch-up...`);
-    await runAutoGeneration(tomorrowStr);
 
   } catch (err) {
     console.error('[Scheduler] Error during missed-generation check:', err.message);
+  } finally {
+    isCheckingMissed = false;
   }
 };
 
@@ -163,7 +150,7 @@ export const initScheduler = () => {
   console.log(`✅ Next Run: ${getNextRunIST()}`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-  // Register the cron task
+  // Register the daily 8:00 PM IST cron task
   schedulerTask = cron.schedule(
     SCHEDULED_CRON,
     async () => {
@@ -172,10 +159,38 @@ export const initScheduler = () => {
     { timezone: SCHEDULER_TIMEZONE }
   );
 
+  // Register hourly backup check to catch any missed runs due to sleep/wake delays
+  backupTask = cron.schedule(
+    '0 * * * *',
+    async () => {
+      await checkMissedGeneration();
+    },
+    { timezone: SCHEDULER_TIMEZONE }
+  );
+
   schedulerRunning = true;
 
-  // Check for missed generation after a short delay (let DB connect first)
-  setTimeout(checkMissedGeneration, 5000);
+  // Check for missed generation once DB is ready
+  let startupCheckDone = false;
+  const runStartupCheck = () => {
+    if (startupCheckDone) return;
+    startupCheckDone = true;
+    checkMissedGeneration();
+  };
+
+  if (mongoose.connection.readyState === 1) {
+    runStartupCheck();
+  } else {
+    mongoose.connection.once('open', () => {
+      setTimeout(runStartupCheck, 1000);
+    });
+    // Fallback timer
+    setTimeout(() => {
+      if (mongoose.connection.readyState === 1) {
+        runStartupCheck();
+      }
+    }, 5000);
+  }
 };
 
 // ─── Status API ───────────────────────────────────────────────────────────────

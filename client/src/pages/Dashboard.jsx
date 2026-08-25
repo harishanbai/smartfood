@@ -499,12 +499,21 @@ const Dashboard = () => {
                 <CalendarRange className="h-4 w-4 text-accentOrange" />
                 {t('dashboard.tomorrowTitle')}
               </span>
-              {tomorrowMenu && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  {tomorrowMenu.generationType === 'automatic' ? 'Automatically Generated' : 'Manually Generated'}
-                </span>
-              )}
+              {tomorrowMenu && (() => {
+                const isAuto = tomorrowMenu.generationType
+                  ? (tomorrowMenu.generationType.toLowerCase() === 'automatic' || tomorrowMenu.generationType.toLowerCase() === 'auto')
+                  : (tomorrowMenu.scheduledTime === '20:00' || !tomorrowMenu.generationType);
+                return (
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase ${
+                    isAuto
+                      ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
+                      : 'bg-blue-500/10 border border-blue-500/30 text-blue-400'
+                  }`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${isAuto ? 'bg-emerald-400 animate-pulse' : 'bg-blue-400'}`} />
+                    {isAuto ? 'Auto Generated' : 'Manually Generated'}
+                  </span>
+                );
+              })()}
             </div>
 
             {tomorrowMenu && !carouselMode ? (

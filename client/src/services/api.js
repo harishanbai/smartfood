@@ -140,4 +140,10 @@ export const tamilCalendarApi = {
   getTomorrow: () => api.get('/tamil-calendar/tomorrow'),
 };
 
+export const paymentApi = {
+  getPayments: () => api.get('/payments'),
+  createPayment: (paymentData) => api.post('/payments', paymentData),
+  deletePayment: (id) => api.delete(`/payments/${id}`)
+};
+
 export default api;

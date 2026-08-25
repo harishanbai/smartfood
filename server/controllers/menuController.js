@@ -3,7 +3,7 @@ import Food from '../models/Food.js';
 import { generateLunchForDate } from '../services/generatorService.js';
 import { selectFood } from '../services/menuGenerator.js';
 import { translateResponse } from '../utils/translator.js';
-import { getKolkataDateStr } from '../server.js';
+import { getKolkataDateStr, getCurrentISTHour } from '../utils/dateUtils.js';
 
 // Fallback date helper if import is not ready
 const getTodayStr = () => {
@@ -37,7 +37,7 @@ export const getTodayMenu = async (req, res) => {
 
     if (!menu) {
       try {
-        menu = await generateLunchForDate(todayStr, 'automatic');
+        menu = await generateLunchForDate(todayStr, 'automatic', { scheduledTime: '20:00' });
       } catch (err) {
         return res.status(200).json(null);
       }
@@ -52,12 +52,23 @@ export const getTomorrowMenu = async (req, res) => {
   try {
     const lang = req.headers['accept-language'] || 'en';
     const tomorrowStr = getTomorrowStr();
-    const menu = await Menu.findOne({ date: tomorrowStr, status: 'active' })
+    let menu = await Menu.findOne({ date: tomorrowStr, status: 'active' })
       .populate('foodId', '-image.data')
       .populate('vegFoodId', '-image.data')
       .populate('nonVegFoodId', '-image.data');
+
     if (!menu) {
-      return res.status(200).json(null);
+      // If it is >= 8:00 PM IST (20:00 IST), auto-recover tomorrow's scheduled menu
+      const istHour = getCurrentISTHour();
+      if (istHour >= 20) {
+        try {
+          menu = await generateLunchForDate(tomorrowStr, 'automatic', { scheduledTime: '20:00' });
+        } catch (err) {
+          return res.status(200).json(null);
+        }
+      } else {
+        return res.status(200).json(null);
+      }
     }
     res.json(translateResponse(menu, lang));
   } catch (error) {
@@ -173,6 +184,7 @@ export const assignMenu = async (req, res) => {
       menu.vegFoodId = isNonVeg ? null : foodId;
       menu.nonVegFoodId = isNonVeg ? foodId : null;
       menu.generationType = 'manual';
+      menu.scheduledTime = null;
       await menu.save();
     } else {
       menu = new Menu({
@@ -181,7 +193,8 @@ export const assignMenu = async (req, res) => {
         vegFoodId: isNonVeg ? null : foodId,
         nonVegFoodId: isNonVeg ? foodId : null,
         status: 'active',
-        generationType: 'manual'
+        generationType: 'manual',
+        scheduledTime: null
       });
       await menu.save();
     }
