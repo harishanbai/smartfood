@@ -94,60 +94,56 @@ export const calculateDailyRequirements = (recipe, actualEmployees = 10, storage
     const rawRequired = scalingFactor * (ing.baseQuantity || 0);
     const roundedRequired = Math.round(rawRequired * 100) / 100;
 
+    // Match with storage item via canonical normalized name, lowercased name, or ID
+    const normName = normalizeItemName(ing.name);
+    const storageItem = storageMap.get(normName) || storageMap.get((ing.name || '').toLowerCase()) || null;
+
+    let currentStorage = storageItem ? (Number(storageItem.currentStock) || 0) : 0;
+    let storageUnit = storageItem ? storageItem.defaultUnit : ing.unit;
+
+    // Convert recipe required quantity into storage units for consistent comparison
+    const requiredInStorageUnit = Math.round(normalizeToStorageUnit(roundedRequired, ing.unit, storageUnit) * 100) / 100;
+
+    // Shortage = max(Required - Available, 0)
+    // Remaining = max(Available - Required, 0)
+    const purchaseNeeded = Math.max(0, Math.round((requiredInStorageUnit - currentStorage) * 100) / 100);
+    const remainingStock = Math.max(0, Math.round((currentStorage - requiredInStorageUnit) * 100) / 100);
+
+    let status = 'STOCK_SUFFICIENT';
+    let statusLabel = 'Stock Sufficient';
+    if (roundedRequired === 0 || requiredInStorageUnit === 0) {
+      status = 'NOT_REQUIRED_THIS_MONTH';
+      statusLabel = 'Not Required';
+    } else if (currentStorage >= requiredInStorageUnit) {
+      status = 'STOCK_SUFFICIENT';
+      statusLabel = 'Stock Sufficient';
+    } else {
+      status = 'NEED_PURCHASE';
+      statusLabel = 'Need Purchase';
+    }
+
+    const itemData = {
+      name: storageItem ? storageItem.name : ing.name,
+      name_ta: (storageItem && storageItem.name_ta) ? storageItem.name_ta : (ing.name_ta || ''),
+      baseQty: ing.baseQuantity,
+      unit: ing.unit,
+      requiredQty: roundedRequired,
+      currentStorage: currentStorage,
+      storageUnit: storageUnit,
+      requiredInStorageUnit: requiredInStorageUnit,
+      purchaseNeeded: purchaseNeeded,
+      remainingStock: remainingStock,
+      status,
+      statusLabel,
+      ingredientId: storageItem ? storageItem._id : null
+    };
+
     if (ing.category === 'grocery') {
-      // Find matching storage item via canonical normalized name
-      const normName = normalizeItemName(ing.name);
-      const storageItem = storageMap.get(normName) || storageMap.get(ing.name.toLowerCase()) || null;
-
-      let currentStorage = storageItem ? storageItem.currentStock : 0;
-      let storageUnit = storageItem ? storageItem.defaultUnit : ing.unit;
-
-      // Convert recipe required quantity into storage units for consistent comparison
-      const requiredInStorageUnit = normalizeToStorageUnit(roundedRequired, ing.unit, storageUnit);
-      const roundedReqInStorage = Math.round(requiredInStorageUnit * 100) / 100;
-
-      // Purchase = max(Required - Available, 0)
-      // Remaining = max(Available - Required, 0)
-      const purchaseNeeded = Math.max(0, Math.round((roundedReqInStorage - currentStorage) * 100) / 100);
-      const remainingStock = Math.max(0, Math.round((currentStorage - roundedReqInStorage) * 100) / 100);
-
-      let status = 'STOCK_SUFFICIENT';
-      let statusLabel = 'Stock Sufficient';
-      if (roundedReqInStorage === 0) {
-        status = 'NOT_REQUIRED_THIS_MONTH';
-        statusLabel = 'Not Required';
-      } else if (currentStorage >= roundedReqInStorage) {
-        status = 'STOCK_SUFFICIENT';
-        statusLabel = 'Stock Sufficient';
-      } else {
-        status = 'NEED_PURCHASE';
-        statusLabel = 'Need Purchase';
-      }
-
-      groceryItems.push({
-        name: storageItem ? storageItem.name : ing.name,
-        name_ta: (storageItem && storageItem.name_ta) ? storageItem.name_ta : (ing.name_ta || ''),
-        baseQty: ing.baseQuantity,
-        unit: ing.unit,
-        requiredQty: roundedRequired,
-        currentStorage: currentStorage,
-        storageUnit: storageUnit,
-        requiredInStorageUnit: roundedReqInStorage,
-        purchaseNeeded: purchaseNeeded,
-        remainingStock: remainingStock,
-        status,
-        statusLabel,
-        ingredientId: storageItem ? storageItem._id : null
-      });
+      groceryItems.push(itemData);
     } else {
       // Fresh items (Vegetables, meat, perishable herbs, dairy)
-      freshItems.push({
-        name: ing.name,
-        name_ta: ing.name_ta || '',
-        baseQty: ing.baseQuantity,
-        unit: ing.unit,
-        requiredQty: roundedRequired
-      });
+      itemData.category = ing.category || 'fresh';
+      freshItems.push(itemData);
     }
   }
 

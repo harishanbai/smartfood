@@ -62,7 +62,7 @@ export const getDailyRequirement = async (req, res) => {
         .populate('vegFoodId', '-image.data')
         .populate('nonVegFoodId', '-image.data'),
       DailyRequirement.findOne({ date }),
-      Ingredient.find({ isStorageItem: true })
+      Ingredient.find({})
     ]);
 
     const foodItem = menu?.foodId || menu?.vegFoodId || menu?.nonVegFoodId || null;
@@ -90,8 +90,10 @@ export const getDailyRequirement = async (req, res) => {
     // 4. Run calculation
     const calcResult = calculateDailyRequirements(recipe, actualEmployees, storageIngredients);
 
-    // 6. Build purchase list: grocery items where purchaseNeeded > 0
-    const purchaseList = calcResult.groceryItems.filter(item => item.purchaseNeeded > 0);
+    // 5. Build purchase list: all items (grocery & fresh) where purchaseNeeded > 0
+    const purchaseList = [...calcResult.groceryItems, ...calcResult.freshItems].filter(
+      item => (Number(item.purchaseNeeded) || 0) > 0 && (Number(item.requiredQty) || 0) > 0
+    );
 
     const responseData = {
       date,
@@ -145,7 +147,7 @@ export const saveDailyRequirement = async (req, res) => {
       recipe = await findRecipeForFood(foodItem) || await Recipe.findOne({ mealNumber: 1 });
     }
 
-    const storageIngredients = await Ingredient.find({ isStorageItem: true });
+    const storageIngredients = await Ingredient.find({});
     const employees = Math.max(0, Number(actualEmployees) || 0);
     const calcResult = calculateDailyRequirements(recipe, employees, storageIngredients);
 
@@ -196,7 +198,7 @@ export const confirmStockDeduction = async (req, res) => {
     }
 
     const employees = actualEmployees != null ? Math.max(0, Number(actualEmployees)) : (dailyDoc?.actualEmployees || 10);
-    const storageIngredients = await Ingredient.find({ isStorageItem: true });
+    const storageIngredients = await Ingredient.find({});
     const calcResult = calculateDailyRequirements(recipe, employees, storageIngredients);
 
     // If already deducted, alert to prevent duplicate reduction

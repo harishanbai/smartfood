@@ -59,7 +59,11 @@ const dailyRequirementSchema = new mongoose.Schema(
         name_ta: { type: String, default: '' },
         baseQty: { type: Number, required: true },
         unit: { type: String, required: true },
-        requiredQty: { type: Number, required: true }
+        requiredQty: { type: Number, required: true },
+        currentStorage: { type: Number, default: 0 },
+        storageUnit: { type: String, default: '' },
+        purchaseNeeded: { type: Number, default: 0 },
+        remainingStock: { type: Number, default: 0 }
       }
     ],
     isStockDeducted: {
