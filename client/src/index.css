@@ -154,6 +154,13 @@
   animation: gradientText 4s linear infinite;
 }
 
+/* Splash Screen performance classes:
+   box-shadow is in static CSS (not in Framer Motion style prop) so it is
+   never included in per-frame style diffing or recalculated by the compositor. */
+.splash-ring {
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -164,22 +171,11 @@ body {
 }
 
 body,
-header,
-main,
-aside,
-footer,
-nav,
 .glass-panel,
 button,
 input,
 select,
-textarea,
-span,
-h1,
-h2,
-h3,
-h4,
-p {
+textarea {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 

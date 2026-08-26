@@ -71,6 +71,11 @@ const paymentSchema = new mongoose.Schema(
   }
 );
 
+// Performance Indexes
+paymentSchema.index({ userUid: 1, paidAt: -1 });
+paymentSchema.index({ createdAt: -1 });
+paymentSchema.index({ status: 1 });
+
 const Payment = mongoose.models.Payment || mongoose.model('Payment', paymentSchema);
 
 export default Payment;

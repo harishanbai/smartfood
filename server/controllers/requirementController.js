@@ -1,4 +1,4 @@
-﻿import Menu from '../models/Menu.js';
+import Menu from '../models/Menu.js';
 import Food from '../models/Food.js';
 import Recipe from '../models/Recipe.js';
 import Ingredient from '../models/Ingredient.js';
@@ -55,11 +55,15 @@ export const getDailyRequirement = async (req, res) => {
     const date = req.query.date || getKolkataDateStr(0);
     const employeeParam = req.query.employees;
 
-    // 1. Fetch active menu for this date
-    const menu = await Menu.findOne({ date, status: 'active' })
-      .populate('foodId', '-image.data')
-      .populate('vegFoodId', '-image.data')
-      .populate('nonVegFoodId', '-image.data');
+    // 1. Fetch active menu, saved DailyRequirement, and grocery storage inventory concurrently
+    const [menu, savedDoc, storageIngredients] = await Promise.all([
+      Menu.findOne({ date, status: 'active' })
+        .populate('foodId', '-image.data')
+        .populate('vegFoodId', '-image.data')
+        .populate('nonVegFoodId', '-image.data'),
+      DailyRequirement.findOne({ date }),
+      Ingredient.find({ isStorageItem: true })
+    ]);
 
     const foodItem = menu?.foodId || menu?.vegFoodId || menu?.nonVegFoodId || null;
 
@@ -75,8 +79,7 @@ export const getDailyRequirement = async (req, res) => {
       recipe = await Recipe.findOne({ mealNumber: 1 });
     }
 
-    // 3. Check existing saved DailyRequirement for employee count & stock deduction status
-    const savedDoc = await DailyRequirement.findOne({ date });
+    // 3. Resolve employee count & stock deduction status
     let actualEmployees = 10;
     if (employeeParam !== undefined && employeeParam !== '') {
       actualEmployees = Math.max(0, Number(employeeParam));
@@ -84,10 +87,7 @@ export const getDailyRequirement = async (req, res) => {
       actualEmployees = savedDoc.actualEmployees;
     }
 
-    // 4. Fetch live grocery storage inventory from MongoDB
-    const storageIngredients = await Ingredient.find({ isStorageItem: true });
-
-    // 5. Run calculation
+    // 4. Run calculation
     const calcResult = calculateDailyRequirements(recipe, actualEmployees, storageIngredients);
 
     // 6. Build purchase list: grocery items where purchaseNeeded > 0

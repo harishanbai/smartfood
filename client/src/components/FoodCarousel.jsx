@@ -51,7 +51,6 @@ const FoodCarousel = () => {
   const [carouselItems, setCarouselItems] = useState(FOOD_ITEMS);
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState(1);
-  const [orbitRotation, setOrbitRotation] = useState(0);
   const [loading, setLoading] = useState(true);
   const shouldReduceMotion = useReducedMotion();
   const total = carouselItems.length;
@@ -92,15 +91,6 @@ const FoodCarousel = () => {
     setActiveIndex(0);
   }, [carouselItems.length]);
 
-  // Continuous smooth orbit rotation
-  useEffect(() => {
-    if (shouldReduceMotion) return;
-    const interval = setInterval(() => {
-      setOrbitRotation(prev => (prev + 0.28) % 360);
-    }, 30);
-    return () => clearInterval(interval);
-  }, [shouldReduceMotion]);
-
   // Auto-advance featured dish every 5s
   useEffect(() => {
     if (total <= 1) return;
@@ -134,6 +124,16 @@ const FoodCarousel = () => {
 
   return (
     <div className="w-full flex flex-col items-center select-none">
+      <style>{`
+        @keyframes carouselOrbitRotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes carouselOrbitCounterRotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(-360deg); }
+        }
+      `}</style>
 
       {/* ── ORBITAL SHOWCASE ── */}
       <div className="relative w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] lg:w-[420px] lg:h-[420px] flex items-center justify-center">
@@ -166,8 +166,11 @@ const FoodCarousel = () => {
 
         {/* Rotating satellite container */}
         <div
-          className="absolute inset-0"
-          style={{ transform: `rotate(${orbitRotation}deg)` }}
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            animation: shouldReduceMotion ? 'none' : 'carouselOrbitRotate 38.57s linear infinite',
+            willChange: 'transform'
+          }}
         >
           {carouselItems.map((food, idx) => {
             const angleDeg = (idx * 360) / total;
@@ -184,9 +187,10 @@ const FoodCarousel = () => {
                   position: 'absolute',
                   left: `calc(50% + ${x}px - 30px)`,
                   top: `calc(50% + ${y}px - 30px)`,
-                  transform: `rotate(${-orbitRotation}deg)`,
+                  animation: shouldReduceMotion ? 'none' : 'carouselOrbitCounterRotate 38.57s linear infinite',
+                  willChange: 'transform'
                 }}
-                className="cursor-pointer z-20 group"
+                className="cursor-pointer z-20 group pointer-events-auto"
               >
                 <motion.div
                   animate={{ scale: isActive ? 1.38 : 0.92 }}

@@ -18,27 +18,27 @@ export const ConfirmProvider = ({ children }) => {
   const [options, setOptions] = useState({});
   const resolveRef = useRef(null);
 
-  const confirm = (opts = {}) => {
+  const confirm = React.useCallback((opts = {}) => {
     setOptions(opts);
     setIsOpen(true);
     return new Promise((resolve) => {
       resolveRef.current = resolve;
     });
-  };
+  }, []);
 
-  const handleConfirm = () => {
+  const handleConfirm = React.useCallback(() => {
     setIsOpen(false);
     if (resolveRef.current) {
       resolveRef.current(true);
     }
-  };
+  }, []);
 
-  const handleCancel = () => {
+  const handleCancel = React.useCallback(() => {
     setIsOpen(false);
     if (resolveRef.current) {
       resolveRef.current(false);
     }
-  };
+  }, []);
 
   // Select styling based on confirmation type
   const type = options.type || 'danger'; // default is danger for delete

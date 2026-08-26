@@ -6,24 +6,43 @@ export const getStats = async (req, res) => {
   try {
     const lang = req.headers['accept-language'] || 'en';
 
-    const totalFoods = await Food.countDocuments();
-    const vegFoods = await Food.countDocuments({ foodType: 'veg' });
-    const nonVegFoods = await Food.countDocuments({ foodType: 'non-veg' });
-    const availableFoods = await Food.countDocuments({ available: true });
-    const unavailableFoods = await Food.countDocuments({ available: false });
-    const menusGenerated = await Menu.countDocuments({ status: 'active' });
-    const menusSkipped = await Menu.countDocuments({ status: 'skipped' });
-
-    // Find the most generated food item (active status)
-    const mostGeneratedAggregation = await Menu.aggregate([
-      { $match: { status: 'active' } },
-      { $group: { _id: '$foodId', count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 1 }
+    // Execute count, aggregation, and recent menu queries concurrently
+    const [
+      totalFoods,
+      vegFoods,
+      nonVegFoods,
+      availableFoods,
+      unavailableFoods,
+      menusGenerated,
+      menusSkipped,
+      mostGeneratedAggregation,
+      categoryAggregation,
+      recentMenus
+    ] = await Promise.all([
+      Food.countDocuments(),
+      Food.countDocuments({ foodType: 'veg' }),
+      Food.countDocuments({ foodType: 'non-veg' }),
+      Food.countDocuments({ available: true }),
+      Food.countDocuments({ available: false }),
+      Menu.countDocuments({ status: 'active' }),
+      Menu.countDocuments({ status: 'skipped' }),
+      Menu.aggregate([
+        { $match: { status: 'active' } },
+        { $group: { _id: '$foodId', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 1 }
+      ]),
+      Food.aggregate([
+        { $group: { _id: '$category', count: { $sum: 1 } } }
+      ]),
+      Menu.find({ status: 'active' })
+        .populate('foodId', '-image.data')
+        .sort({ date: -1 })
+        .limit(7)
     ]);
 
     let mostGeneratedFood = null;
-    if (mostGeneratedAggregation.length > 0) {
+    if (mostGeneratedAggregation.length > 0 && mostGeneratedAggregation[0]._id) {
       const food = await Food.findById(mostGeneratedAggregation[0]._id).select('-image.data');
       if (food) {
         mostGeneratedFood = {
@@ -36,20 +55,10 @@ export const getStats = async (req, res) => {
       }
     }
 
-    // Also get counts by category for charts
-    const categoryAggregation = await Food.aggregate([
-      { $group: { _id: '$category', count: { $sum: 1 } } }
-    ]);
     const categoryStats = categoryAggregation.map(item => ({
       name: item._id,
       value: item.count
     }));
-
-    // Get weekly generation statistics (last 7 menus)
-    const recentMenus = await Menu.find({ status: 'active' })
-      .populate('foodId', '-image.data')
-      .sort({ date: -1 })
-      .limit(7);
 
     const weeklyStats = recentMenus.map(menu => ({
       date: menu.date,

@@ -540,7 +540,7 @@ export const LanguageProvider = ({ children }) => {
     window.dispatchEvent(new Event('language-change'));
   }, [language]);
 
-  const t = (path) => {
+  const t = React.useCallback((path) => {
     const keys = path.split('.');
     let value = translations[language] || translations['en'];
     for (const key of keys) {
@@ -560,14 +560,21 @@ export const LanguageProvider = ({ children }) => {
       }
     }
     return value;
-  };
+  }, [language]);
 
-  const tc = (category) => {
+  const tc = React.useCallback((category) => {
     return categoryTranslations[language]?.[category] || category;
-  };
+  }, [language]);
+
+  const contextValue = React.useMemo(() => ({
+    language,
+    setLanguage,
+    t,
+    tc
+  }), [language, t, tc]);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, tc }}>
+    <LanguageContext.Provider value={contextValue}>
       {children}
     </LanguageContext.Provider>
   );

@@ -41,6 +41,10 @@ const foodSchema = new mongoose.Schema({
   }
 });
 
-const Food = mongoose.model('Food', foodSchema);
-export default Food;
+// Performance Indexes
+foodSchema.index({ available: 1, foodType: 1 });
+foodSchema.index({ createdAt: -1 });
+foodSchema.index({ name: 1 });
 
+const Food = mongoose.models.Food || mongoose.model('Food', foodSchema);
+export default Food;
