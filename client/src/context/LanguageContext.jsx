@@ -24,6 +24,23 @@ const translations = {
       serviceOnline: "Service Online",
       messMaster: "Mess Master"
     },
+    holiday: {
+      badge: "🎉 HOLIDAY",
+      title: "Holiday",
+      isHoliday: "Marked as Holiday",
+      holidayNotice: "This date is marked as a non-working holiday.",
+      holidayDesc: "No lunch, ingredient, fresh-item, or purchase requirements are generated for this date.",
+      markHolidayBtn: "🎉 Mark Holiday",
+      markHolidayPromptTitle: "🎉 Mark as Holiday?",
+      markHolidayPromptMsg: "This date will be treated as a non-working lunch day. No lunch, ingredient, fresh-item, or purchase requirements will be generated.",
+      removeHolidayBtn: "Remove Holiday",
+      removeHolidayPromptTitle: "Remove Holiday?",
+      removeHolidayPromptMsg: "This date will return to a normal working day.",
+      markedSuccess: "Date marked as Holiday successfully! 🎉",
+      removedSuccess: "Holiday removed successfully. Normal working day restored!",
+      calendarTag: "Holiday",
+      noRequirements: "No Requirements"
+    },
     topSection: {
       goodMorning: "Good Morning",
       goodAfternoon: "Good Afternoon",
@@ -274,6 +291,23 @@ const translations = {
       loading: "ஏற்றப்படுகிறது...",
       serviceOnline: "சேவை ஆன்லைனில் உள்ளது",
       messMaster: "மெஸ் மாஸ்டர்"
+    },
+    holiday: {
+      badge: "🎉 விடுமுறை",
+      title: "விடுமுறை",
+      isHoliday: "விடுமுறை நாளாக குறிக்கப்பட்டுள்ளது",
+      holidayNotice: "இந்த நாள் வேலை இல்லாத விடுமுறை நாளாகக் குறிக்கப்பட்டுள்ளது.",
+      holidayDesc: "இந்த நாளுக்கு மதிய உணவு, மளிகைப் பொருட்கள், புதிய காய்கறிகள் அல்லது கொள்முதல் தேவைகள் எதுவும் உருவாக்கப்படாது.",
+      markHolidayBtn: "🎉 விடுமுறையாகக் குறி",
+      markHolidayPromptTitle: "🎉 விடுமுறை நாளாகக் குறிக்கவா?",
+      markHolidayPromptMsg: "இந்த நாள் வேலை இல்லாத விடுமுறை நாளாகக் கருதப்படும். மதிய உணவு, மூலப்பொருள் அல்லது கொள்முதல் தேவைகள் எதுவும் உருவாக்கப்படாது.",
+      removeHolidayBtn: "விடுமுறையை நீக்கு",
+      removeHolidayPromptTitle: "விடுமுறையை நீக்கவா?",
+      removeHolidayPromptMsg: "இந்த நாள் மீண்டும் சாதாரண வேலை நாளாக மாற்றப்படும்.",
+      markedSuccess: "விடுமுறை நாளாக வெற்றிகரமாகக் குறிக்கப்பட்டது! 🎉",
+      removedSuccess: "விடுமுறை நீக்கப்பட்டு சாதாரண வேலை நாள் மீட்டமைக்கப்பட்டது!",
+      calendarTag: "விடுமுறை",
+      noRequirements: "தேவைகள் ஏதுமில்லை"
     },
     topSection: {
       goodMorning: "காலை வணக்கம்",

@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Sparkles, RefreshCw, AlertCircle, CalendarRange, Bell, CheckCircle,
-  Sun, Moon, Star, Flame, Info, Calendar, MessageSquare, CreditCard, ShoppingBag
+  Sun, Moon, Star, Flame, Info, Calendar, MessageSquare, CreditCard, ShoppingBag, Trash2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { menuApi, foodApi, tamilCalendarApi } from '../services/api';
+import { menuApi, foodApi, tamilCalendarApi, holidayApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { getImageUrl, getFallbackFoodImage } from '../utils/imageUtils';
 import PremiumCarousel from '../components/PremiumCarousel';
 import NotificationsPanel from '../components/NotificationsPanel';
 import { useLanguage } from '../context/LanguageContext';
+import { useConfirm } from '../context/ConfirmContext';
 // ─────────────────────────────────────────────────────────────────────────────
 // Rule Badge — displays which rule was applied for menu generation
 // ─────────────────────────────────────────────────────────────────────────────
@@ -172,6 +173,7 @@ const Dashboard = () => {
   const [openDropdown, setOpenDropdown] = useState(null); // 'today' | 'tomorrow' | null
   const { addNotification } = useNotifications();
   const { language, t } = useLanguage();
+  const confirm = useConfirm();
   const navigate = useNavigate();
   const carouselTriggerRef = useRef(null);
 
@@ -275,6 +277,31 @@ const Dashboard = () => {
       addNotification(err.response?.data?.message || "Failed to assign tomorrow's menu", 'warning');
     } finally {
       setAssigning(false);
+    }
+  };
+
+  const handleRemoveTomorrowHoliday = async () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    const tomorrowStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    const isConfirmed = await confirm({
+      title: t('holiday.removeHolidayPromptTitle') || 'Remove Holiday?',
+      message: t('holiday.removeHolidayPromptMsg') || 'This date will return to a normal working day.',
+      confirmText: t('holiday.removeHolidayBtn') || 'Remove Holiday',
+      cancelText: t('common.cancel') || 'Cancel',
+      type: 'warning'
+    });
+
+    if (!isConfirmed) return;
+
+    try {
+      await holidayApi.removeHoliday(tomorrowStr);
+      addNotification(t('holiday.removedSuccess') || 'Holiday removed successfully. Normal working day restored!', 'success');
+      await fetchData();
+    } catch (err) {
+      console.error('Error removing tomorrow holiday:', err);
+      addNotification(err.response?.data?.message || 'Failed to remove holiday', 'warning');
     }
   };
 
@@ -435,7 +462,28 @@ const Dashboard = () => {
               <span className="text-xs text-gray-400 font-medium font-mono">{t('dashboard.timeRange')}</span>
             </div>
 
-            {todayMenu ? (
+            {todayMenu?.isHoliday ? (
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-gold-500/15 via-white/5 to-transparent border border-gold-500/40 text-center flex flex-col items-center justify-center space-y-2">
+                {/* Holiday Icon */}
+                <div className="w-14 h-14 rounded-full bg-gold-500/20 border border-gold-500/40 flex items-center justify-center shadow-lg">
+                  <span className="text-2xl">🎉</span>
+                </div>
+                <span className="px-3 py-0.5 rounded-full bg-gold-500/20 border border-gold-500/50 text-gold-400 text-[10px] font-extrabold uppercase tracking-wider">
+                  {t('holiday.badge')}
+                </span>
+                <h4 className="text-sm sm:text-base font-bold text-white mb-0">
+                  {todayMenu.holiday?.name || t('holiday.title')}
+                </h4>
+                {todayMenu.holiday?.name_ta && (
+                  <p className="text-xs text-gold-400 font-semibold font-sans">
+                    {todayMenu.holiday.name_ta}
+                  </p>
+                )}
+                <p className="text-xs text-gray-300 max-w-sm">
+                  {t('holiday.holidayNotice')} {t('holiday.holidayDesc')}
+                </p>
+              </div>
+            ) : todayMenu ? (
               <div className="flex flex-col gap-5">
                 {(() => {
                   const todayFood = todayMenu.foodId || todayMenu.vegFoodId || todayMenu.nonVegFoodId;
@@ -508,16 +556,15 @@ const Dashboard = () => {
                 <CalendarRange className="h-4 w-4 text-accentOrange" />
                 {t('dashboard.tomorrowTitle')}
               </span>
-              {tomorrowMenu && (() => {
+              {tomorrowMenu && !tomorrowMenu.isHoliday && (() => {
                 const isAuto = tomorrowMenu.generationType
                   ? (tomorrowMenu.generationType.toLowerCase() === 'automatic' || tomorrowMenu.generationType.toLowerCase() === 'auto')
                   : (tomorrowMenu.scheduledTime === '20:00' || !tomorrowMenu.generationType);
                 return (
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase ${
-                    isAuto
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase ${isAuto
                       ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
                       : 'bg-blue-500/10 border border-blue-500/30 text-blue-400'
-                  }`}>
+                    }`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${isAuto ? 'bg-emerald-400 animate-pulse' : 'bg-blue-400'}`} />
                     {isAuto ? 'Auto Generated' : 'Manually Generated'}
                   </span>
@@ -525,7 +572,36 @@ const Dashboard = () => {
               })()}
             </div>
 
-            {tomorrowMenu && !carouselMode ? (
+            {tomorrowMenu?.isHoliday ? (
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-gold-500/15 via-white/5 to-transparent border border-gold-500/40 text-center flex flex-col items-center justify-center space-y-2">
+                <div className="w-14 h-14 rounded-full bg-gold-500/20 border border-gold-500/40 flex items-center justify-center shadow-lg mb-2">
+                  <span className="text-2xl">🎉</span>
+                </div>
+                <span className="px-3 py-0.5 rounded-full bg-gold-500/20 border border-gold-500/50 text-gold-400 text-[10px] font-extrabold uppercase tracking-wider">
+                  {t('holiday.badge')}
+                </span>
+                <h4 className="text-sm sm:text-base font-bold text-white mb-0">
+                  {tomorrowMenu.holiday?.name || t('holiday.title')}
+                </h4>
+                {tomorrowMenu.holiday?.name_ta && (
+                  <p className="text-xs text-gold-400 font-semibold font-sans">
+                    {tomorrowMenu.holiday.name_ta}
+                  </p>
+                )}
+                <p className="text-xs text-gray-300 max-w-sm">
+                  {t('holiday.holidayNotice')} {t('holiday.holidayDesc')}
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+                  <button
+                    onClick={handleRemoveTomorrowHoliday}
+                    className="px-5 py-2 rounded-xl bg-white/10 hover:bg-red-500/20 text-gray-200 hover:text-red-400 border border-white/20 hover:border-red-500/40 text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shadow-sm"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>{t('holiday.removeHolidayBtn')}</span>
+                  </button>
+                </div>
+              </div>
+            ) : tomorrowMenu && !carouselMode ? (
               <div className="flex flex-col gap-5">
                 {(() => {
                   const tomorrowFood = tomorrowMenu.foodId || tomorrowMenu.vegFoodId || tomorrowMenu.nonVegFoodId;

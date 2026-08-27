@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { CreditCard, QrCode, ClipboardCheck, ArrowLeft, RefreshCw, CheckCircle2, IndianRupee, Landmark, History, Clock, Zap, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { CreditCard, QrCode, ArrowLeft, RefreshCw, CheckCircle2, IndianRupee, Landmark, History, Clock, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import QRCode from 'qrcode';
 import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
 import paymentService from '../services/payments/paymentService';
@@ -10,7 +11,7 @@ const generateNewRef = () => `TXN${Date.now().toString().slice(-4)}${Math.floor(
 const Payment = () => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
-  const { language, t } = useLanguage();
+  const { language } = useLanguage();
 
   const [activeTab, setActiveTab] = useState('upi'); // 'upi' | 'bank'
   const [upiId, setUpiId] = useState('harishanbai06-2@oksbi');
@@ -22,6 +23,7 @@ const Payment = () => {
   
   const [customAmount, setCustomAmount] = useState('120');
   const [currentSessionRef, setCurrentSessionRef] = useState(generateNewRef);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   const [isCopied, setIsCopied] = useState('');
   const [referenceNo, setReferenceNo] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -30,14 +32,94 @@ const Payment = () => {
   const [transactions, setTransactions] = useState([]);
   const [selectedTx, setSelectedTx] = useState(null);
 
-  // Keep track of known transaction IDs to detect incoming background payments
+  // Keep track of known transaction IDs and in-flight polling status
   const knownTxnIdsRef = useRef(new Set());
+  const isPollingRef = useRef(false);
+  const isMountedRef = useRef(true);
 
-  const fetchTransactions = async (isBackgroundPoll = false) => {
+  // Construct valid standard NPCI compliant UPI URI
+  const cleanAmountNum = Number(customAmount) > 0 ? Number(customAmount) : Number(amount) || 120;
+  const cleanAmountStr = cleanAmountNum.toFixed(2);
+  const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId.trim())}&pn=${encodeURIComponent(upiName.trim())}&am=${cleanAmountStr}&cu=INR&tr=${encodeURIComponent(currentSessionRef.trim())}&tn=${encodeURIComponent(`Smart Lunch Payment - ${currentSessionRef.trim()}`)}`;
+
+  // Generate crisp QR code locally with qrcode package + fallback
+  useEffect(() => {
+    let active = true;
+    QRCode.toDataURL(upiUrl, {
+      errorCorrectionLevel: 'M',
+      margin: 1,
+      width: 280,
+      color: {
+        dark: '#000000',
+        light: '#ffffff'
+      }
+    })
+      .then((url) => {
+        if (active) setQrCodeDataUrl(url);
+      })
+      .catch((err) => {
+        console.error('Local QRCode generation error, using fallback URL:', err);
+        if (active) {
+          setQrCodeDataUrl(`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [upiUrl]);
+
+  // Synchronize payment order session with backend in WAITING_FOR_PAYMENT state
+  useEffect(() => {
+    if (!currentSessionRef || cleanAmountNum <= 0) return;
+    const desc = cleanAmountNum === Number(amount)
+      ? 'Daily Lunch Subscription'
+      : `Dynamic Meal Payment - ₹${cleanAmountNum}`;
+
+    paymentService.createPaymentOrder({
+      amount: cleanAmountNum,
+      referenceNo: currentSessionRef,
+      description: desc,
+      upiId,
+      upiName
+    }).catch((err) => {
+      // Graceful background sync
+      console.debug('[Payment] Order session sync:', err?.message || err);
+    });
+  }, [currentSessionRef, cleanAmountNum, upiId, upiName, amount]);
+
+  const fetchTransactions = useCallback(async (isBackgroundPoll = false) => {
+    if (isBackgroundPoll && isPollingRef.current) return;
     try {
       if (!isBackgroundPoll) setLoadingLogs(true);
+      if (isBackgroundPoll) isPollingRef.current = true;
+
+      // 1. Check if the active QR session transaction has been paid/verified
+      if (currentSessionRef) {
+        try {
+          const statusRes = await paymentService.getPaymentStatus(currentSessionRef);
+          if (statusRes?.success && statusRes.data?.status === 'SUCCESS') {
+            const confirmedTx = statusRes.data;
+            if (!knownTxnIdsRef.current.has(confirmedTx.transactionId)) {
+              knownTxnIdsRef.current.add(confirmedTx.transactionId);
+              addNotification(
+                language === 'ta'
+                  ? `⚡ ₹${confirmedTx.amount} தொகைக்கான QR கட்டணம் தானாகக் கண்டறியப்பட்டு சரிபார்க்கப்பட்டது!`
+                  : `⚡ Payment of ₹${confirmedTx.amount} automatically verified & recorded!`,
+                'success'
+              );
+              setSelectedTx(confirmedTx);
+              setCurrentSessionRef(generateNewRef());
+            }
+          }
+        } catch (statusErr) {
+          // Normal if order is pending
+        }
+      }
+
+      // 2. Fetch latest transaction list
       const res = await paymentService.getPayments();
-      if (res && res.data) {
+      if (res && res.data && isMountedRef.current) {
         const fetched = res.data;
 
         // Check if there are newly arrived successful transactions in background
@@ -59,9 +141,10 @@ const Payment = () => {
           }
         }
 
-        // Update known IDs
+        // Update known IDs & state
         fetched.forEach((t) => knownTxnIdsRef.current.add(t.transactionId || t.id));
         setTransactions(fetched);
+        localStorage.setItem('payment_transactions', JSON.stringify(fetched));
       }
     } catch (err) {
       if (!isBackgroundPoll) {
@@ -78,11 +161,14 @@ const Payment = () => {
         }
       }
     } finally {
-      if (!isBackgroundPoll) setLoadingLogs(false);
+      if (!isBackgroundPoll && isMountedRef.current) setLoadingLogs(false);
+      isPollingRef.current = false;
     }
-  };
+  }, [currentSessionRef, language, addNotification]);
 
   useEffect(() => {
+    isMountedRef.current = true;
+
     // Load config from localStorage
     const savedUpiId = localStorage.getItem('payment_upiId') || 'harishanbai06-2@oksbi';
     const savedUpiName = localStorage.getItem('payment_upiName') || 'Vaseegrah Veda Catering';
@@ -121,14 +207,11 @@ const Payment = () => {
     window.addEventListener('payment-config-change', handleConfigChange);
 
     return () => {
+      isMountedRef.current = false;
       clearInterval(pollInterval);
       window.removeEventListener('payment-config-change', handleConfigChange);
     };
-  }, []);
-
-  // Construct dynamic UPI payment URI with reference and custom amount
-  const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(upiName)}&am=${customAmount}&cu=INR&tr=${currentSessionRef}&tn=${encodeURIComponent('SmartFood Meal Payment')}`;
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`;
+  }, [fetchTransactions]);
 
   const handleCopy = (text, field) => {
     navigator.clipboard.writeText(text);
@@ -139,14 +222,14 @@ const Payment = () => {
 
   /**
    * Automated / Instant Verification:
-   * Verifies incoming payment for the current active customAmount (e.g. ₹10) and pushes immediately into logs.
+   * Verifies incoming payment for the current active customAmount and updates state.
    */
   const handleAutoVerify = async () => {
     if (autoDetecting || !customAmount) return;
     setAutoDetecting(true);
 
     try {
-      const parsedAmt = Number(customAmount);
+      const parsedAmt = Number(customAmount) || 120;
       const isDefaultRate = parsedAmt === Number(amount);
       const desc = isDefaultRate
         ? (language === 'ta' ? 'தினசரி மதிய உணவு சந்தா' : 'Daily Lunch Subscription')
@@ -160,7 +243,7 @@ const Payment = () => {
         upiName
       });
 
-      const newTx = res.data;
+      const newTx = res?.data;
       if (newTx) {
         knownTxnIdsRef.current.add(newTx.transactionId || newTx.id);
 
@@ -179,31 +262,10 @@ const Payment = () => {
       }
     } catch (err) {
       console.error('Auto verify error:', err);
-      // Resilient local fallback
-      const parsedAmt = Number(customAmount) || 10;
-      const fallbackTx = {
-        id: currentSessionRef,
-        transactionId: currentSessionRef,
-        referenceNo: currentSessionRef,
-        date: new Date().toLocaleDateString(),
-        desc: `Dynamic Meal Payment - ₹${parsedAmt}`,
-        description: `Dynamic Meal Payment - ₹${parsedAmt}`,
-        amount: parsedAmt,
-        type: 'UPI',
-        paymentType: 'UPI',
-        status: 'SUCCESS',
-        paidAt: new Date().toISOString(),
-        upiId,
-        upiName
-      };
-
-      knownTxnIdsRef.current.add(fallbackTx.id);
-      const updated = [fallbackTx, ...transactions];
-      setTransactions(updated);
-      localStorage.setItem('payment_transactions', JSON.stringify(updated));
-      setSelectedTx(fallbackTx);
-      setCurrentSessionRef(generateNewRef());
-      addNotification(`⚡ Payment of ₹${parsedAmt} verified & recorded!`, 'success');
+      addNotification(
+        err.response?.data?.message || (language === 'ta' ? 'கட்டணத்தை சரிபார்க்க முடியவில்லை' : 'Failed to verify payment with server'),
+        'warning'
+      );
     } finally {
       setAutoDetecting(false);
     }
@@ -217,7 +279,7 @@ const Payment = () => {
     setSubmitting(true);
 
     try {
-      const parsedAmt = Number(customAmount);
+      const parsedAmt = Number(customAmount) || 120;
       const isDefaultRate = parsedAmt === Number(amount);
       const desc = isDefaultRate
         ? (language === 'ta' ? 'தினசரி மதிய உணவு சந்தா' : 'Daily Lunch Subscription')
@@ -237,7 +299,7 @@ const Payment = () => {
       };
 
       const res = await paymentService.createPayment(payload);
-      const newTx = res.data;
+      const newTx = res?.data;
       if (newTx) {
         knownTxnIdsRef.current.add(newTx.transactionId || newTx.id);
 
@@ -257,26 +319,10 @@ const Payment = () => {
       }
     } catch (err) {
       console.error('Error logging payment transaction:', err);
-      const parsedAmt = Number(customAmount);
-      const fallbackTx = {
-        id: referenceNo.trim() || currentSessionRef,
-        transactionId: referenceNo.trim() || currentSessionRef,
-        date: new Date().toLocaleDateString(),
-        desc: parsedAmt === Number(amount) ? 'Daily Lunch Subscription' : `Dynamic Meal Payment - ₹${parsedAmt}`,
-        amount: parsedAmt,
-        type: activeTab === 'upi' ? 'UPI' : 'Bank',
-        status: 'SUCCESS',
-        paidAt: new Date().toISOString()
-      };
-
-      knownTxnIdsRef.current.add(fallbackTx.id);
-      const updated = [fallbackTx, ...transactions];
-      setTransactions(updated);
-      localStorage.setItem('payment_transactions', JSON.stringify(updated));
-      setReferenceNo('');
-      setCurrentSessionRef(generateNewRef());
-      setSelectedTx(fallbackTx);
-      addNotification('Payment recorded successfully! 🎉', 'success');
+      addNotification(
+        err.response?.data?.message || (language === 'ta' ? 'கட்டணத்தை பதிவு செய்ய முடியவில்லை' : 'Failed to record payment transaction'),
+        'warning'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -339,7 +385,7 @@ const Payment = () => {
                 {/* QR Code Frame */}
                 <div className="p-4 bg-white rounded-2xl shadow-xl border border-white/15 relative group flex flex-col items-center">
                   <img
-                    src={qrCodeUrl}
+                    src={qrCodeDataUrl || `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`}
                     alt="UPI QR Code"
                     className="w-48 h-48 object-contain"
                   />

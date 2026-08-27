@@ -1,5 +1,6 @@
 import Menu from '../models/Menu.js';
 import Food from '../models/Food.js';
+import Holiday from '../models/Holiday.js';
 import { generateLunchForDate } from '../services/generatorService.js';
 import { selectFood } from '../services/menuGenerator.js';
 import { translateResponse } from '../utils/translator.js';
@@ -30,6 +31,16 @@ export const getTodayMenu = async (req, res) => {
     const lang = req.headers['accept-language'] || 'en';
     const todayStr = getTodayStr();
 
+    const holiday = await Holiday.findOne({ date: todayStr, status: 'HOLIDAY' });
+    if (holiday) {
+      return res.json({
+        date: todayStr,
+        isHoliday: true,
+        holiday: translateResponse(holiday, lang),
+        status: 'holiday'
+      });
+    }
+
     let menu = await Menu.findOne({ date: todayStr, status: 'active' })
       .populate('foodId', '-image.data')
       .populate('vegFoodId', '-image.data')
@@ -52,6 +63,17 @@ export const getTomorrowMenu = async (req, res) => {
   try {
     const lang = req.headers['accept-language'] || 'en';
     const tomorrowStr = getTomorrowStr();
+
+    const holiday = await Holiday.findOne({ date: tomorrowStr, status: 'HOLIDAY' });
+    if (holiday) {
+      return res.json({
+        date: tomorrowStr,
+        isHoliday: true,
+        holiday: translateResponse(holiday, lang),
+        status: 'holiday'
+      });
+    }
+
     let menu = await Menu.findOne({ date: tomorrowStr, status: 'active' })
       .populate('foodId', '-image.data')
       .populate('vegFoodId', '-image.data')
@@ -80,6 +102,11 @@ export const generateTomorrowMenu = async (req, res) => {
   try {
     const lang = req.headers['accept-language'] || 'en';
     const tomorrowStr = getTomorrowStr();
+
+    const holiday = await Holiday.findOne({ date: tomorrowStr, status: 'HOLIDAY' });
+    if (holiday) {
+      return res.status(400).json({ message: "Tomorrow is marked as a holiday. Remove holiday to generate menu." });
+    }
 
     const menu = await generateLunchForDate(tomorrowStr, 'manual');
     res.status(201).json(translateResponse(menu, lang));

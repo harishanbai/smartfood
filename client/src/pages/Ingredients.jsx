@@ -27,7 +27,7 @@ import {
   XCircle,
   AlertCircle
 } from 'lucide-react';
-import { requirementApi, ingredientApi, recipeApi, menuApi } from '../services/api';
+import { requirementApi, ingredientApi, recipeApi, menuApi, holidayApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useConfirm } from '../context/ConfirmContext';
@@ -138,7 +138,7 @@ const Ingredients = () => {
       const data = res.data;
       setDailyData(data);
       if (overrideEmployees === null && data?.actualEmployees !== undefined) {
-        setActualEmployees(data.actualEmployees);
+        setActualEmployees(data.isHoliday ? 0 : (data.actualEmployees > 0 ? data.actualEmployees : 10));
       }
     } catch (err) {
       console.error('Error fetching daily requirements:', err);
@@ -227,6 +227,50 @@ const Ingredients = () => {
       addNotification(err.response?.data?.message || 'Failed to deduct stock from storage', 'warning');
     } finally {
       setDeductingStock(false);
+    }
+  };
+
+  // Mark current date as Holiday
+  const handleMarkHoliday = async () => {
+    const isConfirmed = await confirm({
+      title: t('holiday.markHolidayPromptTitle') || '🎉 Mark as Holiday?',
+      message: t('holiday.markHolidayPromptMsg') || 'This date will be treated as a non-working lunch day. No lunch, ingredient, fresh-item, or purchase requirements will be generated.',
+      confirmText: t('holiday.markHolidayBtn') || '🎉 Mark Holiday',
+      cancelText: t('common.cancel') || 'Cancel',
+      type: 'warning'
+    });
+
+    if (!isConfirmed) return;
+
+    try {
+      await holidayApi.markHoliday({ date: selectedDate });
+      addNotification(t('holiday.markedSuccess') || 'Date marked as Holiday successfully! 🎉', 'success');
+      fetchDailyRequirements();
+    } catch (err) {
+      console.error('Error marking holiday:', err);
+      addNotification(err.response?.data?.message || 'Failed to mark holiday', 'warning');
+    }
+  };
+
+  // Remove Holiday status
+  const handleRemoveHoliday = async () => {
+    const isConfirmed = await confirm({
+      title: t('holiday.removeHolidayPromptTitle') || 'Remove Holiday?',
+      message: t('holiday.removeHolidayPromptMsg') || 'This date will return to a normal working day.',
+      confirmText: t('holiday.removeHolidayBtn') || 'Remove Holiday',
+      cancelText: t('common.cancel') || 'Cancel',
+      type: 'warning'
+    });
+
+    if (!isConfirmed) return;
+
+    try {
+      await holidayApi.removeHoliday(selectedDate);
+      addNotification(t('holiday.removedSuccess') || 'Holiday removed successfully. Normal working day restored!', 'success');
+      fetchDailyRequirements();
+    } catch (err) {
+      console.error('Error removing holiday:', err);
+      addNotification(err.response?.data?.message || 'Failed to remove holiday', 'warning');
     }
   };
 
@@ -401,11 +445,10 @@ const Ingredients = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${
-                    active
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${active
                       ? 'bg-gradient-to-r from-gold-500 to-gold-600 text-black shadow-glowGold font-extrabold scale-102'
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  }`}
+                    }`}
                 >
                   <Icon className={`h-4 w-4 ${active ? 'text-black' : 'text-gray-400'}`} />
                   <span>{tab.label}</span>
@@ -423,30 +466,28 @@ const Ingredients = () => {
         <div className="space-y-6">
 
           {/* Date & Meal Selection Controls */}
-          <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-black/10 dark:border-white/10 bg-bgCard space-y-4">
+          <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-white/10 bg-bgCard space-y-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              {/* Date selection shortcuts */}
+              {/* Date selection shortcuts & Holiday toggle */}
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider mr-1">
+                <span className="text-xs font-bold text-gray-300 uppercase tracking-wider mr-1">
                   {t('ingredients.selectDate')}:
                 </span>
                 <button
                   onClick={() => setSelectedDate(getTodayDateStr())}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    selectedDate === getTodayDateStr()
-                      ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/50 shadow-sm'
-                      : 'bg-black/5 dark:bg-white/5 text-gray-700 dark:text-gray-400 hover:text-black dark:hover:text-white border border-black/10 dark:border-white/5'
-                  }`}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedDate === getTodayDateStr()
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-sm'
+                      : 'bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 border border-white/10'
+                    }`}
                 >
                   {t('dashboard.todayTitle').split(' ')[0] || 'Today'}
                 </button>
                 <button
                   onClick={() => setSelectedDate(getTomorrowDateStr())}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    selectedDate === getTomorrowDateStr()
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedDate === getTomorrowDateStr()
                       ? 'bg-accentOrange/20 text-accentOrange border border-accentOrange/50 shadow-sm'
-                      : 'bg-black/5 dark:bg-white/5 text-gray-700 dark:text-gray-400 hover:text-black dark:hover:text-white border border-black/10 dark:border-white/5'
-                  }`}
+                      : 'bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 border border-white/10'
+                    }`}
                 >
                   {t('dashboard.tomorrowTitle').split(' ')[0] || 'Tomorrow'}
                 </button>
@@ -454,383 +495,470 @@ const Ingredients = () => {
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="glass-panel px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/5 border border-black/15 dark:border-white/10 text-gray-900 dark:text-white text-xs font-semibold focus:outline-none focus:border-gold-500/50"
+                  className="glass-panel px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-semibold focus:outline-none focus:border-gold-500/50 [color-scheme:dark]"
                 />
-              </div>
 
-              {/* Meal / Recipe override dropdown */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
-                  Meal Recipe:
-                </span>
-                <select
-                  value={selectedMealNumber}
-                  onChange={(e) => setSelectedMealNumber(e.target.value)}
-                  className="glass-panel px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/5 border border-black/15 dark:border-white/10 text-gray-900 dark:text-white text-xs font-medium focus:outline-none focus:border-gold-500/50 max-w-[260px] truncate [&>option]:bg-bgCard cursor-pointer"
-                >
-                  <option value="">Auto from Scheduled Menu</option>
-                  {allRecipesList.map(r => (
-                    <option key={r.mealNumber} value={r.mealNumber}>
-                      #{r.mealNumber} - {r.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Dish Hero Card + Employee Input */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-4 border-t border-black/5 dark:border-white/5">
-
-              {/* Left Column: Menu Details & Base Recipe Tags */}
-              <div className="lg:col-span-7 flex flex-col justify-between p-4 rounded-2xl bg-black/5 dark:bg-white/3 border border-black/10 dark:border-white/5 relative overflow-hidden">
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        dailyData?.dish?.foodType === 'non-veg'
-                          ? 'bg-red-500/15 border border-red-500/40 text-red-600 dark:text-red-400'
-                          : 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-700 dark:text-emerald-400'
-                      }`}>
-                        {dailyData?.dish?.foodType === 'non-veg' ? '🍗 NON-VEG' : '🌿 VEG'} • {dailyData?.dish?.category || 'Main Course'}
-                      </span>
-                      {dailyData?.dish?.mealNumber && (
-                        <span className="px-2 py-0.5 rounded-md bg-gold-500/15 border border-gold-500/30 text-gold-600 dark:text-gold-400 text-[10px] font-bold">
-                          Meal #{dailyData.dish.mealNumber}
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white tracking-tight">
-                      {dailyData?.dish?.name || 'Loading Lunch Menu...'}
-                    </h3>
-                    {dailyData?.dish?.name_ta && (
-                      <p className="text-xs sm:text-sm text-gold-600 dark:text-gold-400 font-semibold mt-0.5 font-sans">
-                        {dailyData.dish.name_ta}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-black/5 dark:border-white/5">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-gray-300">
-                    <Users className="h-3.5 w-3.5 text-gold-600 dark:text-gold-400" />
-                    <span>{t('ingredients.baseRecipeNotice')}</span>
-                  </div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
-                    <Sparkles className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300" />
-                    <span>{t('ingredients.formulaNotice')}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column: Actual Employee Count Input */}
-              <div className="lg:col-span-5 p-5 rounded-2xl bg-gradient-to-br from-gold-500/15 via-black/5 dark:via-white/5 to-transparent border border-gold-500/40 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-gold-600 dark:text-gold-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Users className="h-4 w-4" />
-                      {t('ingredients.employeesApplied')}
-                    </label>
-                    <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-400">Scaling Factor: {(actualEmployees / 10).toFixed(2)}x</span>
-                  </div>
-                  <p className="text-[11px] text-gray-600 dark:text-gray-400 mb-3">{t('ingredients.employeesAppliedDesc')}</p>
-
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleEmployeeCountChange(Math.max(0, actualEmployees - 1))}
-                      className="h-12 w-12 rounded-xl bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/20 border border-black/20 dark:border-white/15 text-gray-900 dark:text-white font-bold text-xl flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      min="0"
-                      value={actualEmployees}
-                      onChange={(e) => handleEmployeeCountChange(e.target.value)}
-                      className="flex-1 h-12 glass-panel text-center text-2xl font-black text-gray-900 dark:text-white bg-black/5 dark:bg-black/40 border border-gold-500/40 rounded-xl focus:outline-none focus:border-gold-500 shadow-inner"
-                    />
-                    <button
-                      onClick={() => handleEmployeeCountChange(actualEmployees + 1)}
-                      className="h-12 w-12 rounded-xl bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/20 border border-black/20 dark:border-white/15 text-gray-900 dark:text-white font-bold text-xl flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 mt-4 pt-3 border-t border-black/10 dark:border-white/10">
-                  <button
-                    onClick={handleSaveDaily}
-                    disabled={savingDaily}
-                    className="flex-1 py-2 rounded-xl bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/20 border border-black/20 dark:border-white/20 text-gray-900 dark:text-white text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm active:scale-98"
-                  >
-                    <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-                    <span>{savingDaily ? 'Saving...' : t('ingredients.saveCount')}</span>
-                  </button>
-
-                  <button
-                    onClick={handleConfirmDeductStock}
-                    disabled={deductingStock || dailyData?.isStockDeducted}
-                    className={`flex-1 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                      dailyData?.isStockDeducted
-                        ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-700 dark:text-emerald-400 cursor-not-allowed opacity-80'
-                        : 'bg-[#D4AF37] hover:bg-[#E5C158] text-black shadow-glowGold'
-                    }`}
-                    style={dailyData?.isStockDeducted ? {} : { backgroundColor: '#D4AF37', color: '#000000', fontWeight: 800 }}
-                  >
-                    <CheckCircle className="h-3.5 w-3.5" />
-                    <span>
-                      {dailyData?.isStockDeducted
-                        ? t('ingredients.stockDeducted')
-                        : deductingStock ? 'Deducting...' : t('ingredients.confirmDeductBtn')}
+                {/* Holiday Toggle Button on the Date bar */}
+                {dailyData?.isHoliday ? (
+                  <div className="flex items-center gap-2 ml-1">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gold-500/20 border border-gold-500/50 text-gold-400 text-xs font-extrabold shadow-glowGold">
+                      <span>🎉</span>
+                      <span>{t('holiday.badge')}</span>
                     </span>
+                    <button
+                      onClick={handleRemoveHoliday}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-red-500/20 text-gray-300 hover:text-red-400 border border-white/20 hover:border-red-500/40 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>{t('holiday.removeHolidayBtn')}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleMarkHoliday}
+                    className="ml-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-gold-500/15 hover:bg-gold-500/25 text-gold-400 border border-gold-500/40 hover:border-gold-500/70 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                  >
+                    <span>🎉</span>
+                    <span>{t('holiday.markHolidayBtn')}</span>
                   </button>
-                </div>
+                )}
               </div>
 
-            </div>
-
-            {/* Quick Metrics Badges */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-              <div className="p-3 rounded-xl bg-black/5 dark:bg-white/3 border border-black/10 dark:border-white/5">
-                <span className="text-[10px] uppercase font-bold text-gray-600 dark:text-gray-500 block">{t('ingredients.employeesApplied')}</span>
-                <span className="text-lg font-extrabold text-gray-900 dark:text-white">{actualEmployees} Employees</span>
-              </div>
-              <div className="p-3 rounded-xl bg-black/5 dark:bg-white/3 border border-black/10 dark:border-white/5">
-                <span className="text-[10px] uppercase font-bold text-gray-600 dark:text-gray-500 block">Grocery Storage Items</span>
-                <span className="text-lg font-extrabold text-gold-600 dark:text-gold-400">{dailyData?.groceryItems?.length || 0} Items</span>
-              </div>
-              <div className="p-3 rounded-xl bg-black/5 dark:bg-white/3 border border-black/10 dark:border-white/5">
-                <span className="text-[10px] uppercase font-bold text-gray-600 dark:text-gray-500 block">Fresh Perishables</span>
-                <span className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">{dailyData?.freshItems?.length || 0} Items</span>
-              </div>
-              <div className="p-3 rounded-xl bg-black/5 dark:bg-white/3 border border-black/10 dark:border-white/5">
-                <span className="text-[10px] uppercase font-bold text-gray-600 dark:text-gray-500 block">Immediate Purchase</span>
-                <span className={`text-lg font-extrabold ${dailyData?.purchaseList?.length > 0 ? 'text-red-500 dark:text-red-400 animate-pulse' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                  {dailyData?.purchaseList?.length || 0} Items Short
-                </span>
-              </div>
-            </div>
-
-          </div>
-
-          {/* ── Today's Purchase List (Shown when purchase is needed) ── */}
-          <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-red-500/30 bg-gradient-to-br from-red-500/5 via-bgCard to-bgCard relative overflow-hidden">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
-                  {t('ingredients.purchaseListHeader')}
-                </h3>
-                <p className="text-xs text-gray-600 dark:text-gray-400">{t('ingredients.purchaseListSub')}</p>
-              </div>
-
-              {dailyData?.purchaseList?.length > 0 && (
+              {/* Meal / Recipe override dropdown (only when not holiday) */}
+              {!dailyData?.isHoliday && (
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleCopyShoppingList(dailyData.purchaseList, "Today's Purchase List")}
-                    className="px-3 py-1.5 rounded-xl bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/30 text-xs font-bold text-gray-900 dark:text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  <span className="text-xs font-bold text-gray-300 uppercase tracking-wider whitespace-nowrap">
+                    Meal Recipe:
+                  </span>
+                  <select
+                    value={selectedMealNumber}
+                    onChange={(e) => setSelectedMealNumber(e.target.value)}
+                    className="glass-panel px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-medium focus:outline-none focus:border-gold-500/50 max-w-[260px] truncate [&>option]:bg-bgCard cursor-pointer"
                   >
-                    <Copy className="h-3.5 w-3.5 text-gold-600 dark:text-gold-400" />
-                    <span>{t('ingredients.copyList')}</span>
-                  </button>
-                  <button
-                    onClick={() => handleShareWhatsapp(dailyData.purchaseList, "Today's Purchase List")}
-                    className="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-xs font-bold text-emerald-300 transition-all flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Share2 className="h-3.5 w-3.5 text-emerald-400" />
-                    {t('ingredients.shareWhatsapp')}
-                  </button>
+                    <option value="">Auto from Scheduled Menu</option>
+                    {allRecipesList.map(r => (
+                      <option key={r.mealNumber} value={r.mealNumber}>
+                        #{r.mealNumber} - {r.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
             </div>
 
-            {dailyData?.purchaseList?.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-black/10 dark:border-white/10 text-gray-600 dark:text-gray-400 uppercase tracking-wider font-bold">
-                      <th className="pb-3 pl-2">#</th>
-                      <th className="pb-3">{t('ingredients.itemName')}</th>
-                      <th className="pb-3 text-right">{t('ingredients.required')}</th>
-                      <th className="pb-3 text-right">{t('ingredients.available')}</th>
-                      <th className="pb-3 text-right font-bold text-red-500 dark:text-red-400">{t('ingredients.purchaseNeeded')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-black/5 dark:divide-white/5">
-                    {dailyData.purchaseList.map((item, idx) => (
-                      <tr key={item.name} className="hover:bg-black/5 dark:hover:bg-white/3 transition-colors">
-                        <td className="py-3 pl-2 font-mono text-gray-500">{idx + 1}</td>
-                        <td className="py-3">
-                          <span className="font-bold text-gray-900 dark:text-white">{item.name}</span>
-                          {item.name_ta && <span className="block text-[11px] text-gray-600 dark:text-gray-400">{item.name_ta}</span>}
-                        </td>
-                        <td className="py-3 text-right font-semibold text-gray-800 dark:text-gray-200">
-                          {item.requiredInStorageUnit || item.requiredQty} {item.storageUnit || item.unit}
-                        </td>
-                        <td className="py-3 text-right text-gray-600 dark:text-gray-400 font-medium">
-                          {item.currentStorage} {item.storageUnit || item.unit}
-                        </td>
-                        <td className="py-3 text-right">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-red-500/20 border border-red-500/40 text-red-700 dark:text-red-300 font-extrabold">
-                            + {item.purchaseNeeded} {item.storageUnit || item.unit}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {/* If Holiday: Show Beautiful Holiday State Card */}
+            {dailyData?.isHoliday ? (
+              <div className="pt-3 border-t border-white/10">
+                <div className="glass-panel rounded-[20px] p-4 sm:p-6 border border-gold-500/40 bg-gradient-to-br from-gold-500/15 via-white/5 to-transparent text-center flex flex-col items-center justify-center relative overflow-hidden">
+                  {/* Holiday Icon */}
+                  <div className="w-16 h-16 rounded-full bg-gold-500/20 border border-gold-500/40 flex items-center justify-center mb-3 shadow-lg">
+                    <span className="text-3xl">🎉</span>
+                  </div>
+
+                  <span className="px-3 py-0.5 rounded-full bg-gold-500/20 border border-gold-500/50 text-gold-400 text-[11px] font-extrabold uppercase tracking-wider mb-1.5 shadow-sm">
+                    {t('holiday.badge')}
+                  </span>
+                  <h3 className="text-lg sm:text-xl font-extrabold text-white tracking-tight mb-0.5">
+                    {dailyData.holiday?.name || t('holiday.title')}
+                  </h3>
+                  {dailyData.holiday?.name_ta && (
+                    <p className="text-xs sm:text-sm text-gold-400 font-bold mb-1.5 font-sans">
+                      {dailyData.holiday.name_ta}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-300 max-w-lg mb-4 leading-relaxed">
+                    {t('holiday.holidayNotice')} {t('holiday.holidayDesc')}
+                  </p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full max-w-2xl mb-4">
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center">
+                      <span className="text-[10px] uppercase font-bold text-gray-400 block mb-0.5">Lunch Menu</span>
+                      <span className="text-xs font-bold text-gold-400">None (Holiday)</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center">
+                      <span className="text-[10px] uppercase font-bold text-gray-400 block mb-0.5">Employees Lunch</span>
+                      <span className="text-xs font-bold text-gray-300">Not Applicable</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center">
+                      <span className="text-[10px] uppercase font-bold text-gray-400 block mb-0.5">Storage Grocery</span>
+                      <span className="text-xs font-bold text-emerald-400">{t('holiday.noRequirements')}</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center">
+                      <span className="text-[10px] uppercase font-bold text-gray-400 block mb-0.5">Fresh Perishables</span>
+                      <span className="text-xs font-bold text-purple-400">{t('holiday.noRequirements')}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleRemoveHoliday}
+                    className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shadow-sm"
+                  >
+                    <Trash2 className="h-4 w-4 text-red-400" />
+                    <span>{t('holiday.removeHolidayBtn')}</span>
+                  </button>
+                </div>
               </div>
             ) : (
-              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3">
-                <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-                <p className="text-xs text-emerald-800 dark:text-emerald-200 font-semibold">
-                  {t('ingredients.allStockSufficient')}
-                </p>
-              </div>
-            )}
-          </div>
+              <>
+                {/* Dish Hero Card + Employee Input */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-4 border-t border-white/10">
 
-          {/* ── 🏪 Grocery / Storage Items Table ── */}
-          <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-black/10 dark:border-white/10 bg-bgCard space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  {t('ingredients.groceryStorageHeader')}
-                </h3>
-                <p className="text-xs text-gray-600 dark:text-gray-400">{t('ingredients.groceryStorageSub')}</p>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-black/10 dark:border-white/10 text-gray-600 dark:text-gray-400 uppercase tracking-wider font-bold">
-                    <th className="pb-3 pl-2">#</th>
-                    <th className="pb-3">{t('ingredients.itemName')}</th>
-                    <th className="pb-3 text-right">Base (10p)</th>
-                    <th className="pb-3 text-right">{t('ingredients.required')} Today</th>
-                    <th className="pb-3 text-right">{t('ingredients.available')}</th>
-                    <th className="pb-3 text-right">{t('ingredients.purchaseNeeded')}</th>
-                    <th className="pb-3 text-right">{t('ingredients.remainingAfterLunch')}</th>
-                    <th className="pb-3 text-center">{t('ingredients.status')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-black/5 dark:divide-white/5">
-                  {dailyData?.groceryItems?.map((item, idx) => {
-                    const isShort = item.purchaseNeeded > 0;
-                    return (
-                      <tr key={item.name} className="hover:bg-black/5 dark:hover:bg-white/3 transition-colors">
-                        <td className="py-3 pl-2 font-mono text-gray-500">{idx + 1}</td>
-                        <td className="py-3">
-                          <span className="font-bold text-gray-900 dark:text-white">{item.name}</span>
-                          {item.name_ta && <span className="block text-[11px] text-gray-600 dark:text-gray-400">{item.name_ta}</span>}
-                        </td>
-                        <td className="py-3 text-right text-gray-600 dark:text-gray-400 font-medium">
-                          {item.baseQty} {item.unit}
-                        </td>
-                        <td className="py-3 text-right font-bold text-gold-600 dark:text-gold-300">
-                          {item.requiredQty} {item.unit}
-                        </td>
-                        <td className="py-3 text-right text-gray-800 dark:text-gray-300 font-semibold">
-                          {item.currentStorage} {item.storageUnit || item.unit}
-                        </td>
-                        <td className="py-3 text-right">
-                          {isShort ? (
-                            <span className="text-red-600 dark:text-red-400 font-extrabold">
-                              {item.purchaseNeeded} {item.storageUnit || item.unit}
-                            </span>
-                          ) : (
-                            <span className="text-emerald-700 dark:text-emerald-400 font-semibold">0 {item.storageUnit || item.unit}</span>
-                          )}
-                        </td>
-                        <td className="py-3 text-right font-bold text-gray-900 dark:text-gray-200">
-                          {item.remainingStock} {item.storageUnit || item.unit}
-                        </td>
-                        <td className="py-3 text-center">
-                          {isShort ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/15 border border-red-500/30 text-red-600 dark:text-red-400">
-                              Shortfall
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
-                              In Stock
+                  {/* Left Column: Menu Details & Base Recipe Tags */}
+                  <div className="lg:col-span-7 flex flex-col justify-between p-4 rounded-2xl bg-white/5 border border-white/10 relative overflow-hidden">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${dailyData?.dish?.foodType === 'non-veg'
+                              ? 'bg-red-500/15 border border-red-500/40 text-red-400'
+                              : 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-400'
+                            }`}>
+                            {dailyData?.dish?.foodType === 'non-veg' ? '🍗 NON-VEG' : '🌿 VEG'} • {dailyData?.dish?.category || 'Main Course'}
+                          </span>
+                          {dailyData?.dish?.mealNumber && (
+                            <span className="px-2 py-0.5 rounded-md bg-gold-500/15 border border-gold-500/30 text-gold-400 text-[10px] font-bold">
+                              Meal #{dailyData.dish.mealNumber}
                             </span>
                           )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                        </div>
+                        <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+                          {dailyData?.dish?.name || 'Loading Lunch Menu...'}
+                        </h3>
+                        {dailyData?.dish?.name_ta && (
+                          <p className="text-xs sm:text-sm text-gold-400 font-semibold mt-0.5 font-sans">
+                            {dailyData.dish.name_ta}
+                          </p>
+                        )}
+                      </div>
+                    </div>
 
-          {/* ── 🥬 Fresh Items Required Today Table ── */}
-          <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-emerald-500/20 bg-bgCard space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  {t('ingredients.freshItemsHeader')}
-                </h3>
-                <p className="text-xs text-gray-600 dark:text-gray-400">{t('ingredients.freshItemsSub')}</p>
-              </div>
+                    <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-white/10">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold text-gray-300">
+                        <Users className="h-3.5 w-3.5 text-gold-400" />
+                        <span>{t('ingredients.baseRecipeNotice')}</span>
+                      </div>
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-xs font-semibold text-emerald-300">
+                        <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                        <span>{t('ingredients.formulaNotice')}</span>
+                      </div>
+                    </div>
+                  </div>
 
-              {dailyData?.freshItems?.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleCopyShoppingList(dailyData.freshItems, "Today's Fresh Produce Required")}
-                    className="px-3 py-1.5 rounded-xl bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/30 text-xs font-bold text-gray-900 dark:text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-                  >
-                    <Copy className="h-3.5 w-3.5 text-gold-600 dark:text-gold-400" />
-                    <span>{t('ingredients.copyList')}</span>
-                  </button>
-                  <button
-                    onClick={() => handleShareWhatsapp(dailyData.freshItems, "Today's Fresh Produce Required")}
-                    className="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-xs font-bold text-emerald-300 transition-all flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Share2 className="h-3.5 w-3.5 text-emerald-400" />
-                    {t('ingredients.shareWhatsapp')}
-                  </button>
-                </div>
-              )}
-            </div>
+                  {/* Right Column: Actual Employee Count Input */}
+                  <div className="lg:col-span-5 p-5 rounded-2xl bg-gradient-to-br from-gold-500/15 via-white/5 to-transparent border border-gold-500/40 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-bold text-gold-400 uppercase tracking-wider flex items-center gap-1.5">
+                          <Users className="h-4 w-4" />
+                          {t('ingredients.employeesApplied')}
+                        </label>
+                        <span className="text-[10px] font-semibold text-gray-300">Scaling Factor: {(actualEmployees / 10).toFixed(2)}x</span>
+                      </div>
+                      <p className="text-[11px] text-gray-300 mb-3">{t('ingredients.employeesAppliedDesc')}</p>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-black/10 dark:border-white/10 text-gray-600 dark:text-gray-400 uppercase tracking-wider font-bold">
-                    <th className="pb-3 pl-2">#</th>
-                    <th className="pb-3">{t('ingredients.itemName')}</th>
-                    <th className="pb-3 text-right">Base Recipe (10p)</th>
-                    <th className="pb-3 text-right font-bold text-emerald-700 dark:text-emerald-400">{t('ingredients.required')} Today</th>
-                    <th className="pb-3 text-center">Category</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-black/5 dark:divide-white/5">
-                  {dailyData?.freshItems?.map((item, idx) => (
-                    <tr key={item.name} className="hover:bg-black/5 dark:hover:bg-white/3 transition-colors">
-                      <td className="py-3 pl-2 font-mono text-gray-500">{idx + 1}</td>
-                      <td className="py-3">
-                        <span className="font-bold text-gray-900 dark:text-white">{item.name}</span>
-                        {item.name_ta && <span className="block text-[11px] text-gray-600 dark:text-gray-400">{item.name_ta}</span>}
-                      </td>
-                      <td className="py-3 text-right text-gray-600 dark:text-gray-400 font-medium">
-                        {item.baseQty} {item.unit}
-                      </td>
-                      <td className="py-3 text-right font-extrabold text-emerald-700 dark:text-emerald-300 text-sm">
-                        {item.requiredQty} {item.unit}
-                      </td>
-                      <td className="py-3 text-center">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300">
-                          Fresh Daily Produce
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleEmployeeCountChange(Math.max(0, actualEmployees - 1))}
+                          className="h-12 w-12 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xl flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          min="0"
+                          value={actualEmployees}
+                          onChange={(e) => handleEmployeeCountChange(e.target.value)}
+                          className="flex-1 h-12 glass-panel text-center text-2xl font-black text-white bg-black/40 border border-gold-500/40 rounded-xl focus:outline-none focus:border-gold-500 shadow-inner"
+                        />
+                        <button
+                          onClick={() => handleEmployeeCountChange(actualEmployees + 1)}
+                          className="h-12 w-12 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xl flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/10">
+                      <button
+                        onClick={handleSaveDaily}
+                        disabled={savingDaily}
+                        className="flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm active:scale-98"
+                      >
+                        <Check className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
+                        <span>{savingDaily ? 'Saving...' : t('ingredients.saveCount')}</span>
+                      </button>
+
+                      <button
+                        onClick={handleConfirmDeductStock}
+                        disabled={deductingStock || dailyData?.isStockDeducted}
+                        className={`flex-1 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${dailyData?.isStockDeducted
+                            ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 cursor-not-allowed opacity-80'
+                            : 'bg-[#D4AF37] hover:bg-[#E5C158] text-black shadow-glowGold'
+                          }`}
+                        style={dailyData?.isStockDeducted ? {} : { backgroundColor: '#D4AF37', color: '#000000', fontWeight: 800 }}
+                      >
+                        <CheckCircle className="h-3.5 w-3.5" />
+                        <span>
+                          {dailyData?.isStockDeducted
+                            ? t('ingredients.stockDeducted')
+                            : deductingStock ? 'Deducting...' : t('ingredients.confirmDeductBtn')}
                         </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Quick Metrics Badges */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                  <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                    <span className="text-[10px] uppercase font-bold text-gray-400 block">{t('ingredients.employeesApplied')}</span>
+                    <span className="text-lg font-extrabold text-white">{actualEmployees} Employees</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                    <span className="text-[10px] uppercase font-bold text-gray-400 block">Grocery Storage Items</span>
+                    <span className="text-lg font-extrabold text-gold-400">{dailyData?.groceryItems?.length || 0} Items</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                    <span className="text-[10px] uppercase font-bold text-gray-400 block">Fresh Perishables</span>
+                    <span className="text-lg font-extrabold text-emerald-400">{dailyData?.freshItems?.length || 0} Items</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                    <span className="text-[10px] uppercase font-bold text-gray-400 block">Immediate Purchase</span>
+                    <span className={`text-lg font-extrabold ${dailyData?.purchaseList?.length > 0 ? 'text-red-400 animate-pulse' : 'text-emerald-400'}`}>
+                      {dailyData?.purchaseList?.length || 0} Items Short
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+
           </div>
+
+          {/* Tables: Only show when NOT a Holiday */}
+          {!dailyData?.isHoliday && (
+            <>
+
+              {/* ── Today's Purchase List (Shown when purchase is needed) ── */}
+              <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-red-500/30 bg-gradient-to-br from-red-500/5 via-bgCard to-bgCard relative overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
+                      {t('ingredients.purchaseListHeader')}
+                    </h3>
+                    <p className="text-xs text-gray-400">{t('ingredients.purchaseListSub')}</p>
+                  </div>
+
+                  {dailyData?.purchaseList?.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleCopyShoppingList(dailyData.purchaseList, "Today's Purchase List")}
+                        className="px-3 py-1.5 rounded-xl bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/30 text-xs font-bold text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                      >
+                        <Copy className="h-3.5 w-3.5 text-gold-400" />
+                        <span>{t('ingredients.copyList')}</span>
+                      </button>
+                      <button
+                        onClick={() => handleShareWhatsapp(dailyData.purchaseList, "Today's Purchase List")}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-xs font-bold text-emerald-300 transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Share2 className="h-3.5 w-3.5 text-emerald-400" />
+                        {t('ingredients.shareWhatsapp')}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {dailyData?.purchaseList?.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-white/10 text-gray-400 uppercase tracking-wider font-bold">
+                          <th className="pb-3 pl-2">#</th>
+                          <th className="pb-3">{t('ingredients.itemName')}</th>
+                          <th className="pb-3 text-right">{t('ingredients.required')}</th>
+                          <th className="pb-3 text-right">{t('ingredients.available')}</th>
+                          <th className="pb-3 text-right font-bold text-red-400">{t('ingredients.purchaseNeeded')}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {dailyData.purchaseList.map((item, idx) => (
+                          <tr key={item.name} className="hover:bg-white/5 transition-colors">
+                            <td className="py-3 pl-2 font-mono text-gray-400">{idx + 1}</td>
+                            <td className="py-3">
+                              <span className="font-bold text-white">{item.name}</span>
+                              {item.name_ta && <span className="block text-[11px] text-gray-400">{item.name_ta}</span>}
+                            </td>
+                            <td className="py-3 text-right font-semibold text-gray-200">
+                              {item.requiredInStorageUnit || item.requiredQty} {item.storageUnit || item.unit}
+                            </td>
+                            <td className="py-3 text-right text-gray-300 font-medium">
+                              {item.currentStorage} {item.storageUnit || item.unit}
+                            </td>
+                            <td className="py-3 text-right">
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-red-500/20 border border-red-500/40 text-red-300 font-extrabold">
+                                + {item.purchaseNeeded} {item.storageUnit || item.unit}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-400 flex-shrink-0" />
+                    <p className="text-xs text-emerald-200 font-semibold">
+                      {t('ingredients.allStockSufficient')}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* ── 🏪 Grocery / Storage Items Table ── */}
+              <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-white/10 bg-bgCard space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                      {t('ingredients.groceryStorageHeader')}
+                    </h3>
+                    <p className="text-xs text-gray-400">{t('ingredients.groceryStorageSub')}</p>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-white/10 text-gray-400 uppercase tracking-wider font-bold">
+                        <th className="pb-3 pl-2">#</th>
+                        <th className="pb-3">{t('ingredients.itemName')}</th>
+                        <th className="pb-3 text-right">Base (10p)</th>
+                        <th className="pb-3 text-right">{t('ingredients.required')} Today</th>
+                        <th className="pb-3 text-right">{t('ingredients.available')}</th>
+                        <th className="pb-3 text-right">{t('ingredients.purchaseNeeded')}</th>
+                        <th className="pb-3 text-right">{t('ingredients.remainingAfterLunch')}</th>
+                        <th className="pb-3 text-center">{t('ingredients.status')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {dailyData?.groceryItems?.map((item, idx) => {
+                        const isShort = item.purchaseNeeded > 0;
+                        return (
+                          <tr key={item.name} className="hover:bg-white/5 transition-colors">
+                            <td className="py-3 pl-2 font-mono text-gray-400">{idx + 1}</td>
+                            <td className="py-3">
+                              <span className="font-bold text-white">{item.name}</span>
+                              {item.name_ta && <span className="block text-[11px] text-gray-400">{item.name_ta}</span>}
+                            </td>
+                            <td className="py-3 text-right text-gray-400 font-medium">
+                              {item.baseQty} {item.unit}
+                            </td>
+                            <td className="py-3 text-right font-bold text-gold-400">
+                              {item.requiredQty} {item.unit}
+                            </td>
+                            <td className="py-3 text-right text-gray-200 font-semibold">
+                              {item.currentStorage} {item.storageUnit || item.unit}
+                            </td>
+                            <td className="py-3 text-right">
+                              {isShort ? (
+                                <span className="text-red-400 font-extrabold">
+                                  {item.purchaseNeeded} {item.storageUnit || item.unit}
+                                </span>
+                              ) : (
+                                <span className="text-emerald-400 font-semibold">0 {item.storageUnit || item.unit}</span>
+                              )}
+                            </td>
+                            <td className="py-3 text-right font-bold text-gray-200">
+                              {item.remainingStock} {item.storageUnit || item.unit}
+                            </td>
+                            <td className="py-3 text-center">
+                              {isShort ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/15 border border-red-500/30 text-red-400">
+                                  Shortfall
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+                                  In Stock
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* ── 🥬 Fresh Items Required Today Table ── */}
+              <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-emerald-500/20 bg-bgCard space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                      {t('ingredients.freshItemsHeader')}
+                    </h3>
+                    <p className="text-xs text-gray-400">{t('ingredients.freshItemsSub')}</p>
+                  </div>
+
+                  {dailyData?.freshItems?.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleCopyShoppingList(dailyData.freshItems, "Today's Fresh Produce Required")}
+                        className="px-3 py-1.5 rounded-xl bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/30 text-xs font-bold text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                      >
+                        <Copy className="h-3.5 w-3.5 text-gold-400" />
+                        <span>{t('ingredients.copyList')}</span>
+                      </button>
+                      <button
+                        onClick={() => handleShareWhatsapp(dailyData.freshItems, "Today's Fresh Produce Required")}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-xs font-bold text-emerald-300 transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Share2 className="h-3.5 w-3.5 text-emerald-400" />
+                        {t('ingredients.shareWhatsapp')}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-white/10 text-gray-400 uppercase tracking-wider font-bold">
+                        <th className="pb-3 pl-2">#</th>
+                        <th className="pb-3">{t('ingredients.itemName')}</th>
+                        <th className="pb-3 text-right">Base Recipe (10p)</th>
+                        <th className="pb-3 text-right font-bold text-emerald-400">{t('ingredients.required')} Today</th>
+                        <th className="pb-3 text-center">Category</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {dailyData?.freshItems?.map((item, idx) => (
+                        <tr key={item.name} className="hover:bg-white/5 transition-colors">
+                          <td className="py-3 pl-2 font-mono text-gray-400">{idx + 1}</td>
+                          <td className="py-3">
+                            <span className="font-bold text-white">{item.name}</span>
+                            {item.name_ta && <span className="block text-[11px] text-gray-400">{item.name_ta}</span>}
+                          </td>
+                          <td className="py-3 text-right text-gray-400 font-medium">
+                            {item.baseQty} {item.unit}
+                          </td>
+                          <td className="py-3 text-right font-extrabold text-emerald-300 text-sm">
+                            {item.requiredQty} {item.unit}
+                          </td>
+                          <td className="py-3 text-center">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">
+                              Fresh Daily Produce
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
 
         </div>
       )}
@@ -843,30 +971,30 @@ const Ingredients = () => {
 
           {/* Storage Header & Quick Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="glass-panel p-4 sm:p-5 rounded-[22px] border border-black/10 dark:border-white/10 bg-bgCard">
-              <span className="text-[10px] uppercase font-bold text-gray-600 dark:text-gray-400 block mb-1">Total Storage Items</span>
-              <span className="text-2xl font-black text-gray-900 dark:text-white">{storageInventory.summary?.totalItems || 0}</span>
-              <span className="text-[10px] text-gray-500 block mt-1">31 Suggested Items</span>
+            <div className="glass-panel p-4 sm:p-5 rounded-[22px] border border-white/10 bg-bgCard">
+              <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Total Storage Items</span>
+              <span className="text-2xl font-black text-white">{storageInventory.summary?.totalItems || 0}</span>
+              <span className="text-[10px] text-gray-400 block mt-1">31 Suggested Items</span>
             </div>
             <div className="glass-panel p-4 sm:p-5 rounded-[22px] border border-emerald-500/30 bg-emerald-500/5">
-              <span className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400 block mb-1">Healthy Stock</span>
-              <span className="text-2xl font-black text-emerald-700 dark:text-emerald-300">{storageInventory.summary?.inStockCount || 0}</span>
-              <span className="text-[10px] text-emerald-800 dark:text-emerald-400/80 block mt-1">Sufficient for meals</span>
+              <span className="text-[10px] uppercase font-bold text-emerald-400 block mb-1">Healthy Stock</span>
+              <span className="text-2xl font-black text-emerald-300">{storageInventory.summary?.inStockCount || 0}</span>
+              <span className="text-[10px] text-emerald-400/80 block mt-1">Sufficient for meals</span>
             </div>
             <div className="glass-panel p-4 sm:p-5 rounded-[22px] border border-amber-500/30 bg-amber-500/5">
-              <span className="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-400 block mb-1">Low Stock Warning</span>
-              <span className="text-2xl font-black text-amber-700 dark:text-amber-300">{storageInventory.summary?.lowStockCount || 0}</span>
-              <span className="text-[10px] text-amber-800 dark:text-amber-400/80 block mt-1">Below minimum threshold</span>
+              <span className="text-[10px] uppercase font-bold text-amber-400 block mb-1">Low Stock Warning</span>
+              <span className="text-2xl font-black text-amber-300">{storageInventory.summary?.lowStockCount || 0}</span>
+              <span className="text-[10px] text-amber-400/80 block mt-1">Below minimum threshold</span>
             </div>
             <div className="glass-panel p-4 sm:p-5 rounded-[22px] border border-red-500/30 bg-red-500/5">
-              <span className="text-[10px] uppercase font-bold text-red-600 dark:text-red-400 block mb-1">Out of Stock</span>
-              <span className="text-2xl font-black text-red-600 dark:text-red-400">{storageInventory.summary?.outOfStockCount || 0}</span>
-              <span className="text-[10px] text-red-700 dark:text-red-400/80 block mt-1">Requires immediate refill</span>
+              <span className="text-[10px] uppercase font-bold text-red-400 block mb-1">Out of Stock</span>
+              <span className="text-2xl font-black text-red-400">{storageInventory.summary?.outOfStockCount || 0}</span>
+              <span className="text-[10px] text-red-400/80 block mt-1">Requires immediate refill</span>
             </div>
           </div>
 
           {/* Storage Filter & Action Bar */}
-          <div className="glass-panel rounded-[24px] p-4 sm:p-5 border border-black/10 dark:border-white/10 bg-bgCard flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="glass-panel rounded-[24px] p-4 sm:p-5 border border-white/10 bg-bgCard flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex flex-1 items-center gap-3">
               <div className="relative flex-1 max-w-md">
                 <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -875,18 +1003,17 @@ const Ingredients = () => {
                   placeholder="Search grocery stock..."
                   value={storageSearch}
                   onChange={(e) => setStorageSearch(e.target.value)}
-                  className="w-full glass-panel pl-10 pr-4 py-2 rounded-xl bg-black/5 dark:bg-white/5 border border-black/15 dark:border-white/10 text-gray-900 dark:text-white text-xs focus:outline-none focus:border-gold-500/50"
+                  className="w-full glass-panel pl-10 pr-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-400 text-xs focus:outline-none focus:border-gold-500/50"
                 />
               </div>
 
-              <div className="flex items-center gap-1.5 p-1 glass-panel rounded-xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-xs">
+              <div className="flex items-center gap-1.5 p-1 glass-panel rounded-xl bg-white/5 border border-white/10 text-xs">
                 {['all', 'low_stock', 'out_of_stock'].map(f => (
                   <button
                     key={f}
                     onClick={() => setStorageFilter(f)}
-                    className={`px-3 py-1 rounded-lg font-bold capitalize transition-all cursor-pointer ${
-                      storageFilter === f ? 'bg-gold-500 text-black shadow-sm font-extrabold' : 'text-gray-700 dark:text-gray-400 hover:text-black dark:hover:text-white'
-                    }`}
+                    className={`px-3 py-1 rounded-lg font-bold capitalize transition-all cursor-pointer ${storageFilter === f ? 'bg-gold-500 text-black shadow-sm font-extrabold' : 'text-gray-400 hover:text-white'
+                      }`}
                   >
                     {f.replace('_', ' ')}
                   </button>
@@ -897,9 +1024,9 @@ const Ingredients = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={fetchTransactions}
-                className="px-3.5 py-2 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 text-xs font-bold text-gray-800 dark:text-gray-300 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-gray-300 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
               >
-                <History className="h-4 w-4 text-gold-600 dark:text-gold-400" />
+                <History className="h-4 w-4 text-gold-400" />
                 <span>Audit Logs</span>
               </button>
               <button
@@ -915,17 +1042,17 @@ const Ingredients = () => {
 
           {/* ── Section 1: STORAGE STOCK (currentStock > 0) ── */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-black/10 dark:border-white/10">
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
               <div className="flex items-center gap-2.5">
                 <div className="h-3 w-3 rounded-full bg-emerald-400 shadow-glowEmerald" />
-                <h3 className="text-base sm:text-lg font-extrabold text-gray-900 dark:text-white tracking-wide">
+                <h3 className="text-base sm:text-lg font-extrabold text-white tracking-wide">
                   {t('ingredients.storageStockSection')}
                 </h3>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/40">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                   {inStockStorageItems.length}
                 </span>
               </div>
-              <span className="text-xs text-gray-600 dark:text-gray-400 hidden sm:inline-block">
+              <span className="text-xs text-gray-400 hidden sm:inline-block">
                 {t('ingredients.storageStockSub')}
               </span>
             </div>
@@ -941,49 +1068,46 @@ const Ingredients = () => {
                   return (
                     <div
                       key={item._id}
-                      className={`glass-panel p-5 rounded-[22px] border transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${
-                        isLow
+                      className={`glass-panel p-5 rounded-[22px] border transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${isLow
                           ? 'border-amber-500/40 bg-amber-500/5'
-                          : 'border-black/10 dark:border-white/10 bg-bgCard hover:border-gold-500/40 shadow-sm'
-                      }`}
+                          : 'border-white/10 bg-bgCard hover:border-gold-500/40 shadow-sm'
+                        }`}
                     >
                       <div>
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div>
-                            <h4 className="font-bold text-gray-900 dark:text-white text-base">{item.name}</h4>
-                            {item.name_ta && <p className="text-xs text-gold-600 dark:text-gold-400 font-semibold">{item.name_ta}</p>}
+                            <h4 className="font-bold text-white text-base">{item.name}</h4>
+                            {item.name_ta && <p className="text-xs text-gold-400 font-semibold">{item.name_ta}</p>}
                           </div>
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
-                            isLow
-                              ? 'bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/40'
-                              : 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/40'
-                          }`}>
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${isLow
+                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                              : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            }`}>
                             {isLow ? t('ingredients.lowStock') : t('ingredients.inStock')}
                           </span>
                         </div>
 
                         <div className="mt-4 flex items-baseline justify-between">
-                          <span className="text-2xl font-black text-gray-900 dark:text-white">
-                            {item.currentStock} <span className="text-sm font-bold text-gray-600 dark:text-gray-400">{item.defaultUnit}</span>
+                          <span className="text-2xl font-black text-white">
+                            {item.currentStock} <span className="text-sm font-bold text-gray-400">{item.defaultUnit}</span>
                           </span>
-                          <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                          <span className="text-xs text-gray-400 font-medium">
                             Suggested: {item.suggestedStorageStock} {item.defaultUnit}
                           </span>
                         </div>
 
                         {/* Stock level progress bar */}
-                        <div className="w-full h-2 rounded-full bg-black/10 dark:bg-white/10 mt-3 overflow-hidden">
+                        <div className="w-full h-2 rounded-full bg-white/10 mt-3 overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all duration-500 ${
-                              isLow ? 'bg-amber-500' : 'bg-emerald-500'
-                            }`}
+                            className={`h-full rounded-full transition-all duration-500 ${isLow ? 'bg-amber-500' : 'bg-emerald-500'
+                              }`}
                             style={{ width: `${pct}%` }}
                           />
                         </div>
                       </div>
 
-                      <div className="mt-5 pt-3 border-t border-black/5 dark:border-white/5 flex items-center justify-between">
-                        <span className="text-[10px] text-gray-600 dark:text-gray-500 font-semibold">Min Alert: {item.minStock} {item.defaultUnit}</span>
+                      <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between">
+                        <span className="text-[10px] text-gray-400 font-semibold">Min Alert: {item.minStock} {item.defaultUnit}</span>
                         <button
                           onClick={() => {
                             setEditStockModal(item);
@@ -992,9 +1116,9 @@ const Ingredients = () => {
                             setMinStockInput(String(item.minStock || ''));
                             setSuggestedStockInput(String(item.suggestedStorageStock || ''));
                           }}
-                          className="px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 border border-black/10 dark:border-white/10 text-xs font-bold text-gray-900 dark:text-white transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+                          className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-xs font-bold text-white transition-all flex items-center gap-1 cursor-pointer shadow-sm"
                         >
-                          <Edit2 className="h-3 w-3 text-gold-600 dark:text-gold-400" />
+                          <Edit2 className="h-3 w-3 text-gold-400" />
                           <span>{t('ingredients.addStockTitle')}</span>
                         </button>
                       </div>
@@ -1003,7 +1127,7 @@ const Ingredients = () => {
                 })}
               </div>
             ) : (
-              <div className="p-8 rounded-2xl glass-panel border border-black/10 dark:border-white/5 text-center text-xs text-gray-600 dark:text-gray-400">
+              <div className="p-8 rounded-2xl glass-panel border border-white/10 text-center text-xs text-gray-400">
                 {t('ingredients.noInStockItems')}
               </div>
             )}
@@ -1011,17 +1135,17 @@ const Ingredients = () => {
 
           {/* ── Section 2: OUT OF STOCK (currentStock <= 0) ── */}
           <div className="space-y-4 pt-4">
-            <div className="flex items-center justify-between pb-2 border-b border-black/10 dark:border-white/10">
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
               <div className="flex items-center gap-2.5">
                 <div className="h-3 w-3 rounded-full bg-red-500 shadow-glowRed" />
-                <h3 className="text-base sm:text-lg font-extrabold text-gray-900 dark:text-white tracking-wide">
+                <h3 className="text-base sm:text-lg font-extrabold text-white tracking-wide">
                   {t('ingredients.outOfStockSection')}
                 </h3>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-red-500/20 text-red-700 dark:text-red-300 border border-red-500/40">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-red-500/20 text-red-300 border border-red-500/40">
                   {outOfStockStorageItems.length}
                 </span>
               </div>
-              <span className="text-xs text-gray-600 dark:text-gray-400 hidden sm:inline-block">
+              <span className="text-xs text-gray-400 hidden sm:inline-block">
                 {t('ingredients.outOfStockSub')}
               </span>
             </div>
@@ -1036,8 +1160,8 @@ const Ingredients = () => {
                     <div>
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div>
-                          <h4 className="font-bold text-gray-900 dark:text-white text-base">{item.name}</h4>
-                          {item.name_ta && <p className="text-xs text-gold-600 dark:text-gold-400 font-semibold">{item.name_ta}</p>}
+                          <h4 className="font-bold text-white text-base">{item.name}</h4>
+                          {item.name_ta && <p className="text-xs text-gold-400 font-semibold">{item.name_ta}</p>}
                         </div>
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-red-500/20 text-red-300 border border-red-500/40">
                           {t('ingredients.outOfStock')}
@@ -1060,7 +1184,7 @@ const Ingredients = () => {
                     </div>
 
                     <div className="mt-5 pt-3 border-t border-white/5 flex items-center justify-between">
-                      <span className="text-[10px] text-gray-500">Min Alert: {item.minStock} {item.defaultUnit}</span>
+                      <span className="text-[10px] text-gray-400">Min Alert: {item.minStock} {item.defaultUnit}</span>
                       <button
                         onClick={() => {
                           setEditStockModal(item);
@@ -1125,9 +1249,8 @@ const Ingredients = () => {
                   <button
                     key={tab.id}
                     onClick={() => setRecipeFilter(tab.id)}
-                    className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                      recipeFilter === tab.id ? 'bg-gold-500 text-black font-extrabold' : 'text-gray-400 hover:text-white'
-                    }`}
+                    className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${recipeFilter === tab.id ? 'bg-gold-500 text-black font-extrabold' : 'text-gray-400 hover:text-white'
+                      }`}
                   >
                     {tab.label}
                   </button>
@@ -1157,9 +1280,8 @@ const Ingredients = () => {
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
-                            recipe.foodType === 'non-veg' ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'
-                          }`}>
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${recipe.foodType === 'non-veg' ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'
+                            }`}>
                             {recipe.foodType}
                           </span>
                           <span className="text-[10px] text-gray-500">{recipe.category}</span>
@@ -1217,11 +1339,10 @@ const Ingredients = () => {
                                     {ing.name_ta && <span className="text-gray-400 ml-2">({ing.name_ta})</span>}
                                   </td>
                                   <td className="py-2.5">
-                                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
-                                      ing.category === 'grocery'
+                                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${ing.category === 'grocery'
                                         ? 'bg-gold-500/10 text-gold-400 border border-gold-500/20'
                                         : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                    }`}>
+                                      }`}>
                                       {ing.category}
                                     </span>
                                   </td>
@@ -1278,18 +1399,16 @@ const Ingredients = () => {
                 <button
                   type="button"
                   onClick={() => setStockAction('add')}
-                  className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    stockAction === 'add' ? 'bg-gold-500 text-black font-extrabold shadow-sm' : 'bg-white/5 text-gray-400'
-                  }`}
+                  className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${stockAction === 'add' ? 'bg-gold-500 text-black font-extrabold shadow-sm' : 'bg-white/5 text-gray-400'
+                    }`}
                 >
                   {t('ingredients.addAmount')} (+)
                 </button>
                 <button
                   type="button"
                   onClick={() => setStockAction('set')}
-                  className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    stockAction === 'set' ? 'bg-gold-500 text-black font-extrabold shadow-sm' : 'bg-white/5 text-gray-400'
-                  }`}
+                  className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${stockAction === 'set' ? 'bg-gold-500 text-black font-extrabold shadow-sm' : 'bg-white/5 text-gray-400'
+                    }`}
                 >
                   {t('ingredients.setStock')} (=)
                 </button>
@@ -1544,19 +1663,17 @@ const Ingredients = () => {
                       </td>
                       <td className="py-2.5 font-bold text-white">{tx.ingredientName}</td>
                       <td className="py-2.5">
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
-                          tx.type === 'usage_deduction'
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${tx.type === 'usage_deduction'
                             ? 'bg-red-500/15 text-red-400'
                             : tx.type === 'stock_addition'
                               ? 'bg-emerald-500/15 text-emerald-400'
                               : 'bg-gold-500/15 text-gold-400'
-                        }`}>
+                          }`}>
                           {tx.type.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className={`py-2.5 text-right font-black ${
-                        tx.type === 'usage_deduction' ? 'text-red-400' : 'text-emerald-400'
-                      }`}>
+                      <td className={`py-2.5 text-right font-black ${tx.type === 'usage_deduction' ? 'text-red-400' : 'text-emerald-400'
+                        }`}>
                         {tx.type === 'usage_deduction' ? '-' : '+'}{tx.quantity} {tx.unit}
                       </td>
                       <td className="py-2.5 text-right text-gray-300 font-bold">

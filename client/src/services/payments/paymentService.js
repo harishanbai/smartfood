@@ -7,13 +7,31 @@ export const paymentService = {
   /**
    * Fetch payment transaction history logs
    */
-  getPayments: async () => {
-    const res = await api.get('/payments');
+  getPayments: async (includePending = false) => {
+    const res = await api.get(`/payments${includePending ? '?includePending=true' : ''}`);
     return res.data;
   },
 
   /**
-   * Record a new dynamic payment transaction
+   * Initiates a new QR payment session order in WAITING_FOR_PAYMENT state
+   * @param {Object} orderData - { amount, description, referenceNo, upiId, upiName }
+   */
+  createPaymentOrder: async (orderData) => {
+    const res = await api.post('/payments/order', orderData);
+    return res.data;
+  },
+
+  /**
+   * Query real-time payment status by transaction ID
+   * @param {string} transactionId
+   */
+  getPaymentStatus: async (transactionId) => {
+    const res = await api.get(`/payments/status/${encodeURIComponent(transactionId)}`);
+    return res.data;
+  },
+
+  /**
+   * Record a new manual or settled payment transaction
    * @param {Object} paymentData - { amount, description, paymentType, referenceNo, upiId, upiName, bankName }
    */
   createPayment: async (paymentData) => {
@@ -32,7 +50,7 @@ export const paymentService = {
 
   /**
    * Trigger payment simulation / webhook callback test
-   * @param {Object} paymentData - { amount, description, upiId, upiName }
+   * @param {Object} paymentData - { amount, referenceNo, transactionId, description, upiId, upiName }
    */
   simulatePayment: async (paymentData) => {
     const res = await api.post('/payments/simulate', paymentData);

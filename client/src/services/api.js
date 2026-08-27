@@ -171,5 +171,12 @@ export const requirementApi = {
   confirmStockDeduction: (data) => api.post('/requirements/daily/deduct-stock', data)
 };
 
+export const holidayApi = {
+  getHolidays: (month = '') => api.get(`/holidays${month ? `?month=${month}` : ''}`),
+  checkHoliday: (date) => api.get(`/holidays/check?date=${date}`),
+  markHoliday: (data) => api.post('/holidays', data),
+  removeHoliday: (date) => api.delete(`/holidays/${date}`),
+};
+
 export default api;
 

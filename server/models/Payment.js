@@ -39,6 +39,11 @@ const paymentSchema = new mongoose.Schema(
       required: true,
       min: 1
     },
+    currency: {
+      type: String,
+      default: 'INR',
+      trim: true
+    },
     paymentType: {
       type: String,
       enum: ['UPI', 'Bank', 'Card'],
@@ -46,8 +51,8 @@ const paymentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['SUCCESS', 'PENDING', 'FAILED', 'Success'],
-      default: 'SUCCESS'
+      enum: ['CREATED', 'WAITING_FOR_PAYMENT', 'VERIFYING', 'SUCCESS', 'FAILED', 'CANCELLED', 'EXPIRED', 'PENDING', 'Success'],
+      default: 'WAITING_FOR_PAYMENT'
     },
     upiId: {
       type: String,
@@ -63,7 +68,11 @@ const paymentSchema = new mongoose.Schema(
     },
     paidAt: {
       type: Date,
-      default: Date.now
+      default: null
+    },
+    expiresAt: {
+      type: Date,
+      default: null
     }
   },
   {

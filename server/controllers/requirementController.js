@@ -4,6 +4,7 @@ import Recipe from '../models/Recipe.js';
 import Ingredient from '../models/Ingredient.js';
 import DailyRequirement from '../models/DailyRequirement.js';
 import StockTransaction from '../models/StockTransaction.js';
+import Holiday from '../models/Holiday.js';
 import { calculateDailyRequirements, normalizeItemName, normalizeToStorageUnit } from '../services/requirementCalculator.js';
 import { getKolkataDateStr } from '../utils/dateUtils.js';
 import { translateResponse } from '../utils/translator.js';
@@ -55,7 +56,32 @@ export const getDailyRequirement = async (req, res) => {
     const date = req.query.date || getKolkataDateStr(0);
     const employeeParam = req.query.employees;
 
-    // 1. Fetch active menu, saved DailyRequirement, and grocery storage inventory concurrently
+    // 1. Check if date is a Holiday
+    const holiday = await Holiday.findOne({ date, status: 'HOLIDAY' });
+    if (holiday) {
+      return res.json(translateResponse({
+        date,
+        isHoliday: true,
+        holiday: {
+          name: holiday.name || 'Holiday',
+          name_ta: holiday.name_ta || 'விடுமுறை',
+          notes: holiday.notes || ''
+        },
+        hasMenu: false,
+        menuId: null,
+        dish: null,
+        actualEmployees: 0,
+        basePersons: 10,
+        groceryItems: [],
+        freshItems: [],
+        purchaseList: [],
+        isStockDeducted: false,
+        deductedAt: null,
+        notes: holiday.name || 'Holiday'
+      }, lang));
+    }
+
+    // 2. Fetch active menu, saved DailyRequirement, and grocery storage inventory concurrently
     const [menu, savedDoc, storageIngredients] = await Promise.all([
       Menu.findOne({ date, status: 'active' })
         .populate('foodId', '-image.data')
@@ -83,7 +109,7 @@ export const getDailyRequirement = async (req, res) => {
     let actualEmployees = 10;
     if (employeeParam !== undefined && employeeParam !== '') {
       actualEmployees = Math.max(0, Number(employeeParam));
-    } else if (savedDoc) {
+    } else if (savedDoc && savedDoc.actualEmployees > 0) {
       actualEmployees = savedDoc.actualEmployees;
     }
 
@@ -137,6 +163,11 @@ export const saveDailyRequirement = async (req, res) => {
       return res.status(400).json({ message: 'Date is required' });
     }
 
+    const holiday = await Holiday.findOne({ date, status: 'HOLIDAY' });
+    if (holiday) {
+      return res.status(400).json({ message: 'Cannot save employee count on a holiday' });
+    }
+
     let recipe = null;
     if (mealNumber) {
       recipe = await Recipe.findOne({ mealNumber: Number(mealNumber) });
@@ -184,6 +215,11 @@ export const confirmStockDeduction = async (req, res) => {
     const { date, actualEmployees } = req.body;
     const targetDate = date || getKolkataDateStr(0);
     const lang = req.headers['accept-language'] || 'en';
+
+    const holiday = await Holiday.findOne({ date: targetDate, status: 'HOLIDAY' });
+    if (holiday) {
+      return res.status(400).json({ message: 'Cannot deduct stock on a holiday' });
+    }
 
     let dailyDoc = await DailyRequirement.findOne({ date: targetDate });
 

@@ -91,7 +91,7 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
               key={item.name}
               to={item.path}
               className={({ isActive }) => `
-                flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-4 px-4 py-3.5'} rounded-xl text-sm font-semibold transition-[padding,background-color,border-color,color,transform,box-shadow] duration-200 ease-out group relative overflow-hidden transform hover:-translate-y-0.5
+                flex items-center ${isCollapsed ? 'justify-center p-3' : 'gap-3 px-3.5 py-3'} rounded-xl text-[13px] font-semibold transition-[padding,background-color,border-color,color,transform,box-shadow] duration-200 ease-out group relative overflow-hidden transform hover:-translate-y-0.5
                 ${isActive
                   ? 'active text-accentOrange bg-sidebarActive border border-accentOrange/40 shadow-[0_0_16px_rgba(212,175,55,0.25)]'
                   : 'text-sidebarText hover:text-sidebarText hover:bg-sidebarHover border border-transparent'
@@ -105,7 +105,7 @@ const Sidebar = ({ isCollapsed, onToggle }) => {
                   <span className="absolute inset-0 bg-gradient-to-r from-accentOrange/10 via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
                   <Icon className={`h-5 w-5 flex-shrink-0 transition-transform duration-200 ease-out group-hover:scale-110 group-hover:rotate-3 ${isActive ? 'text-accentOrange drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]' : 'text-sidebarText/80 group-hover:text-sidebarText'}`} />
-                  <span className={`relative z-10 font-bold whitespace-nowrap overflow-hidden transition-[max-width,opacity,transform] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isCollapsed ? 'max-w-0 opacity-0 -translate-x-2 pointer-events-none' : 'max-w-[160px] opacity-100 translate-x-0'}`}>{item.name}</span>
+                  <span className={`relative z-10 font-bold whitespace-nowrap overflow-hidden tracking-tight transition-[max-width,opacity,transform] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isCollapsed ? 'max-w-0 opacity-0 -translate-x-2 pointer-events-none' : 'max-w-[170px] opacity-100 translate-x-0'}`}>{item.name}</span>
 
                   {isActive && !isCollapsed && (
                     <span className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-6 rounded-l bg-accentOrange animate-pulse shadow-[0_0_12px_rgba(212,175,55,0.9)]" />

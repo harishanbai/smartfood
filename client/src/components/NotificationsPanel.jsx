@@ -16,7 +16,7 @@ const NotificationsPanel = ({ isOpen, onClose }) => {
         </div>
         <button 
           onClick={onClose}
-          className="text-body-muted hover:text-title p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+          className="text-body-muted hover:text-title p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
           aria-label="Close notifications"
         >
           <X className="h-4 w-4" />
