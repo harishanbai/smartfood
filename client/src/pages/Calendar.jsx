@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles, ChefHat, Trash2, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles, ChefHat, Trash2, Calendar as CalendarIcon, PartyPopper } from 'lucide-react';
 import { menuApi, foodApi, holidayApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { getImageUrl, getFallbackFoodImage } from '../utils/imageUtils';
 import { useLanguage } from '../context/LanguageContext';
 import { useConfirm } from '../context/ConfirmContext';
+import { canRemoveHoliday } from '../utils/dateUtils';
 
 const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -88,9 +89,9 @@ const Calendar = () => {
     if (!targetDate) return;
 
     const isConfirmed = await confirm({
-      title: t('holiday.markHolidayPromptTitle') || '🎉 Mark as Holiday?',
+      title: t('holiday.markHolidayPromptTitle') || 'Mark as Holiday?',
       message: t('holiday.markHolidayPromptMsg') || 'This date will be treated as a non-working lunch day. No lunch, ingredient, fresh-item, or purchase requirements will be generated.',
-      confirmText: t('holiday.markHolidayBtn') || '🎉 Mark Holiday',
+      confirmText: t('holiday.markHolidayBtn') || 'Mark Holiday',
       cancelText: t('common.cancel') || 'Cancel',
       type: 'warning'
     });
@@ -110,6 +111,11 @@ const Calendar = () => {
   const handleRemoveHoliday = async (dateToRemove) => {
     const targetDate = dateToRemove || selectedDate;
     if (!targetDate) return;
+
+    if (!canRemoveHoliday(targetDate)) {
+      addNotification('Cannot remove holiday for a past or completed lunch date (1:00 PM cutoff).', 'warning');
+      return;
+    }
 
     const isConfirmed = await confirm({
       title: t('holiday.removeHolidayPromptTitle') || 'Remove Holiday?',
@@ -280,7 +286,7 @@ const renderDays = () => {
           </span>
           {holiday && (
             <span className="text-[9px] bg-gold-500/20 border border-gold-500/40 text-gold-400 font-extrabold px-1 sm:px-1.5 py-0.5 rounded uppercase">
-              🎉 {language === 'ta' ? 'விடுமுறை' : 'Holiday'}
+              {language === 'ta' ? 'விடுமுறை' : 'Holiday'}
             </span>
           )}
           {!holiday && isToday && (
@@ -395,8 +401,8 @@ return (
             <div className="space-y-3 max-h-[calc(100vh-250px)] overflow-y-auto pr-1">
               <div className="p-4 rounded-2xl bg-gradient-to-br from-gold-500/15 via-white/5 to-transparent border border-gold-500/40 text-center flex flex-col items-center justify-center space-y-2">
                 {/* Holiday Icon */}
-                <div className="w-14 h-14 rounded-full bg-gold-500/20 border border-gold-500/40 flex items-center justify-center shadow-lg">
-                  <span className="text-2xl">🎉</span>
+                <div className="holiday-icon-ring w-12 h-12 rounded-2xl bg-[var(--accent-orange)]/12 border border-[var(--accent-orange)]/25 flex items-center justify-center shadow-sm mb-1">
+                  <PartyPopper className="h-6 w-6 text-[var(--accent-orange)]" />
                 </div>
                 <span className="px-3 py-0.5 rounded-full bg-gold-500/20 border border-gold-500/50 text-gold-400 text-[10px] font-extrabold uppercase tracking-wider">
                   {t('holiday.badge')}
@@ -412,13 +418,15 @@ return (
                 <p className="text-xs text-gray-300 leading-relaxed">
                   {t('holiday.holidayNotice')} {t('holiday.holidayDesc')}
                 </p>
-                <button
-                  onClick={() => handleRemoveHoliday(selectedDate)}
-                  className="w-full mt-2 py-2.5 px-4 bg-white/10 hover:bg-red-500/20 text-gray-200 hover:text-red-400 border border-white/20 hover:border-red-500/40 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  <span>{t('holiday.removeHolidayBtn')}</span>
-                </button>
+                {canRemoveHoliday(selectedDate) && (
+                  <button
+                    onClick={() => handleRemoveHoliday(selectedDate)}
+                    className="w-full mt-2 py-2.5 px-4 bg-white/10 hover:bg-red-500/20 text-gray-200 hover:text-red-400 border border-white/20 hover:border-red-500/40 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>{t('holiday.removeHolidayBtn')}</span>
+                  </button>
+                )}
               </div>
               <div className="pt-3 border-t border-white/5 text-[10px] text-gray-500 flex justify-between font-mono">
                 <span>Date: {selectedDate}</span>
@@ -468,9 +476,8 @@ return (
               {selectedDate && (
                 <button
                   onClick={() => handleMarkHoliday(selectedDate)}
-                  className="w-full py-2 px-3 bg-gold-500/10 hover:bg-gold-500/20 text-gold-400 border border-gold-500/30 hover:border-gold-500/50 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  className="w-full py-2 px-3 bg-gold-500/10 hover:bg-gold-500/20 text-gold-400 border border-gold-500/30 hover:border-gold-500/50 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center"
                 >
-                  <span>🎉</span>
                   <span>{t('holiday.markHolidayBtn')}</span>
                 </button>
               )}
@@ -513,9 +520,8 @@ return (
 
                   <button
                     onClick={() => handleMarkHoliday(selectedDate)}
-                    className="w-full py-2.5 px-4 bg-gold-500/10 hover:bg-gold-500/20 text-gold-400 border border-gold-500/30 hover:border-gold-500/50 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 mt-2"
+                    className="w-full py-2.5 px-4 bg-gold-500/10 hover:bg-gold-500/20 text-gold-400 border border-gold-500/30 hover:border-gold-500/50 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center mt-2"
                   >
-                    <span>🎉</span>
                     <span>{t('holiday.markHolidayBtn')}</span>
                   </button>
                 </div>

@@ -82,11 +82,19 @@ export const getDailyRequirement = async (req, res) => {
     }
 
     // 2. Fetch active menu, saved DailyRequirement, and grocery storage inventory concurrently
-    const [menu, savedDoc, storageIngredients] = await Promise.all([
-      Menu.findOne({ date, status: 'active' })
+    let menu = await Menu.findOne({ date, status: 'active' })
+      .populate('foodId', '-image.data')
+      .populate('vegFoodId', '-image.data')
+      .populate('nonVegFoodId', '-image.data');
+
+    if (!menu) {
+      menu = await Menu.findOne({ date })
         .populate('foodId', '-image.data')
         .populate('vegFoodId', '-image.data')
-        .populate('nonVegFoodId', '-image.data'),
+        .populate('nonVegFoodId', '-image.data');
+    }
+
+    const [savedDoc, storageIngredients] = await Promise.all([
       DailyRequirement.findOne({ date }),
       Ingredient.find({})
     ]);
@@ -107,7 +115,7 @@ export const getDailyRequirement = async (req, res) => {
 
     // 3. Resolve employee count & stock deduction status
     let actualEmployees = 10;
-    if (employeeParam !== undefined && employeeParam !== '') {
+    if (employeeParam !== undefined && employeeParam !== '' && Number(employeeParam) >= 0) {
       actualEmployees = Math.max(0, Number(employeeParam));
     } else if (savedDoc && savedDoc.actualEmployees > 0) {
       actualEmployees = savedDoc.actualEmployees;
@@ -119,6 +127,13 @@ export const getDailyRequirement = async (req, res) => {
     // 5. Build purchase list: all items (grocery & fresh) where purchaseNeeded > 0
     const purchaseList = [...calcResult.groceryItems, ...calcResult.freshItems].filter(
       item => (Number(item.purchaseNeeded) || 0) > 0 && (Number(item.requiredQty) || 0) > 0
+    );
+
+    const isDeductedForCurrent = Boolean(
+      savedDoc &&
+      savedDoc.isStockDeducted &&
+      savedDoc.deductedEmployees === actualEmployees &&
+      (savedDoc.deductedMealNumber == null || savedDoc.deductedMealNumber === recipe.mealNumber)
     );
 
     const responseData = {
@@ -139,7 +154,9 @@ export const getDailyRequirement = async (req, res) => {
       groceryItems: calcResult.groceryItems,
       freshItems: calcResult.freshItems,
       purchaseList,
-      isStockDeducted: savedDoc ? savedDoc.isStockDeducted : false,
+      isStockDeducted: isDeductedForCurrent,
+      deductedEmployees: savedDoc ? (savedDoc.deductedEmployees || (savedDoc.isStockDeducted ? savedDoc.actualEmployees : 0)) : 0,
+      deductedMealNumber: savedDoc ? savedDoc.deductedMealNumber : null,
       deductedAt: savedDoc ? savedDoc.deductedAt : null,
       notes: savedDoc ? savedDoc.notes : ''
     };
@@ -182,6 +199,14 @@ export const saveDailyRequirement = async (req, res) => {
     const employees = Math.max(0, Number(actualEmployees) || 0);
     const calcResult = calculateDailyRequirements(recipe, employees, storageIngredients);
 
+    const existingDoc = await DailyRequirement.findOne({ date });
+    const isSameDeductedState = Boolean(
+      existingDoc &&
+      existingDoc.isStockDeducted &&
+      existingDoc.deductedEmployees === employees &&
+      (existingDoc.deductedMealNumber == null || existingDoc.deductedMealNumber === recipe.mealNumber)
+    );
+
     const updatedDoc = await DailyRequirement.findOneAndUpdate(
       { date },
       {
@@ -195,7 +220,11 @@ export const saveDailyRequirement = async (req, res) => {
         basePersons: 10,
         groceryItems: calcResult.groceryItems,
         freshItems: calcResult.freshItems,
-        notes: notes || ''
+        isStockDeducted: isSameDeductedState,
+        deductedEmployees: existingDoc?.deductedEmployees || 0,
+        deductedMealNumber: existingDoc?.deductedMealNumber || null,
+        deductedAt: isSameDeductedState ? existingDoc.deductedAt : null,
+        notes: notes || existingDoc?.notes || ''
       },
       { upsert: true, new: true }
     );
@@ -208,11 +237,11 @@ export const saveDailyRequirement = async (req, res) => {
 
 /**
  * POST /api/requirements/daily/deduct-stock
- * Confirms lunch preparation and permanently deducts grocery storage quantities
+ * Confirms lunch preparation and permanently deducts grocery storage quantities with delta reconciliation
  */
 export const confirmStockDeduction = async (req, res) => {
   try {
-    const { date, actualEmployees } = req.body;
+    const { date, actualEmployees, mealNumber } = req.body;
     const targetDate = date || getKolkataDateStr(0);
     const lang = req.headers['accept-language'] || 'en';
 
@@ -224,8 +253,9 @@ export const confirmStockDeduction = async (req, res) => {
     let dailyDoc = await DailyRequirement.findOne({ date: targetDate });
 
     let recipe = null;
-    if (dailyDoc?.mealNumber) {
-      recipe = await Recipe.findOne({ mealNumber: dailyDoc.mealNumber });
+    const requestedMeal = mealNumber || dailyDoc?.mealNumber;
+    if (requestedMeal) {
+      recipe = await Recipe.findOne({ mealNumber: Number(requestedMeal) });
     }
     if (!recipe) {
       const menu = await Menu.findOne({ date: targetDate, status: 'active' }).populate('foodId vegFoodId nonVegFoodId');
@@ -233,43 +263,82 @@ export const confirmStockDeduction = async (req, res) => {
       recipe = await findRecipeForFood(foodItem) || await Recipe.findOne({ mealNumber: 1 });
     }
 
-    const employees = actualEmployees != null ? Math.max(0, Number(actualEmployees)) : (dailyDoc?.actualEmployees || 10);
-    const storageIngredients = await Ingredient.find({});
-    const calcResult = calculateDailyRequirements(recipe, employees, storageIngredients);
+    const currentEmployees = actualEmployees != null ? Math.max(0, Number(actualEmployees)) : (dailyDoc?.actualEmployees || 10);
+    
+    // Check if previously deducted for this date and same dish
+    const prevDeducted = Boolean(dailyDoc && dailyDoc.isStockDeducted && (dailyDoc.deductedMealNumber == null || dailyDoc.deductedMealNumber === recipe.mealNumber));
+    const prevDeductedCount = prevDeducted ? (dailyDoc.deductedEmployees || dailyDoc.actualEmployees || 0) : 0;
 
-    // If already deducted, alert to prevent duplicate reduction
-    if (dailyDoc && dailyDoc.isStockDeducted) {
-      return res.status(400).json({
-        message: 'Storage inventory has already been deducted for this lunch date.',
-        deductedAt: dailyDoc.deductedAt
+    const deltaEmployees = currentEmployees - prevDeductedCount;
+
+    if (deltaEmployees === 0 && prevDeducted) {
+      return res.json({
+        success: true,
+        message: `Stock has already been deducted for ${currentEmployees} employees on this date.`,
+        dailyDoc: translateResponse(dailyDoc, lang),
+        transactionsCount: 0
       });
     }
 
-    // Deduct each grocery item from MongoDB inventory
+    // Delta scaling factor for base proportion (10 persons)
+    const basePersons = recipe?.basePersons || 10;
+    const deltaScaling = deltaEmployees / basePersons;
+
     const transactions = [];
-    for (const gItem of calcResult.groceryItems) {
-      if (gItem.ingredientId && gItem.requiredInStorageUnit > 0) {
-        const item = await Ingredient.findById(gItem.ingredientId);
+    const rawIngredients = recipe?.ingredients || [];
+
+    for (const ing of rawIngredients) {
+      if (ing.category === 'grocery') {
+        const normName = normalizeItemName(ing.name);
+        const escapedName = ing.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const item = await Ingredient.findOne({
+          $or: [
+            { normalizedName: normName },
+            { name: { $regex: new RegExp(`^${escapedName}$`, 'i') } }
+          ]
+        });
+
         if (item) {
-          const prev = item.currentStock;
-          const deductedQty = gItem.requiredInStorageUnit;
-          const nextStock = Math.max(0, Math.round((prev - deductedQty) * 100) / 100);
+          const deltaRaw = deltaScaling * (ing.baseQuantity || 0);
+          const deltaInStorageUnit = Math.round(normalizeToStorageUnit(deltaRaw, ing.unit, item.defaultUnit) * 100) / 100;
 
-          item.currentStock = nextStock;
-          item.lastUpdated = new Date();
-          await item.save();
+          if (deltaInStorageUnit !== 0) {
+            const prev = item.currentStock;
+            let nextStock = prev;
+            let txType = 'usage_deduction';
+            let txQty = Math.abs(deltaInStorageUnit);
+            let notes = '';
 
-          transactions.push({
-            ingredientId: item._id,
-            ingredientName: item.name,
-            type: 'usage_deduction',
-            quantity: deductedQty,
-            unit: item.defaultUnit,
-            previousStock: prev,
-            newStock: nextStock,
-            referenceDate: targetDate,
-            notes: `Auto deduction for ${targetDate} lunch (${employees} employees, ${recipe.name})`
-          });
+            if (deltaInStorageUnit > 0) {
+              // Deduct additional stock
+              nextStock = Math.max(0, Math.round((prev - deltaInStorageUnit) * 100) / 100);
+              txType = 'usage_deduction';
+              notes = prevDeductedCount > 0
+                ? `Incremental deduction for extra ${deltaEmployees} employees (${prevDeductedCount} → ${currentEmployees}) on ${targetDate} lunch (${recipe.name})`
+                : `Auto deduction for ${targetDate} lunch (${currentEmployees} employees, ${recipe.name})`;
+            } else {
+              // Reconcile/refund excess stock for reduced employee count
+              nextStock = Math.round((prev + txQty) * 100) / 100;
+              txType = 'manual_adjustment';
+              notes = `Stock adjustment for reduced count (${prevDeductedCount} → ${currentEmployees} employees) on ${targetDate} lunch (${recipe.name})`;
+            }
+
+            item.currentStock = nextStock;
+            item.lastUpdated = new Date();
+            await item.save();
+
+            transactions.push({
+              ingredientId: item._id,
+              ingredientName: item.name,
+              type: txType,
+              quantity: txQty,
+              unit: item.defaultUnit,
+              previousStock: prev,
+              newStock: nextStock,
+              referenceDate: targetDate,
+              notes
+            });
+          }
         }
       }
     }
@@ -278,7 +347,10 @@ export const confirmStockDeduction = async (req, res) => {
       await StockTransaction.insertMany(transactions);
     }
 
-    // Update DailyRequirement record
+    const storageIngredients = await Ingredient.find({});
+    const calcResult = calculateDailyRequirements(recipe, currentEmployees, storageIngredients);
+
+    // Update DailyRequirement record with confirmed status
     dailyDoc = await DailyRequirement.findOneAndUpdate(
       { date: targetDate },
       {
@@ -288,11 +360,13 @@ export const confirmStockDeduction = async (req, res) => {
         dishName: recipe.name,
         dishNameTa: recipe.name_ta,
         foodType: recipe.foodType,
-        actualEmployees: employees,
+        actualEmployees: currentEmployees,
         basePersons: 10,
         groceryItems: calcResult.groceryItems,
         freshItems: calcResult.freshItems,
         isStockDeducted: true,
+        deductedEmployees: currentEmployees,
+        deductedMealNumber: recipe.mealNumber,
         deductedAt: new Date()
       },
       { upsert: true, new: true }
@@ -300,11 +374,14 @@ export const confirmStockDeduction = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Storage stock updated and deducted successfully!',
+      message: prevDeductedCount > 0
+        ? `Storage stock adjusted for ${currentEmployees} employees (previously ${prevDeductedCount})!`
+        : `Storage stock deducted successfully for ${currentEmployees} employees!`,
       dailyDoc: translateResponse(dailyDoc, lang),
       transactionsCount: transactions.length
     });
   } catch (error) {
+    console.error('Error confirming stock deduction:', error);
     res.status(500).json({ message: 'Error confirming stock deduction', error: error.message });
   }
 };

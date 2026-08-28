@@ -1,5 +1,6 @@
 import Holiday from '../models/Holiday.js';
 import { translateResponse } from '../utils/translator.js';
+import { getKolkataDateStr, getCurrentISTHour } from '../utils/dateUtils.js';
 
 /**
  * GET /api/holidays
@@ -85,7 +86,7 @@ export const markHoliday = async (req, res) => {
 
 /**
  * DELETE /api/holidays/:date or POST /api/holidays/remove
- * Remove holiday status for a date
+ * Remove holiday status for a date (only permitted if lunch has not passed yet)
  */
 export const removeHoliday = async (req, res) => {
   try {
@@ -93,6 +94,17 @@ export const removeHoliday = async (req, res) => {
 
     if (!date) {
       return res.status(400).json({ message: 'Date is required' });
+    }
+
+    // 1:00 PM (13:00) lunch cutoff check:
+    // Past dates or today after 1:00 PM cannot have their holiday status removed
+    const todayStr = getKolkataDateStr(0);
+    const currentHour = getCurrentISTHour();
+
+    if (date < todayStr || (date === todayStr && currentHour >= 13)) {
+      return res.status(400).json({
+        message: 'Cannot remove holiday for a past or completed lunch date (1:00 PM cutoff).'
+      });
     }
 
     const deleted = await Holiday.findOneAndDelete({ date });

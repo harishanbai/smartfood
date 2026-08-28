@@ -4,6 +4,7 @@ import {
   getStorageInventory,
   addIngredient,
   updateStock,
+  deleteIngredient,
   getTransactions
 } from '../controllers/ingredientController.js';
 
@@ -13,6 +14,7 @@ router.get('/', getIngredients);
 router.get('/storage', getStorageInventory);
 router.post('/', addIngredient);
 router.put('/:id/stock', updateStock);
+router.delete('/:id', deleteIngredient);
 router.get('/transactions', getTransactions);
 
 export default router;

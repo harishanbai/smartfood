@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Ingredient from '../models/Ingredient.js';
 import StockTransaction from '../models/StockTransaction.js';
 import { translateResponse } from '../utils/translator.js';
@@ -200,3 +201,55 @@ export const getTransactions = async (req, res) => {
     res.status(500).json({ message: 'Error retrieving stock transactions', error: error.message });
   }
 };
+
+/**
+ * DELETE /api/ingredients/:id
+ * Removes a physical storage inventory item.
+ * 🚨 CRITICAL RULE: This only clears physical stock / unmarks isStorageItem.
+ * It NEVER deletes recipe/food requirements from dishes (Requirements 3 & 4).
+ */
+export const deleteIngredient = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let item = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      item = await Ingredient.findById(id);
+    }
+    if (!item) {
+      const norm = normalizeIngredientName(id);
+      item = await Ingredient.findOne({ $or: [{ normalizedName: norm }, { name: id }] });
+    }
+    if (!item) {
+      return res.status(404).json({ message: 'Storage item not found' });
+    }
+
+    const prevStock = item.currentStock;
+    item.isStorageItem = false;
+    item.currentStock = 0;
+    item.lastUpdated = new Date();
+    await item.save();
+
+    if (prevStock > 0) {
+      await StockTransaction.create({
+        ingredientId: item._id,
+        ingredientName: item.name,
+        type: 'manual_adjustment',
+        quantity: prevStock,
+        unit: item.defaultUnit,
+        previousStock: prevStock,
+        newStock: 0,
+        notes: 'Item removed from physical storage'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Item removed from physical storage successfully',
+      deletedId: item._id
+    });
+  } catch (error) {
+    console.error('Error deleting storage item:', error);
+    res.status(500).json({ message: 'Error deleting storage item', error: error.message });
+  }
+};
+

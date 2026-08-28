@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Sparkles, RefreshCw, AlertCircle, CalendarRange, Bell, CheckCircle,
-  Sun, Moon, Star, Flame, Info, Calendar, MessageSquare, CreditCard, ShoppingBag, Trash2
+  Sun, Moon, Star, Flame, Info, Calendar, MessageSquare, CreditCard, ShoppingBag, Trash2,
+  PartyPopper, Leaf, UtensilsCrossed, Dices, CalendarDays
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { menuApi, foodApi, tamilCalendarApi, holidayApi } from '../services/api';
@@ -18,21 +19,22 @@ const RuleBadge = ({ ruleCode, ruleApplied }) => {
   if (!ruleCode) return null;
 
   const config = {
-    festival: { bg: 'bg-purple-500/15', border: 'border-purple-500/40', text: 'text-purple-300', icon: '🎉', label: ruleApplied || 'Festival – Veg Only' },
-    viratham: { bg: 'bg-pink-500/15', border: 'border-pink-500/40', text: 'text-pink-300', icon: '🪔', label: ruleApplied || 'Viratham – Veg Only' },
-    amavasai: { bg: 'bg-indigo-500/15', border: 'border-indigo-500/40', text: 'text-indigo-300', icon: '🌑', label: ruleApplied || 'Amavasai – Veg Only' },
-    pournami: { bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', text: 'text-yellow-400', icon: '🌕', label: ruleApplied || 'Pournami – Veg Only' },
-    wednesday: { bg: 'bg-orange-500/15', border: 'border-orange-500/40', text: 'text-orange-300', icon: '🍗', label: ruleApplied || 'Company Rule – Wednesday Non-Veg' },
-    normal: { bg: 'bg-emerald-500/15', border: 'border-emerald-500/40', text: 'text-emerald-300', icon: '🎲', label: ruleApplied || 'Normal Day' },
+    festival: { bg: 'bg-violet-500/15', border: 'border-violet-500/35', text: 'text-violet-300', Icon: PartyPopper, label: ruleApplied || 'Festival – Veg Only' },
+    viratham: { bg: 'bg-pink-500/15', border: 'border-pink-500/35', text: 'text-pink-300', Icon: Flame, label: ruleApplied || 'Viratham – Veg Only' },
+    amavasai: { bg: 'bg-indigo-500/15', border: 'border-indigo-500/35', text: 'text-indigo-300', Icon: Moon, label: ruleApplied || 'Amavasai – Veg Only' },
+    pournami: { bg: 'bg-amber-500/10', border: 'border-amber-500/30', text: 'text-amber-400', Icon: Sun, label: ruleApplied || 'Pournami – Veg Only' },
+    wednesday: { bg: 'bg-orange-500/15', border: 'border-orange-500/35', text: 'text-orange-300', Icon: UtensilsCrossed, label: ruleApplied || 'Company Rule – Wednesday Non-Veg' },
+    normal: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', Icon: Dices, label: ruleApplied || 'Normal Day' },
   };
 
   const c = config[ruleCode] || config.normal;
-  const hasEmoji = typeof c.label === 'string' && /^[^\w\s\d]/.test(c.label);
+  // Strip leading emoji from label if present (data from server may have them)
+  const cleanLabel = typeof c.label === 'string' ? c.label.replace(/^[\u{1F300}-\u{1FFFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\s]+/u, '').trim() : c.label;
 
   return (
     <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-semibold tracking-wide ${c.bg} ${c.border} ${c.text}`}>
-      {!hasEmoji && <span>{c.icon}</span>}
-      <span>{c.label}</span>
+      <c.Icon className="h-3 w-3 flex-shrink-0" />
+      <span>{cleanLabel}</span>
     </div>
   );
 };
@@ -43,7 +45,7 @@ const RuleBadge = ({ ruleCode, ruleApplied }) => {
 const TamilCalendarCard = ({ data, loading }) => {
   if (loading) {
     return (
-      <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-[rgba(34,197,94,0.45)] relative overflow-hidden animate-pulse">
+      <div className="rounded-2xl p-5 sm:p-6 border border-[var(--dash-card-border)] bg-[var(--dash-card-bg)] shadow-[var(--dash-shadow-card)] relative overflow-hidden animate-pulse">
         <div className="h-4 w-36 bg-white/10 rounded mb-4" />
         <div className="grid grid-cols-2 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -63,23 +65,20 @@ const TamilCalendarCard = ({ data, loading }) => {
     { label: 'Tamil Month', value: tc?.tamilMonth, icon: <Sun className="h-3.5 w-3.5" /> },
     { label: 'Tithi', value: tc?.tithi, icon: <Moon className="h-3.5 w-3.5" /> },
     { label: 'Nakshatra', value: tc?.nakshatra, icon: <Star className="h-3.5 w-3.5" /> },
-    { label: 'Sunrise', value: tc?.sunrise, icon: <Sun className="h-3.5 w-3.5 text-yellow-400" /> },
+    { label: 'Sunrise', value: tc?.sunrise, icon: <Sun className="h-3.5 w-3.5 text-amber-400" /> },
     { label: 'Sunset', value: tc?.sunset, icon: <Moon className="h-3.5 w-3.5 text-orange-400" /> },
   ];
 
   return (
-    <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-[rgba(34,197,94,0.45)] relative overflow-hidden group hover:shadow-[0_0_30px_rgba(168,85,247,0.08)] transition-all duration-500">
-      {/* Background glow */}
-      <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-purple-500/8 rounded-full blur-[80px] pointer-events-none" />
-
+    <div className="dash-card-hover rounded-2xl p-5 sm:p-6 border border-[var(--dash-card-border)] bg-[var(--dash-card-bg)] shadow-[var(--dash-shadow-card)] relative overflow-hidden transition-all duration-300">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <span className="text-xs uppercase font-bold tracking-wider text-purple-400 flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-purple-400 animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
+        <span className="text-xs uppercase font-bold tracking-wider text-[var(--dash-text-label)] flex items-center gap-1.5">
+          <CalendarDays className="h-3.5 w-3.5" />
           Tamil Calendar
         </span>
         {!apiAvailable && (
-          <span className="text-[9px] bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 px-2 py-0.5 rounded-full">
+          <span className="text-[9px] bg-amber-500/10 border border-amber-500/30 text-amber-400 px-2 py-0.5 rounded-full">
             API Offline
           </span>
         )}
@@ -89,64 +88,64 @@ const TamilCalendarCard = ({ data, loading }) => {
         <>
           {/* Festival / Viratham / Amavasai / Pournami banners */}
           {tc.isFestival && (
-            <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-500/15 border border-purple-500/30">
-              <span className="text-base">🎉</span>
+            <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-violet-500/12 border border-violet-500/25">
+              <PartyPopper className="h-4 w-4 text-violet-400 flex-shrink-0" />
               <div>
-                <p className="text-[10px] font-bold text-purple-300 uppercase tracking-wider">Festival Today</p>
-                <p className="text-xs text-white font-semibold">{tc.festivalName}</p>
+                <p className="text-[10px] font-bold text-violet-300 uppercase tracking-wider">Festival Today</p>
+                <p className="text-xs text-[var(--dash-text-section)] font-semibold">{tc.festivalName}</p>
               </div>
             </div>
           )}
           {tc.isViratham && (
-            <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-pink-500/15 border border-pink-500/30">
-              <span className="text-base">🪔</span>
+            <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-pink-500/12 border border-pink-500/25">
+              <Flame className="h-4 w-4 text-pink-400 flex-shrink-0" />
               <div>
                 <p className="text-[10px] font-bold text-pink-300 uppercase tracking-wider">Viratham Today</p>
-                <p className="text-xs text-white font-semibold">{tc.virathamName || 'Auspicious Fasting'}</p>
+                <p className="text-xs text-[var(--dash-text-section)] font-semibold">{tc.virathamName || 'Auspicious Fasting'}</p>
               </div>
             </div>
           )}
           {tc.isAmavasai && (
-            <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-500/15 border border-indigo-500/30">
-              <span className="text-base">🌑</span>
+            <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-500/12 border border-indigo-500/25">
+              <Moon className="h-4 w-4 text-indigo-400 flex-shrink-0" />
               <p className="text-xs font-bold text-indigo-300">Amavasai (No Moon Day)</p>
             </div>
           )}
           {tc.isPournami && (
-            <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-yellow-500/10 border border-yellow-500/25">
-              <span className="text-base">🌕</span>
-              <p className="text-xs font-bold text-yellow-300">Pournami (Full Moon Day)</p>
+            <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <Sun className="h-4 w-4 text-amber-400 flex-shrink-0" />
+              <p className="text-xs font-bold text-amber-300">Pournami (Full Moon Day)</p>
             </div>
           )}
 
           {/* Data grid */}
           <div className="grid grid-cols-2 gap-2 mb-4">
             {fields.map((f) => (
-              <div key={f.label} className="bg-white/3 border border-white/5 rounded-xl p-2.5 hover:bg-white/5 transition-colors">
-                <div className="flex items-center gap-1.5 text-gray-500 mb-0.5">
+              <div key={f.label} className="bg-[var(--dash-inner-bg)] border border-[var(--dash-inner-border)] rounded-xl p-2.5 hover:bg-[var(--dash-status-track)] transition-colors">
+                <div className="flex items-center gap-1.5 text-[var(--dash-text-muted)] mb-0.5">
                   {f.icon}
                   <span className="text-[9px] uppercase tracking-wider font-semibold">{f.label}</span>
                 </div>
-                <p className="text-xs font-semibold text-white truncate">{f.value || '—'}</p>
+                <p className="text-xs font-semibold text-[var(--dash-text-section)] truncate">{f.value || '—'}</p>
               </div>
             ))}
           </div>
 
           {/* Rule Applied for Tomorrow */}
           {rule && (
-            <div className="pt-3 border-t border-white/5">
-              <p className="text-[9px] text-gray-500 uppercase tracking-wider mb-1.5 font-semibold">Tomorrow's Rule</p>
+            <div className="pt-3 border-t border-[var(--dash-inner-border)]">
+              <p className="text-[9px] text-[var(--dash-text-muted)] uppercase tracking-wider mb-1.5 font-semibold">Tomorrow's Rule</p>
               <RuleBadge ruleCode={rule.ruleCode} ruleApplied={rule.ruleApplied} />
               {rule.festivalName && (
-                <p className="text-[10px] text-gray-400 mt-1.5">Festival: <span className="text-white font-medium">{rule.festivalName}</span></p>
+                <p className="text-[10px] text-[var(--dash-text-muted)] mt-1.5">Festival: <span className="text-[var(--dash-text-section)] font-medium">{rule.festivalName}</span></p>
               )}
             </div>
           )}
         </>
       ) : (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <Info className="h-8 w-8 text-gray-600 mb-2" />
-          <p className="text-xs text-gray-500 max-w-[200px]">
+          <Info className="h-8 w-8 text-[var(--dash-text-muted)] mb-2" />
+          <p className="text-xs text-[var(--dash-text-muted)] max-w-[200px]">
             Tamil Calendar data unavailable. Menu generation will use Normal Random mode.
           </p>
         </div>
@@ -410,76 +409,90 @@ const Dashboard = () => {
   }, [eligibleFoods]);
 
   return (
-    <div className="relative min-h-screen pb-12 w-full overflow-x-hidden">
+    <div className="relative min-h-screen pb-32 lg:pb-12 w-full overflow-x-hidden">
       {/* Notification bell row */}
       <div className="flex justify-end mb-6 relative">
         <button
           onClick={() => setNotifOpen(!notifOpen)}
-          className="relative glass-panel p-3 rounded-xl hover:bg-white/10 transition-all border border-[rgba(34,197,94,0.45)] text-accentGreen hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center shadow-sm"
+          className="relative glass-panel p-3 rounded-xl hover:bg-white/10 transition-all border border-[var(--glass-border-gold)] text-[var(--accent-orange)] hover:text-[var(--accent-orange-bright)] min-h-[44px] min-w-[44px] flex items-center justify-center shadow-sm"
         >
-          <Bell className="h-5 w-5 text-accentGreen" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-accentGreen animate-pulse" />
+          <Bell className="h-5 w-5" />
+          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[var(--accent-orange)] animate-pulse" />
         </button>
         <NotificationsPanel isOpen={notifOpen} onClose={() => setNotifOpen(false)} />
       </div>
 
-      {/* Quick Billing Alert */}
-      <div className="mb-6 rounded-2xl border border-[var(--glass-border)] bg-bgCard p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl transition-all">
+      {/* ── Quick Billing Alert ─────────────────────────────────────────────── */}
+      {/* Actionable card: strongest visual weight — strong border + shadow */}
+      <div
+        className="mb-6 rounded-2xl border border-[var(--dash-card-primary-border)] bg-[var(--dash-card-bg)] p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+        style={{ boxShadow: 'var(--dash-shadow-elevated)' }}
+      >
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-accentGreen/10 flex items-center justify-center text-accentOrange border border-accentOrange/30">
-            <CreditCard className="h-5 w-5 text-accentOrange" />
+          <div className="h-10 w-10 rounded-xl bg-[var(--accent-orange)]/10 border border-[var(--accent-orange)]/30 flex items-center justify-center flex-shrink-0">
+            <CreditCard className="h-5 w-5 text-[var(--accent-orange)]" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-title">{language === 'ta' ? 'மதிய உணவு சந்தா கணக்கு' : 'Active Meal Subscription Account'}</h4>
-            <p className="text-xs text-body-muted mt-0.5">{language === 'ta' ? 'கட்டண விவரங்களை சரிபார்த்து, UPI QR அல்லது வங்கிப் பரிமாற்றம் மூலம் தொகையைச் செலுத்தவும்.' : 'Check payment details or scan UPI QR code to keep your meal subscription active.'}</p>
+            <h4 className="text-sm font-bold text-[var(--dash-text-hero)]">
+              {language === 'ta' ? 'மதிய உணவு சந்தா கணக்கு' : 'Active Meal Subscription Account'}
+            </h4>
+            <p className="text-xs text-[var(--dash-text-muted)] mt-0.5 max-w-sm leading-relaxed">
+              {language === 'ta'
+                ? 'கட்டண விவரங்களை சரிபார்த்து, UPI QR அல்லது வங்கிப் பரிமாற்றம் மூலம் தொகையைச் செலுத்தவும்.'
+                : 'Check payment details or scan UPI QR code to keep your meal subscription active.'}
+            </p>
           </div>
         </div>
         <button
           onClick={() => navigate('/payment')}
-          className="w-full sm:w-auto px-6 py-2.5 bg-[#D4AF37] hover:bg-[#E5C158] text-black font-extrabold text-xs rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(212,175,55,0.4)] cursor-pointer min-h-[38px] text-center border-none shadow-md"
+          className="w-full sm:w-auto px-6 py-2.5 bg-[#D4AF37] hover:bg-[#E5C158] text-black font-extrabold text-xs rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(212,175,55,0.45)] cursor-pointer min-h-[38px] text-center border-none shadow-md flex-shrink-0"
           style={{ backgroundColor: '#D4AF37', color: '#000000', fontWeight: 800 }}
         >
           {language === 'ta' ? 'பணம் செலுத்து' : 'Pay Now'}
         </button>
       </div>
 
-      {/* Main Dashboard Layout */}
+      {/* ── Main Dashboard Grid ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 xl:gap-8">
 
         {/* Left Side: Today, Tomorrow Cards + Tamil Calendar Card */}
-        {/* Left Side: Today & Tomorrow Cards */}
         <div className="col-span-1 xl:col-span-7 flex flex-col gap-6">
 
-          {/* ── Today's Lunch Card ── */}
-          <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-[rgba(34,197,94,0.45)] relative overflow-hidden group hover:shadow-[0_0_30px_rgba(34,197,94,0.1)] transition-all duration-500">
-            <div className="absolute -right-20 -top-20 w-48 h-48 bg-accentGreen/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-accentGreen/20 transition-colors duration-500" />
+          {/* ── TODAY'S LUNCH MENU — Primary Hero Card (highest elevation) ── */}
+          <div
+            className="dash-card-primary dash-card-hover rounded-2xl p-5 sm:p-6 border border-[var(--dash-card-primary-border)] bg-[var(--dash-card-bg)] relative overflow-hidden transition-all duration-300"
+            style={{ boxShadow: 'var(--dash-shadow-elevated)' }}
+          >
+            {/* Subtle gold glow accent — only visual, no functional change */}
+            <div className="absolute -right-16 -top-16 w-40 h-40 bg-[var(--accent-orange)]/8 rounded-full blur-[70px] pointer-events-none" />
 
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs uppercase font-bold tracking-wider text-accentGreen flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-accentGreen animate-pulse shadow-[0_0_8px_#22C55E]" />
+            {/* Section label — typography hierarchy: LABEL style */}
+            <div className="flex items-center justify-between mb-5">
+              <span className="text-[11px] uppercase font-extrabold tracking-widest text-[var(--dash-text-label)] flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent-orange)] animate-pulse" />
                 {t('dashboard.todayTitle')}
               </span>
-              <span className="text-xs text-gray-400 font-medium font-mono">{t('dashboard.timeRange')}</span>
+              <span className="text-xs text-[var(--dash-text-muted)] font-medium font-mono">{t('dashboard.timeRange')}</span>
             </div>
 
             {todayMenu?.isHoliday ? (
-              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-gold-500/15 via-white/5 to-transparent border border-gold-500/40 text-center flex flex-col items-center justify-center space-y-2">
-                {/* Holiday Icon */}
-                <div className="w-14 h-14 rounded-full bg-gold-500/20 border border-gold-500/40 flex items-center justify-center shadow-lg">
-                  <span className="text-2xl">🎉</span>
+              /* ── Holiday empty state: proportionate, icon-based ── */
+              <div className="holiday-state-bloom py-6 px-4 rounded-2xl bg-[var(--dash-inner-bg)] border border-[var(--dash-card-border-accent)] text-center flex flex-col items-center justify-center space-y-3">
+                <div className="holiday-icon-ring w-12 h-12 rounded-2xl bg-[var(--accent-orange)]/12 border border-[var(--accent-orange)]/25 flex items-center justify-center shadow-sm">
+                  <PartyPopper className="h-6 w-6 text-[var(--accent-orange)]" />
                 </div>
-                <span className="px-3 py-0.5 rounded-full bg-gold-500/20 border border-gold-500/50 text-gold-400 text-[10px] font-extrabold uppercase tracking-wider">
+                <span className="px-3 py-0.5 rounded-full bg-[var(--accent-orange)]/12 border border-[var(--accent-orange)]/30 text-[var(--accent-orange)] text-[10px] font-extrabold uppercase tracking-widest">
                   {t('holiday.badge')}
                 </span>
-                <h4 className="text-sm sm:text-base font-bold text-white mb-0">
+                <h4 className="text-sm sm:text-base font-bold text-[var(--dash-text-hero)] mb-0">
                   {todayMenu.holiday?.name || t('holiday.title')}
                 </h4>
                 {todayMenu.holiday?.name_ta && (
-                  <p className="text-xs text-gold-400 font-semibold font-sans">
+                  <p className="text-xs text-[var(--accent-orange)] font-semibold font-sans">
                     {todayMenu.holiday.name_ta}
                   </p>
                 )}
-                <p className="text-xs text-gray-300 max-w-sm">
+                <p className="text-xs text-[var(--dash-text-body)] max-w-sm leading-relaxed">
                   {t('holiday.holidayNotice')} {t('holiday.holidayDesc')}
                 </p>
               </div>
@@ -490,8 +503,8 @@ const Dashboard = () => {
                   if (!todayFood) return null;
                   const isNonVeg = todayFood.foodType === 'non-veg' || (todayFood.category || '').toLowerCase().includes('non');
                   return (
-                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start p-4 rounded-2xl bg-white/3 border border-white/5 hover:bg-white/5 transition-all duration-300 w-full">
-                      <div className="w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 items-center sm:items-start p-4 rounded-2xl bg-[var(--dash-inner-bg)] border border-[var(--dash-inner-border)] hover:border-[var(--dash-card-border-accent)] transition-all duration-300 w-full">
+                      <div className="food-photo-frame w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-[var(--dash-inner-border)] relative flex-shrink-0">
                         <img
                           src={getImageUrl(todayFood)}
                           alt={todayFood.name}
@@ -505,33 +518,32 @@ const Dashboard = () => {
                       </div>
                       <div className="flex-1 text-center sm:text-left">
                         <span className={`inline-flex items-center gap-1.5 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${isNonVeg
-                          ? 'bg-red-500/15 border border-red-500/30 text-red-400'
-                          : 'bg-accentGreen/15 border border-accentGreen/30 text-accentGreen'
-                          }`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${isNonVeg ? 'bg-red-400' : 'bg-accentGreen animate-pulse'}`} />
+                          ? 'bg-red-500/15 border border-red-500/25 text-red-400'
+                          : 'bg-emerald-500/12 border border-emerald-500/25 text-emerald-500'
+                        }`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${isNonVeg ? 'bg-red-400' : 'bg-emerald-400 animate-pulse'}`} />
                           {isNonVeg ? 'NON-VEG' : 'VEG'} • {todayFood.category}
                         </span>
-                        <h3 className="text-lg font-bold text-white mt-2 mb-1 tracking-tight">{todayFood.name}</h3>
-                        <p className="text-gray-400 text-xs leading-relaxed">{todayFood.description}</p>
+                        <h3 className="dash-heading text-lg font-bold text-[var(--dash-text-hero)] mt-2 mb-1 tracking-tight">{todayFood.name}</h3>
+                        <p className="text-[var(--dash-text-body)] text-xs leading-relaxed">{todayFood.description}</p>
                       </div>
                     </div>
                   );
                 })()}
 
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/5">
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-[var(--dash-inner-border)]">
                   <div className="flex flex-wrap items-center gap-2">
-                    <div className="inline-flex items-center gap-2 text-xs font-semibold text-accentGreen bg-accentGreen/10 border border-accentGreen/20 px-3 py-1.5 rounded-lg">
-                      <CheckCircle className="h-3.5 w-3.5 text-accentGreen" />
+                    <div className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg">
+                      <CheckCircle className="h-3.5 w-3.5" />
                       <span>Prepared &amp; Served</span>
                     </div>
-                    {/* Rule badge for today's menu */}
                     {todayMenu.ruleCode && (
                       <RuleBadge ruleCode={todayMenu.ruleCode} ruleApplied={todayMenu.ruleApplied} />
                     )}
                   </div>
                   <button
-                    onClick={() => navigate('/ingredients')}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white/5 hover:bg-white/10 text-gold-400 border border-gold-500/30 transition-all cursor-pointer"
+                    onClick={() => navigate('/ingredients', { state: { date: todayMenu?.date || getTodayStr() } })}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[var(--dash-inner-bg)] hover:bg-[var(--dash-status-track)] text-[var(--accent-orange)] border border-[var(--dash-card-border-accent)] transition-all cursor-pointer"
                   >
                     <ShoppingBag className="h-3.5 w-3.5" />
                     <span>{t('common.ingredients') || 'Ingredients'}</span>
@@ -540,20 +552,23 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-10 text-center">
-                <AlertCircle className="h-10 w-10 text-gray-500 mb-2" />
-                <h4 className="font-bold text-white mb-1">{t('dashboard.noTodayMenu')}</h4>
-                <p className="text-xs text-gray-400 max-w-xs">{t('dashboard.noTodaySub')}</p>
+                <AlertCircle className="h-10 w-10 text-[var(--dash-text-muted)] mb-2" />
+                <h4 className="font-bold text-[var(--dash-text-hero)] mb-1">{t('dashboard.noTodayMenu')}</h4>
+                <p className="text-xs text-[var(--dash-text-muted)] max-w-xs">{t('dashboard.noTodaySub')}</p>
               </div>
             )}
           </div>
 
-          {/* ── Tomorrow's Lunch Card ── */}
-          <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-[rgba(34,197,94,0.45)] relative overflow-hidden group hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] transition-all duration-500">
-            <div className="absolute -right-20 -top-20 w-48 h-48 bg-accentOrange/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-accentOrange/20 transition-colors duration-500" />
+          {/* ── TOMORROW'S LUNCH CARD — Secondary card (balanced weight) ── */}
+          <div
+            className="dash-card-hover rounded-2xl p-5 sm:p-6 border border-[var(--dash-card-border)] bg-[var(--dash-card-bg)] relative overflow-hidden transition-all duration-300"
+            style={{ boxShadow: 'var(--dash-shadow-card)' }}
+          >
+            <div className="absolute -right-14 -top-14 w-36 h-36 bg-[var(--accent-orange)]/6 rounded-full blur-[60px] pointer-events-none" />
 
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs uppercase font-bold tracking-wider text-accentOrange flex items-center gap-1.5">
-                <CalendarRange className="h-4 w-4 text-accentOrange" />
+            <div className="flex items-center justify-between mb-5">
+              <span className="text-[11px] uppercase font-extrabold tracking-widest text-[var(--dash-text-label)] flex items-center gap-2">
+                <CalendarRange className="h-3.5 w-3.5" />
                 {t('dashboard.tomorrowTitle')}
               </span>
               {tomorrowMenu && !tomorrowMenu.isHoliday && (() => {
@@ -562,9 +577,9 @@ const Dashboard = () => {
                   : (tomorrowMenu.scheduledTime === '20:00' || !tomorrowMenu.generationType);
                 return (
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase ${isAuto
-                      ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
-                      : 'bg-blue-500/10 border border-blue-500/30 text-blue-400'
-                    }`}>
+                    ? 'bg-emerald-500/10 border border-emerald-500/25 text-emerald-500'
+                    : 'bg-blue-500/10 border border-blue-500/25 text-blue-400'
+                  }`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${isAuto ? 'bg-emerald-400 animate-pulse' : 'bg-blue-400'}`} />
                     {isAuto ? 'Auto Generated' : 'Manually Generated'}
                   </span>
@@ -573,28 +588,29 @@ const Dashboard = () => {
             </div>
 
             {tomorrowMenu?.isHoliday ? (
-              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-gold-500/15 via-white/5 to-transparent border border-gold-500/40 text-center flex flex-col items-center justify-center space-y-2">
-                <div className="w-14 h-14 rounded-full bg-gold-500/20 border border-gold-500/40 flex items-center justify-center shadow-lg mb-2">
-                  <span className="text-2xl">🎉</span>
+              /* ── Holiday empty state: proportionate ── */
+              <div className="holiday-state-bloom py-6 px-4 rounded-2xl bg-[var(--dash-inner-bg)] border border-[var(--dash-card-border-accent)] text-center flex flex-col items-center justify-center space-y-3">
+                <div className="holiday-icon-ring w-12 h-12 rounded-2xl bg-[var(--accent-orange)]/12 border border-[var(--accent-orange)]/25 flex items-center justify-center shadow-sm">
+                  <PartyPopper className="h-6 w-6 text-[var(--accent-orange)]" />
                 </div>
-                <span className="px-3 py-0.5 rounded-full bg-gold-500/20 border border-gold-500/50 text-gold-400 text-[10px] font-extrabold uppercase tracking-wider">
+                <span className="px-3 py-0.5 rounded-full bg-[var(--accent-orange)]/12 border border-[var(--accent-orange)]/30 text-[var(--accent-orange)] text-[10px] font-extrabold uppercase tracking-widest">
                   {t('holiday.badge')}
                 </span>
-                <h4 className="text-sm sm:text-base font-bold text-white mb-0">
+                <h4 className="text-sm sm:text-base font-bold text-[var(--dash-text-hero)] mb-0">
                   {tomorrowMenu.holiday?.name || t('holiday.title')}
                 </h4>
                 {tomorrowMenu.holiday?.name_ta && (
-                  <p className="text-xs text-gold-400 font-semibold font-sans">
+                  <p className="text-xs text-[var(--accent-orange)] font-semibold font-sans">
                     {tomorrowMenu.holiday.name_ta}
                   </p>
                 )}
-                <p className="text-xs text-gray-300 max-w-sm">
+                <p className="text-xs text-[var(--dash-text-body)] max-w-sm leading-relaxed">
                   {t('holiday.holidayNotice')} {t('holiday.holidayDesc')}
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
                   <button
                     onClick={handleRemoveTomorrowHoliday}
-                    className="px-5 py-2 rounded-xl bg-white/10 hover:bg-red-500/20 text-gray-200 hover:text-red-400 border border-white/20 hover:border-red-500/40 text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shadow-sm"
+                    className="px-5 py-2 rounded-xl bg-[var(--dash-inner-bg)] hover:bg-red-500/12 text-[var(--dash-text-body)] hover:text-red-400 border border-[var(--dash-inner-border)] hover:border-red-500/35 text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shadow-sm"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     <span>{t('holiday.removeHolidayBtn')}</span>
@@ -608,8 +624,8 @@ const Dashboard = () => {
                   if (!tomorrowFood) return null;
                   const isNonVeg = tomorrowFood.foodType === 'non-veg' || (tomorrowFood.category || '').toLowerCase().includes('non');
                   return (
-                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start p-4 rounded-2xl bg-white/3 border border-white/5 hover:bg-white/5 transition-all duration-300 w-full">
-                      <div className="w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-white/10 relative flex-shrink-0">
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 items-center sm:items-start p-4 rounded-2xl bg-[var(--dash-inner-bg)] border border-[var(--dash-inner-border)] hover:border-[var(--dash-card-border-accent)] transition-all duration-300 w-full">
+                      <div className="food-photo-frame w-full sm:w-28 h-28 rounded-xl overflow-hidden bg-black/20 border border-[var(--dash-inner-border)] relative flex-shrink-0">
                         <img
                           src={getImageUrl(tomorrowFood)}
                           alt={tomorrowFood.name}
@@ -623,47 +639,45 @@ const Dashboard = () => {
                       </div>
                       <div className="flex-1 text-center sm:text-left">
                         <span className={`inline-flex items-center gap-1.5 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${isNonVeg
-                          ? 'bg-red-500/15 border border-red-500/30 text-red-400'
-                          : 'bg-accentGreen/15 border border-accentGreen/30 text-accentGreen'
-                          }`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${isNonVeg ? 'bg-red-400' : 'bg-accentGreen'}`} />
+                          ? 'bg-red-500/15 border border-red-500/25 text-red-400'
+                          : 'bg-emerald-500/12 border border-emerald-500/25 text-emerald-500'
+                        }`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${isNonVeg ? 'bg-red-400' : 'bg-emerald-400'}`} />
                           {isNonVeg ? 'NON-VEG' : 'VEG'} • {tomorrowFood.category}
                         </span>
-                        <h3 className="text-lg font-bold text-white mt-2 mb-1 tracking-tight">{tomorrowFood.name}</h3>
-                        <p className="text-gray-400 text-xs leading-relaxed">{tomorrowFood.description}</p>
+                        <h3 className="dash-heading text-lg font-bold text-[var(--dash-text-hero)] mt-2 mb-1 tracking-tight">{tomorrowFood.name}</h3>
+                        <p className="text-[var(--dash-text-body)] text-xs leading-relaxed">{tomorrowFood.description}</p>
                       </div>
                     </div>
                   );
                 })()}
 
-                <div className="flex flex-col justify-between pt-2 border-t border-white/5">
-                  {/* ── Rule Applied Badge ── */}
+                <div className="flex flex-col justify-between pt-3 border-t border-[var(--dash-inner-border)]">
                   {tomorrowRuleCode && (
                     <div className="mb-4">
                       <RuleBadge ruleCode={tomorrowRuleCode} ruleApplied={tomorrowRuleApplied} />
                     </div>
                   )}
 
-                  {/* Action Buttons */}
                   <div className="flex flex-col xs:flex-row flex-wrap gap-3 justify-center sm:justify-start">
                     <button
                       onClick={handleSkipClick}
                       disabled={isSpinning}
-                      className="w-full xs:w-auto px-5 py-3 rounded-xl text-xs font-bold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[44px]"
+                      className="w-full xs:w-auto px-5 py-3 rounded-xl text-xs font-bold bg-[var(--dash-inner-bg)] border border-[var(--dash-inner-border)] text-[var(--dash-text-section)] hover:bg-[var(--dash-status-track)] hover:border-[var(--dash-card-border-accent)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[44px]"
                     >
                       {t('dashboard.btnSkipMenu')}
                     </button>
                     <button
                       onClick={handleGenerateClick}
                       disabled={isSpinning}
-                      className="w-full xs:w-auto px-5 py-3 rounded-xl text-xs font-bold bg-gradient-to-r from-accentPurple to-accentOrange text-white hover:opacity-90 shadow-lg shadow-purple-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[44px]"
+                      className="w-full xs:w-auto px-5 py-3 rounded-xl text-xs font-bold bg-gradient-to-r from-[var(--accent-orange)] to-[var(--accent-orange-bright)] text-black font-extrabold hover:opacity-90 shadow-[0_4px_16px_rgba(212,175,55,0.35)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 min-h-[44px]"
                     >
                       <RefreshCw className={`h-3.5 w-3.5 ${isSpinning ? 'animate-spin' : ''}`} />
                       {t('dashboard.btnRollSelect')}
                     </button>
                     <button
-                      onClick={() => navigate('/ingredients')}
-                      className="w-full xs:w-auto px-4 py-3 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-gold-400 border border-gold-500/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]"
+                      onClick={() => navigate('/ingredients', { state: { date: tomorrowMenu?.date || getTomorrowStr() } })}
+                      className="w-full xs:w-auto px-4 py-3 rounded-xl text-xs font-bold bg-[var(--dash-inner-bg)] hover:bg-[var(--dash-status-track)] text-[var(--accent-orange)] border border-[var(--dash-card-border-accent)] transition-all flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]"
                     >
                       <ShoppingBag className="h-4 w-4" />
                       <span>{t('common.ingredients') || 'Ingredients'}</span>
@@ -673,25 +687,24 @@ const Dashboard = () => {
               </div>
             ) : carouselMode ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="h-8 w-8 rounded-full border-2 border-accentPurple border-t-transparent animate-spin mb-3" />
-                <h4 className="font-bold text-white mb-1">{t('dashboard.carouselTitle')}</h4>
-                <p className="text-xs text-gray-400">{t('dashboard.spinPrompt')}</p>
+                <div className="h-8 w-8 rounded-full border-2 border-[var(--accent-orange)] border-t-transparent animate-spin mb-3" />
+                <h4 className="font-bold text-[var(--dash-text-hero)] mb-1">{t('dashboard.carouselTitle')}</h4>
+                <p className="text-xs text-[var(--dash-text-muted)]">{t('dashboard.spinPrompt')}</p>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-10 text-center">
-                {/* Pre-generation rule preview */}
                 {tomorrowRuleCode && (
                   <div className="mb-4">
                     <RuleBadge ruleCode={tomorrowRuleCode} ruleApplied={tomorrowRuleApplied} />
                   </div>
                 )}
-                <Sparkles className="h-10 w-10 text-accentPurple mb-2 animate-pulse" />
-                <h4 className="font-bold text-white mb-1">{t('dashboard.notSelectedTitle')}</h4>
-                <p className="text-xs text-gray-400 max-w-sm mb-5">{t('dashboard.notSelectedSub')}</p>
+                <Sparkles className="h-10 w-10 text-[var(--accent-orange)] mb-2 animate-pulse" />
+                <h4 className="font-bold text-[var(--dash-text-hero)] mb-1">{t('dashboard.notSelectedTitle')}</h4>
+                <p className="text-xs text-[var(--dash-text-muted)] max-w-sm mb-5">{t('dashboard.notSelectedSub')}</p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mt-2">
                   <button
                     onClick={handleGenerateClick}
-                    className="w-full sm:w-auto px-6 py-3 rounded-2xl text-xs font-bold bg-gradient-to-r from-accentPurple to-accentOrange text-white hover:opacity-90 shadow-lg shadow-purple-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
+                    className="w-full sm:w-auto px-6 py-3 rounded-2xl text-xs font-extrabold bg-gradient-to-r from-[var(--accent-orange)] to-[var(--accent-orange-bright)] text-black hover:opacity-90 shadow-[0_4px_20px_rgba(212,175,55,0.4)] transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
                   >
                     <Sparkles className="h-4 w-4" />
                     {t('dashboard.btnRollSelect')}
@@ -702,18 +715,18 @@ const Dashboard = () => {
                       <select
                         value={selectedFoodId}
                         onChange={(e) => setSelectedFoodId(e.target.value)}
-                        className="glass-panel px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-accentPurple/50 transition-all [&>option]:bg-bgCard min-h-[44px] min-w-[150px]"
+                        className="glass-panel px-3 py-2 rounded-xl bg-[var(--dash-inner-bg)] border border-[var(--dash-card-border)] text-[var(--dash-text-section)] text-xs focus:outline-none focus:border-[var(--accent-orange)] transition-all [&>option]:bg-bgCard min-h-[44px] min-w-[150px]"
                       >
                         {eligibleFoods.map(food => (
                           <option key={food._id} value={food._id}>
-                            {food.name}{food.foodType === 'non-veg' ? ' 🍗' : ' 🌿'}
+                            {food.name}{food.foodType === 'non-veg' ? ' (Non-Veg)' : ' (Veg)'}
                           </option>
                         ))}
                       </select>
                       <button
                         onClick={handleManualSchedule}
                         disabled={assigning}
-                        className="px-4 py-3 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/15 text-white border border-white/15 cursor-pointer min-h-[44px]"
+                        className="px-4 py-3 rounded-xl text-xs font-bold bg-[var(--dash-inner-bg)] hover:bg-[var(--dash-status-track)] text-[var(--dash-text-section)] border border-[var(--dash-card-border)] cursor-pointer min-h-[44px]"
                       >
                         {assigning ? '...' : 'Schedule'}
                       </button>
@@ -732,13 +745,16 @@ const Dashboard = () => {
 
         {/* Right Side: Premium 3D Carousel Panel */}
         <div className="col-span-1 xl:col-span-5 flex flex-col gap-6">
-          <div className="glass-panel rounded-[24px] p-5 sm:p-6 border border-[rgba(34,197,94,0.45)] flex flex-col justify-between relative overflow-hidden">
+          <div
+            className="dash-card-hover rounded-2xl p-5 sm:p-6 border border-[var(--dash-card-border)] bg-[var(--dash-card-bg)] flex flex-col justify-between relative overflow-hidden"
+            style={{ boxShadow: 'var(--dash-shadow-card)' }}
+          >
             <div className="mb-4">
-              <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-accentPurple" />
+              <h3 className="dash-heading text-lg sm:text-xl font-bold text-[var(--dash-text-hero)] tracking-tight flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-[var(--accent-orange)]" />
                 {t('dashboard.carouselTitle')}
               </h3>
-              <p className="text-xs text-gray-400">{t('dashboard.availableRecipesSub')}</p>
+              <p className="text-xs text-[var(--dash-text-muted)]">{t('dashboard.availableRecipesSub')}</p>
             </div>
 
             {/* Carousel Container */}
@@ -751,19 +767,20 @@ const Dashboard = () => {
               />
             </div>
 
-            <div className="mt-4 pt-4 border-t border-white/5 text-[11px] text-gray-500 text-center">
+            <div className="mt-4 pt-4 border-t border-[var(--dash-inner-border)] text-[11px] text-[var(--dash-text-muted)] text-center">
               {t('dashboard.spinPrompt')}
             </div>
           </div>
 
           {/* ── Tomorrow's Tamil Calendar Info ── */}
           {!calendarLoading && tamilTomorrow && (
-            <div className="glass-panel rounded-[24px] p-5 border border-white/5 relative overflow-hidden">
-              <div className="absolute -right-10 -top-10 w-32 h-32 bg-indigo-500/8 rounded-full blur-[60px] pointer-events-none" />
-
+            <div
+              className="dash-card-hover rounded-2xl p-5 sm:p-6 border border-[var(--dash-card-border)] bg-[var(--dash-card-bg)] relative overflow-hidden"
+              style={{ boxShadow: 'var(--dash-shadow-card)' }}
+            >
               <div className="flex items-center gap-1.5 mb-3">
                 <Flame className="h-4 w-4 text-orange-400" />
-                <span className="text-xs uppercase font-bold tracking-wider text-orange-300">Tomorrow's Panchang</span>
+                <span className="text-xs uppercase font-bold tracking-wider text-[var(--dash-text-label)]">Tomorrow's Panchang</span>
               </div>
 
               <div className="grid grid-cols-2 gap-2 mb-3">
@@ -773,56 +790,56 @@ const Dashboard = () => {
                   { label: 'Tithi', value: tamilTomorrow.tamilCalendar.tithi },
                   { label: 'Nakshatra', value: tamilTomorrow.tamilCalendar.nakshatra },
                 ].map((f) => (
-                  <div key={f.label} className="bg-white/3 border border-white/5 rounded-xl p-2.5">
-                    <p className="text-[9px] text-gray-500 uppercase tracking-wider font-semibold mb-0.5">{f.label}</p>
-                    <p className="text-xs font-semibold text-white truncate">{f.value || '—'}</p>
+                  <div key={f.label} className="bg-[var(--dash-inner-bg)] border border-[var(--dash-inner-border)] rounded-xl p-2.5">
+                    <p className="text-[9px] text-[var(--dash-text-muted)] uppercase tracking-wider font-semibold mb-0.5">{f.label}</p>
+                    <p className="text-xs font-semibold text-[var(--dash-text-section)] truncate">{f.value || '—'}</p>
                   </div>
                 ))}
               </div>
 
-              {/* Festival / Viratham / Amavasai / Pournami banners or No Festival */}
+              {/* Festival / Viratham / Amavasai / Pournami banners with icons */}
               {tamilTomorrow.tamilCalendar?.isFestival ? (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-500/15 border border-purple-500/30 mb-3">
-                  <span>🎉</span>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-violet-500/12 border border-violet-500/25 mb-3">
+                  <PartyPopper className="h-4 w-4 text-violet-400 flex-shrink-0" />
                   <div>
-                    <p className="text-[9px] font-bold text-purple-300 uppercase tracking-wider">Festival Tomorrow</p>
-                    <p className="text-xs text-white font-semibold">{tamilTomorrow.tamilCalendar.festivalName}</p>
+                    <p className="text-[9px] font-bold text-violet-300 uppercase tracking-wider">Festival Tomorrow</p>
+                    <p className="text-xs text-[var(--dash-text-section)] font-semibold">{tamilTomorrow.tamilCalendar.festivalName}</p>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 mb-3">
-                  <span>📅</span>
-                  <p className="text-xs font-semibold text-gray-400">No Festival Tomorrow</p>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--dash-inner-bg)] border border-[var(--dash-inner-border)] mb-3">
+                  <CalendarDays className="h-4 w-4 text-[var(--dash-text-muted)] flex-shrink-0" />
+                  <p className="text-xs font-semibold text-[var(--dash-text-muted)]">No Festival Tomorrow</p>
                 </div>
               )}
               {tamilTomorrow.tamilCalendar?.isViratham && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-pink-500/15 border border-pink-500/30 mb-3">
-                  <span>🪔</span>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-pink-500/12 border border-pink-500/25 mb-3">
+                  <Flame className="h-4 w-4 text-pink-400 flex-shrink-0" />
                   <div>
                     <p className="text-[9px] font-bold text-pink-300 uppercase tracking-wider">Viratham Tomorrow</p>
-                    <p className="text-xs text-white font-semibold">{tamilTomorrow.tamilCalendar.virathamName || 'Auspicious Fasting'}</p>
+                    <p className="text-xs text-[var(--dash-text-section)] font-semibold">{tamilTomorrow.tamilCalendar.virathamName || 'Auspicious Fasting'}</p>
                   </div>
                 </div>
               )}
               {tamilTomorrow.tamilCalendar?.isAmavasai && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-500/15 border border-indigo-500/30 mb-3">
-                  <span>🌑</span>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-500/12 border border-indigo-500/25 mb-3">
+                  <Moon className="h-4 w-4 text-indigo-400 flex-shrink-0" />
                   <p className="text-xs font-bold text-indigo-300">Amavasai (New Moon) Tomorrow</p>
                 </div>
               )}
               {tamilTomorrow.tamilCalendar?.isPournami && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-yellow-500/10 border border-yellow-500/25 mb-3">
-                  <span>🌕</span>
-                  <p className="text-xs font-bold text-yellow-300">Pournami (Full Moon) Tomorrow</p>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-3">
+                  <Sun className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                  <p className="text-xs font-bold text-amber-300">Pournami (Full Moon) Tomorrow</p>
                 </div>
               )}
 
               {/* Rule Applied for Tomorrow */}
               {tamilTomorrow.rule && (
-                <div className="pt-3 border-t border-white/5">
+                <div className="pt-3 border-t border-[var(--dash-inner-border)]">
                   <RuleBadge ruleCode={tamilTomorrow.rule.ruleCode} ruleApplied={tamilTomorrow.rule.ruleApplied} />
                   {tamilTomorrow.rule.reason && (
-                    <p className="text-[10px] text-gray-400 mt-2 leading-relaxed">{tamilTomorrow.rule.reason}</p>
+                    <p className="text-[10px] text-[var(--dash-text-muted)] mt-2 leading-relaxed">{tamilTomorrow.rule.reason}</p>
                   )}
                 </div>
               )}

@@ -151,6 +151,7 @@ export const ingredientApi = {
   getStorageInventory: () => api.get('/ingredients/storage'),
   addIngredient: (data) => api.post('/ingredients', data),
   updateStock: (id, data) => api.put(`/ingredients/${id}/stock`, data),
+  deleteIngredient: (id) => api.delete(`/ingredients/${id}`),
   getTransactions: (params = {}) => api.get('/ingredients/transactions', { params })
 };
 

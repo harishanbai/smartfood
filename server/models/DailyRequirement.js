@@ -70,6 +70,14 @@ const dailyRequirementSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    deductedEmployees: {
+      type: Number,
+      default: 0
+    },
+    deductedMealNumber: {
+      type: Number,
+      default: null
+    },
     deductedAt: {
       type: Date,
       default: null

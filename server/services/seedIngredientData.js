@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Ingredient from '../models/Ingredient.js';
 import Recipe from '../models/Recipe.js';
 import Food from '../models/Food.js';

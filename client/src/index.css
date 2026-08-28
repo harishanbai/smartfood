@@ -1,107 +1,246 @@
-/* Smart Lunch Generator - TechVaseegrah Gold & Dark Emerald Theme Design System */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+/* Smart Lunch Generator - TechVaseegrah Unified Design System */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   DESIGN SYSTEM: Unified Color Tokens
+   Primary Accent: Metallic Gold (#D4AF37) — same hue across both modes
+   Dark Mode: Neutral charcoal/slate (no green tint)
+   Light Mode: Clean white/light-gray (no mint tint)
+───────────────────────────────────────────────────────────────────────────── */
+
 :root {
-  --bg-main: #041d14;
-  --bg-secondary: #072b1e;
-  --bg-card: #0a2d1f;
-  --bg-elevated: #0f3927;
-  --bg-scrollbar: #041d14;
-  --bg-scrollbar-thumb: rgba(212, 175, 55, 0.4);
+  /* ── Dark mode backgrounds: deep forest green ── */
+  --bg-main: #061410;
+  --bg-secondary: #0C1D14;
+  --bg-card: #0F2318;
+  --bg-elevated: #162E1F;
+  --bg-scrollbar: #061410;
+  --bg-scrollbar-thumb: rgba(212, 175, 55, 0.35);
 
-  --sidebar-bg: #03170f;
-  --sidebar-hover: #082d1f;
-  --sidebar-active: rgba(212, 175, 55, 0.22);
-  --sidebar-border: rgba(34, 197, 94, 0.35);
-  --sidebar-text: #F8FAFC;
-  --sidebar-text-muted: #A7B0BE;
+  /* ── Sidebar ── */
+  --sidebar-bg: #040D09;
+  --sidebar-hover: #162E1F;
+  --sidebar-active: rgba(212, 175, 55, 0.15);
+  --sidebar-border: rgba(212, 175, 55, 0.25);
+  --sidebar-text: #F1F5F9;
+  --sidebar-text-muted: #94A3B8;
 
-  --accent-purple: #22C55E;
-  /* Emerald */
-  --accent-purple-bright: #4ade80;
-  --accent-purple-soft: #86efac;
-
+  /* ── Primary Accent: Metallic Gold ── */
   --accent-orange: #D4AF37;
-  /* Metallic Gold */
   --accent-orange-bright: #E5C158;
   --accent-orange-soft: #F3D77A;
 
+  /* ── Secondary: Emerald (brighter on green bg for contrast) ── */
+  --accent-purple: #22C55E;
+  --accent-purple-bright: #4ADE80;
+  --accent-purple-soft: #86EFAC;
   --accent-green: #22C55E;
 
+  /* ── Typography hierarchy ── */
   --text-title: #FFFFFF;
-  --text-body: #C2D5CD;
-  --text-body-muted: #A3C0B4;
-  --text-muted: #84AA9B;
-  --text-muted-dark: #658F7F;
+  --text-body: #E2E8F0;
+  --text-body-muted: #94A3B8;
+  --text-muted: #64748B;
+  --text-muted-dark: #475569;
 
-  --glass-bg: rgba(10, 45, 31, 0.85);
-  --glass-border: rgba(34, 197, 94, 0.45);
-  --glass-border-gold: rgba(212, 175, 55, 0.45);
-  --glass-border-emerald: rgba(34, 197, 94, 0.45);
-  --glass-hover-bg: rgba(14, 58, 40, 0.92);
-  --glass-hover-border: rgba(34, 197, 94, 0.65);
-  --shadow-hover: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  /* ── Glass & borders: forest green tinted with unified gold border ── */
+  --glass-bg: rgba(15, 35, 24, 0.95);
+  --glass-border: rgba(212, 175, 55, 0.5);
+  --glass-border-gold: rgba(212, 175, 55, 0.5);
+  --glass-border-emerald: rgba(34, 197, 94, 0.3);
+  --glass-hover-bg: rgba(22, 46, 31, 0.95);
+  --glass-hover-border: rgba(212, 175, 55, 0.7);
+  --shadow-hover: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+
+  /* ── Dashboard & Card semantic tokens ── */
+  --dash-card-bg: rgba(15, 35, 24, 0.95);
+  --dash-card-border: rgba(212, 175, 55, 0.5);
+  --dash-card-border-accent: rgba(212, 175, 55, 0.35);
+  --dash-card-primary-border: rgba(212, 175, 55, 0.5);
+  --dash-shadow-card: 0 4px 24px rgba(0, 0, 0, 0.35);
+  --dash-shadow-elevated: 0 8px 40px rgba(0, 0, 0, 0.5);
+  --dash-inner-bg: rgba(255, 255, 255, 0.04);
+  --dash-inner-border: rgba(212, 175, 55, 0.22);
+  --dash-status-track: rgba(255, 255, 255, 0.05);
+  --dash-text-hero: #FFFFFF;
+  --dash-text-section: #F1F5F9;
+  --dash-text-label: #E2E8F0;
+  --dash-text-body: #CBD5E1;
+  --dash-text-muted: #94A3B8;
+  --dash-text-tag: #94A3B8;
+
+  /* ── Brand Typography Token ── */
+  --font-heading: 'Sora', 'Plus Jakarta Sans', sans-serif;
 }
 
 :root.light {
-  --bg-main: #F2F8F5;
-  --bg-secondary: #E5F0EB;
+  /* ── Light mode backgrounds: clean white / light gray ── */
+  --bg-main: #EEF7F2;
+  --bg-secondary: #E5F2EA;
   --bg-card: #FFFFFF;
-  --bg-elevated: #F0F7F3;
-  --bg-scrollbar: #F2F8F5;
-  --bg-scrollbar-thumb: rgba(212, 175, 55, 0.4);
+  --bg-elevated: #EAF4EE;
+  --bg-scrollbar: #EEF7F2;
+  --bg-scrollbar-thumb: rgba(212, 175, 55, 0.35);
 
+  /* ── Sidebar ── */
   --sidebar-bg: #FFFFFF;
-  --sidebar-hover: #F0F7F3;
-  --sidebar-active: rgba(212, 175, 55, 0.18);
-  --sidebar-border: rgba(212, 175, 55, 0.45);
+  --sidebar-hover: #EEF7F2;
+  --sidebar-active: rgba(180, 140, 40, 0.12);
+  --sidebar-border: rgba(180, 140, 40, 0.35);
   --sidebar-text: #0F172A;
-  --sidebar-text-muted: #334155;
+  --sidebar-text-muted: #475569;
 
-  --accent-purple: #16A34A;
-  /* Emerald */
-  --accent-purple-bright: #15803D;
-  --accent-purple-soft: #22C55E;
-
+  /* ── Primary Accent: Rich Gold (same hue, lighter saturation) ── */
   --accent-orange: #B8962E;
-  /* Metallic Gold */
   --accent-orange-bright: #D4AF37;
   --accent-orange-soft: #E5C158;
 
+  /* ── Secondary: Emerald (brighter for green bg contrast) ── */
+  --accent-purple: #16A34A;
+  --accent-purple-bright: #22C55E;
+  --accent-purple-soft: #4ADE80;
   --accent-green: #16A34A;
 
+  /* ── Typography hierarchy ── */
   --text-title: #0F172A;
   --text-body: #1E293B;
-  --text-body-muted: #334155;
-  --text-muted: #475569;
+  --text-body-muted: #475569;
+  --text-muted: #64748B;
   --text-muted-dark: #334155;
 
-  --glass-bg: rgba(255, 255, 255, 0.96);
+  /* ── Glass & borders: light theme with unified gold border ── */
+  --glass-bg: #FFFFFF;
   --glass-border: rgba(212, 175, 55, 0.45);
-  --glass-border-gold: rgba(212, 175, 55, 0.55);
-  --glass-border-emerald: rgba(22, 163, 74, 0.4);
+  --glass-border-gold: rgba(212, 175, 55, 0.45);
+  --glass-border-emerald: rgba(5, 150, 105, 0.3);
   --glass-hover-bg: #FFFFFF;
-  --glass-hover-border: rgba(212, 175, 55, 0.7);
-  --shadow-hover: 0 10px 30px 0 rgba(15, 23, 42, 0.08);
+  --glass-hover-border: rgba(212, 175, 55, 0.65);
+  --shadow-hover: 0 8px 32px 0 rgba(15, 23, 42, 0.1);
+
+  /* ── Dashboard & Card semantic tokens ── */
+  --dash-card-bg: #FFFFFF;
+  --dash-card-border: rgba(212, 175, 55, 0.45);
+  --dash-card-border-accent: rgba(180, 140, 40, 0.3);
+  --dash-card-primary-border: rgba(212, 175, 55, 0.45);
+  --dash-shadow-card: 0 2px 12px rgba(15, 23, 42, 0.06);
+  --dash-shadow-elevated: 0 8px 32px rgba(15, 23, 42, 0.12);
+  --dash-inner-bg: rgba(15, 23, 42, 0.03);
+  --dash-inner-border: rgba(180, 140, 40, 0.25);
+  --dash-status-track: rgba(15, 23, 42, 0.04);
+  --dash-text-hero: #0F172A;
+  --dash-text-section: #0F172A;
+  --dash-text-label: #0F172A;
+  --dash-text-body: #334155;
+  --dash-text-muted: #64748B;
+  --dash-text-tag: #475569;
 }
 
-/* Light Mode Specific High-Visibility Typography Rules */
-:root.light .glass-panel .text-white:not(button *):not([class*="bg-"]):not([class*="from-"]) {
+/* ─────────────────────────────────────────────────────────────────────────────
+   Light Mode Complete Typography & High-Contrast Theme Rules
+───────────────────────────────────────────────────────────────────────────── */
+
+/* Headings in Light Mode */
+:root.light h1,
+:root.light h2,
+:root.light h3,
+:root.light h4,
+:root.light h5,
+:root.light h6,
+:root.light .dash-heading,
+:root.light .greeting-title,
+:root.light .text-title {
   color: #0F172A !important;
 }
 
-:root.light .glass-panel .text-gray-100:not(button *),
-:root.light .glass-panel .text-gray-200:not(button *),
-:root.light .glass-panel .text-gray-300:not(button *),
-:root.light .glass-panel .text-gray-400:not(button *),
-:root.light .glass-panel .text-gray-500:not(button *) {
+/* Any text-white used across the app (excluding inside filled action buttons or gradient badges) */
+:root.light .text-white:not(button.bg-gradient-to-r *):not(button.bg-gold-500 *):not(button.bg-emerald-600 *):not(button.bg-accentOrange *):not(button.bg-accentPurple *):not(button[class*="bg-red-"] *):not(span[class*="bg-gradient-to-r"] *):not([class*="bg-gradient-to-tr"] *) {
+  color: #0F172A !important;
+}
+
+/* Secondary and body copy across all components */
+:root.light .text-gray-100:not(button.bg-gradient-to-r *):not(button.bg-gold-500 *),
+:root.light .text-gray-200:not(button.bg-gradient-to-r *):not(button.bg-gold-500 *),
+:root.light .text-gray-300:not(button.bg-gradient-to-r *):not(button.bg-gold-500 *),
+:root.light .text-gray-400:not(button.bg-gradient-to-r *):not(button.bg-gold-500 *) {
+  color: #334155 !important;
+}
+
+:root.light .text-gray-500:not(button *),
+:root.light .text-gray-600:not(button *) {
+  color: #64748B !important;
+}
+
+:root.light .subtitle-text,
+:root.light .text-body-muted {
+  color: #475569 !important;
+}
+
+/* Card titles, section headers & semantic tokens */
+:root.light [class*="text-[var(--dash-text-label)]"] {
+  color: #0F172A !important;
+}
+
+:root.light [class*="text-[var(--dash-text-hero)]"] {
+  color: #0F172A !important;
+}
+
+:root.light [class*="text-[var(--dash-text-body)]"] {
+  color: #334155 !important;
+}
+
+:root.light [class*="text-[var(--dash-text-muted)]"] {
+  color: #64748B !important;
+}
+
+/* Holiday Banner, Badges & Tamil Subtitle in Light Mode */
+:root.light .holiday-state-bloom h3,
+:root.light .holiday-state-bloom h4 {
+  color: #0F172A !important;
+}
+
+:root.light .holiday-state-bloom p:not(.font-sans) {
+  color: #334155 !important;
+}
+
+:root.light .holiday-state-bloom p.font-sans,
+:root.light .holiday-state-bloom [class*="text-gold"],
+:root.light .holiday-state-bloom [class*="text-[var(--accent-orange)]"] {
+  color: #854D0E !important;
+}
+
+/* Holiday badge tag */
+:root.light span[class*="bg-[var(--accent-orange)]/12"],
+:root.light span[class*="bg-gold-500/20"],
+:root.light span[class*="bg-gold-500/15"] {
+  background-color: rgba(212, 175, 55, 0.15) !important;
+  border-color: rgba(180, 140, 40, 0.45) !important;
+  color: #854D0E !important;
+  font-weight: 800 !important;
+}
+
+/* Tables across the application */
+:root.light table thead tr th {
+  color: #475569 !important;
+}
+
+:root.light table tbody tr td {
   color: #1E293B !important;
 }
 
+:root.light table tbody tr td span.text-white {
+  color: #0F172A !important;
+}
+
+:root.light table tbody tr td span.text-gray-400,
+:root.light table tbody tr td span.text-gray-300 {
+  color: #475569 !important;
+}
+
+/* Form controls */
 :root.light input,
 :root.light select,
 :root.light textarea {
@@ -119,7 +258,7 @@
   color: #334155 !important;
 }
 
-/* Light Mode Sidebar Specific Solid Text Rule */
+/* Sidebar navigation links */
 :root.light aside nav a:not(.active) {
   color: #0F172A !important;
   font-weight: 700 !important;
@@ -130,8 +269,31 @@
 }
 
 :root.light aside nav a:not(.active):hover {
-  color: #000000 !important;
-  background-color: #E8F3EE !important;
+  color: #0F172A !important;
+  background-color: #EEF7F2 !important;
+}
+
+/* TopSection header */
+:root.light header .greeting-title {
+  color: #0F172A !important;
+}
+
+:root.light header .subtitle-text {
+  color: #475569 !important;
+}
+
+:root.light header .date-card,
+:root.light header .date-card span {
+  color: #0F172A !important;
+}
+
+/* Preserve gold accent text on status highlights */
+:root.light .autogen-card span[class*="text-[var(--accent-orange)]"] {
+  color: #854D0E !important;
+}
+
+:root.light .autogen-card .text-title {
+  color: #0F172A !important;
 }
 
 /* Unique Shimmering Animated Gradient Text for Brand Name */
@@ -198,19 +360,49 @@ textarea {
   background: var(--text-muted);
 }
 
-/* Glassmorphism Styles */
+/* Glassmorphism Styles & Global Card Theming */
 .glass-panel {
-  background: var(--glass-bg);
+  background: var(--dash-card-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--dash-card-border) !important;
+  box-shadow: var(--dash-shadow-card);
 }
 
 .glass-panel-hover:hover {
   background: var(--glass-hover-bg);
-  border: 1px solid var(--glass-hover-border);
+  border: 1px solid var(--glass-hover-border) !important;
   box-shadow: var(--shadow-hover);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ensure all card containers across all screens adopt the unified gold border */
+.glass-panel.border-white\/10,
+.glass-panel.border-white\/5,
+.glass-panel.border-white\/20,
+.glass-panel.border-white\/15,
+.glass-panel[class*="border-white"] {
+  border-color: var(--dash-card-border) !important;
+}
+
+/* Inner subcards, status chips, and nested containers across all pages */
+.glass-panel .bg-white\/5,
+.glass-panel .bg-white\/10,
+.glass-panel .bg-white\/3,
+.p-2\.5.rounded-xl.bg-white\/5,
+.p-3.rounded-xl.bg-white\/5,
+.p-4.rounded-xl.bg-white\/5,
+.p-4.rounded-2xl.bg-white\/5 {
+  background-color: var(--dash-inner-bg) !important;
+  border-color: var(--dash-inner-border) !important;
+}
+
+.glass-panel .border-white\/10,
+.glass-panel .border-white\/5,
+.glass-panel .border-white\/20,
+.glass-panel .border-white\/15,
+.glass-panel [class*="border-white/"] {
+  border-color: var(--dash-inner-border) !important;
 }
 
 /* Border Gradient Effects */
@@ -625,4 +817,235 @@ textarea {
     width: 44px !important;
     height: 44px !important;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   BRAND PERSONALITY & VISUAL DEPTH
+   Sora headings · Card depth · Food photo frame · Holiday bloom · Active sidebar
+   ─────────────────────────────────────────────────────────────────────────────
+   Pure styling additions — zero logic, layout, or component changes.
+═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Heading Font ─────────────────────────────────────────────────────── */
+.greeting-title,
+.dash-heading {
+  font-family: var(--font-heading) !important;
+  letter-spacing: -0.015em;
+}
+
+/* ── 2. Primary Card Depth — Today's Lunch card ──────────────────────────── */
+/* Forest green-tinted gradient so primary hero card feels on-theme */
+.dash-card-primary {
+  background: linear-gradient(
+    145deg,
+    rgba(6, 16, 11, 0.99) 0%,
+    rgba(10, 24, 16, 0.98) 45%,
+    rgba(7, 18, 12, 0.97) 100%
+  ) !important;
+}
+:root.light .dash-card-primary {
+  background: linear-gradient(
+    145deg,
+    #FFFFFF 0%,
+    #F4FCF7 45%,
+    #EBF7EF 100%
+  ) !important;
+}
+
+/* Top-edge inner highlight — simulates a lit surface (light source above) */
+.dash-card-primary::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 5%,
+    rgba(255, 255, 255, 0.09) 25%,
+    rgba(255, 255, 255, 0.09) 75%,
+    transparent 95%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Bottom-right corner brand vignette — gold glow anchoring the brand motif */
+.dash-card-primary::after {
+  content: '';
+  position: absolute;
+  bottom: -24px; right: -24px;
+  width: 140px; height: 140px;
+  background: radial-gradient(
+    circle at center,
+    rgba(212, 175, 55, 0.11) 0%,
+    rgba(212, 175, 55, 0.04) 45%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+:root.light .dash-card-primary::after {
+  background: radial-gradient(
+    circle at center,
+    rgba(212, 175, 55, 0.14) 0%,
+    rgba(212, 175, 55, 0.05) 45%,
+    transparent 65%
+  );
+}
+
+/* ── 3. Hover Lift — all dashboard cards ─────────────────────────────────── */
+.dash-card-hover {
+  /* spring-style ease — slight overshoot for organic feel */
+  transition: transform 0.3s cubic-bezier(0.34, 1.45, 0.64, 1), box-shadow 0.3s ease !important;
+}
+.dash-card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 20px 52px rgba(0, 0, 0, 0.52),
+    0 4px 20px rgba(212, 175, 55, 0.11) !important;
+}
+:root.light .dash-card-hover:hover {
+  box-shadow:
+    0 14px 40px rgba(15, 23, 42, 0.13),
+    0 4px 16px rgba(212, 175, 55, 0.16) !important;
+}
+
+/* ── 4. Food Photo Frame — editorial gradient overlay + hover zoom ────────── */
+.food-photo-frame {
+  position: relative !important;
+  overflow: hidden !important;
+}
+/* Gradient overlay — frames photography like editorial food shots */
+.food-photo-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.54) 0%,
+    rgba(0, 0, 0, 0.14) 36%,
+    transparent 58%
+  );
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.85;
+  transition: opacity 0.4s ease;
+}
+.food-photo-frame:hover::after {
+  opacity: 0.6;
+}
+/* Image zoom on hover */
+.food-photo-frame img {
+  transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  will-change: transform;
+}
+.food-photo-frame:hover img {
+  transform: scale(1.07);
+}
+/* Gold border highlight on hover */
+.food-photo-frame:hover {
+  border-color: rgba(212, 175, 55, 0.45) !important;
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.2) inset;
+}
+:root.light .food-photo-frame::after {
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.42) 0%,
+    rgba(0, 0, 0, 0.08) 36%,
+    transparent 58%
+  );
+}
+
+/* ── 5. Holiday Bloom State ──────────────────────────────────────────────── */
+@keyframes holidaySpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Radial gold glow emanating from the center — lantern-light effect */
+.holiday-state-bloom {
+  position: relative !important;
+  overflow: hidden !important;
+}
+.holiday-state-bloom::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 28%,
+    rgba(212, 175, 55, 0.13) 0%,
+    rgba(212, 175, 55, 0.05) 38%,
+    transparent 62%
+  );
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+}
+:root.light .holiday-state-bloom::before {
+  background: radial-gradient(
+    ellipse at 50% 28%,
+    rgba(212, 175, 55, 0.16) 0%,
+    rgba(212, 175, 55, 0.06) 38%,
+    transparent 62%
+  );
+}
+
+/* Slowly spinning dashed ring around the holiday icon — decorative halo */
+.holiday-icon-ring {
+  position: relative !important;
+}
+.holiday-icon-ring::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(212, 175, 55, 0.38);
+  animation: holidaySpin 16s linear infinite;
+  pointer-events: none;
+}
+:root.light .holiday-icon-ring::after {
+  border-color: rgba(184, 150, 46, 0.45);
+}
+
+/* ── 6. Sidebar Active Link — Directional Gradient + Left Rail ───────────── */
+/* The left inset rail echoes the active pip already in the sidebar;
+   directional gradient 'pulls' the eye toward the selected item. */
+aside nav a.active {
+  background: linear-gradient(
+    90deg,
+    rgba(212, 175, 55, 0.22) 0%,
+    rgba(212, 175, 55, 0.08) 55%,
+    rgba(212, 175, 55, 0.01) 100%
+  ) !important;
+  box-shadow:
+    inset 3px 0 0 rgba(212, 175, 55, 0.7),
+    0 2px 16px rgba(212, 175, 55, 0.12) !important;
+}
+:root.light aside nav a.active {
+  background: linear-gradient(
+    90deg,
+    rgba(180, 140, 40, 0.18) 0%,
+    rgba(180, 140, 40, 0.06) 55%,
+    rgba(180, 140, 40, 0.01) 100%
+  ) !important;
+  box-shadow:
+    inset 3px 0 0 rgba(180, 140, 40, 0.6),
+    0 2px 12px rgba(180, 140, 40, 0.1) !important;
+}
+
+/* ── 7. Section Divider Gold Motif ───────────────────────────────────────── */
+/* Used inside card footers for a branded separator line */
+.divider-gold {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(212, 175, 55, 0.3) 20%,
+    rgba(212, 175, 55, 0.5) 50%,
+    rgba(212, 175, 55, 0.3) 80%,
+    transparent 100%
+  );
+  border: none;
+  margin: 0;
 }
