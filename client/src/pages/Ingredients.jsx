@@ -405,7 +405,13 @@ const Ingredients = () => {
   const isAdmin = mongoUser?.role === 'admin' || (currentUser && !mongoUser?.role);
 
   // Active Tab: 'daily' | 'storage' | 'monthly' | 'recipes'
-  const [activeTab, setActiveTab] = useState('daily');
+  const [activeTab, setActiveTab] = useState(() => location.state?.activeTab || 'daily');
+
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state?.activeTab]);
 
   // ─── TAB 1: DAILY REQUIREMENTS STATE ───
   const [selectedDate, setSelectedDate] = useState(() => {

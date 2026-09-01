@@ -287,9 +287,9 @@
   color: #0F172A !important;
 }
 
-/* Preserve gold accent text on status highlights */
-:root.light .autogen-card span[class*="text-[var(--accent-orange)]"] {
-  color: #854D0E !important;
+/* Preserve green accent text on status highlights */
+:root.light .autogen-card span[class*="text-[var(--accent-green)]"] {
+  color: var(--accent-green) !important;
 }
 
 :root.light .autogen-card .text-title {
@@ -515,11 +515,11 @@ textarea {
     display: flex !important;
     flex-direction: column !important;
     align-items: stretch !important;
-    gap: 12px !important;
+    gap: 10px !important;
     width: 100% !important;
     position: relative !important;
     padding: 14px !important;
-    margin-bottom: 14px !important;
+    margin-bottom: 8px !important;
     box-sizing: border-box !important;
   }
 
@@ -617,7 +617,7 @@ textarea {
     padding: 10px 14px !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: space-between !important;
+    gap: 8px !important;
     box-sizing: border-box !important;
   }
 

@@ -411,7 +411,7 @@ const Dashboard = () => {
   return (
     <div className="relative min-h-screen pb-32 lg:pb-12 w-full overflow-x-hidden">
       {/* Notification bell row */}
-      <div className="flex justify-end mb-6 relative">
+      <div className="flex justify-end mb-3 sm:mb-6 relative">
         <button
           onClick={() => setNotifOpen(!notifOpen)}
           className="relative glass-panel p-3 rounded-xl hover:bg-white/10 transition-all border border-[var(--glass-border-gold)] text-[var(--accent-orange)] hover:text-[var(--accent-orange-bright)] min-h-[44px] min-w-[44px] flex items-center justify-center shadow-sm"

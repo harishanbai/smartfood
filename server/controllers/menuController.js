@@ -168,9 +168,43 @@ export const getMenuHistory = async (req, res) => {
       .populate('nonVegFoodId', '-image.data')
       .sort({ date: -1 });
 
+    // Fetch active holidays for the requested period
+    const holidayQuery = { status: 'HOLIDAY' };
+    if (month) {
+      holidayQuery.date = { $regex: `^${month}` };
+    }
+    const holidays = await Holiday.find(holidayQuery).lean();
+
+    const holidayRecords = holidays.map(h => ({
+      _id: h._id,
+      date: h.date,
+      isHoliday: true,
+      holiday: h,
+      name: h.name || 'Holiday',
+      name_ta: h.name_ta || 'விடுமுறை',
+      notes: h.notes || '',
+      generatedAt: h.updatedAt || h.createdAt || new Date(h.date),
+      status: 'holiday'
+    }));
+
+    // Avoid duplicate entries: if a date is marked as a holiday, the holiday record represents that date
+    const holidayDates = new Set(holidays.map(h => h.date));
+    const activeMenus = menus.filter(m => !holidayDates.has(m.date));
+
+    let combined = [...activeMenus, ...holidayRecords];
+
     if (search) {
       const searchLower = search.toLowerCase();
-      menus = menus.filter(m => {
+      combined = combined.filter(item => {
+        if (item.isHoliday) {
+          return (
+            'holiday'.includes(searchLower) ||
+            'விடுமுறை'.includes(searchLower) ||
+            (item.name && item.name.toLowerCase().includes(searchLower)) ||
+            (item.name_ta && item.name_ta.toLowerCase().includes(searchLower)) ||
+            (item.notes && item.notes.toLowerCase().includes(searchLower))
+          );
+        }
         const matchesSearch = (food) => {
           if (!food) return false;
           return (
@@ -179,11 +213,14 @@ export const getMenuHistory = async (req, res) => {
             food.category.toLowerCase().includes(searchLower)
           );
         };
-        return matchesSearch(m.foodId) || matchesSearch(m.vegFoodId) || matchesSearch(m.nonVegFoodId);
+        return matchesSearch(item.foodId) || matchesSearch(item.vegFoodId) || matchesSearch(item.nonVegFoodId);
       });
     }
 
-    res.json(translateResponse(menus, lang));
+    // Sort chronologically descending
+    combined.sort((a, b) => b.date.localeCompare(a.date));
+
+    res.json(translateResponse(combined, lang));
   } catch (error) {
     res.status(500).json({ message: "Error retrieving menu history", error: error.message });
   }
@@ -241,9 +278,13 @@ export const deleteMenuRecord = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const menu = await Menu.findByIdAndDelete(id);
+    let menu = await Menu.findByIdAndDelete(id);
     if (!menu) {
-      return res.status(404).json({ message: "Menu record not found" });
+      const holiday = await Holiday.findByIdAndDelete(id);
+      if (holiday) {
+        return res.json({ message: "Holiday record deleted successfully" });
+      }
+      return res.status(404).json({ message: "Menu or Holiday record not found" });
     }
     res.json({ message: "Menu record deleted successfully" });
   } catch (error) {

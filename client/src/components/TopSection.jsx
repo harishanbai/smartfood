@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Calendar, CheckCircle2, Sun, Moon, Globe, ChevronDown, LogOut, User } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 
 const TopSection = () => {
+  const location = useLocation();
   const [time, setTime] = useState(new Date());
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
@@ -90,25 +92,88 @@ const TopSection = () => {
 
   const userPhoto = mongoUser?.photo || currentUser?.photoURL || localStorage.getItem('userProfilePhoto') || '';
 
+  // Get page header title and subtitle based on current route
+  const getHeaderDetails = () => {
+    let name = currentUser?.displayName || chefName || '';
+    if (/^\+?[\d\s-]+$/.test(name)) name = '';
+    name = name ? name.trim().split(' ')[0] : '';
+    const userGreeting = name && !['undefined', 'null', 'user'].includes(name.toLowerCase())
+      ? `${getGreeting()}, ${name}`
+      : getGreeting();
+
+    const path = location.pathname;
+    if (path === '/') {
+      return {
+        title: userGreeting,
+        subtitle: t('topSection.subtitle')
+      };
+    }
+    if (path.startsWith('/foods')) {
+      return {
+        title: t('common.foods') || 'Foods',
+        subtitle: t('foods.subtitle') || 'Add, edit, or disable culinary options for menu generation.'
+      };
+    }
+    if (path.startsWith('/ingredients')) {
+      return {
+        title: t('common.ingredients') || 'Ingredients & Grocery',
+        subtitle: t('ingredients.subtitle') || 'Calculate daily meal requirements, manage storage stock, and plan monthly grocery purchases.'
+      };
+    }
+    if (path.startsWith('/settings')) {
+      return {
+        title: t('common.settings') || 'Settings',
+        subtitle: t('settings.subtitle') || 'Admin preferences and database seeding options.'
+      };
+    }
+    if (path.startsWith('/history')) {
+      return {
+        title: t('common.history') || 'History',
+        subtitle: t('history.subtitle') || 'Review previously generated menus and skipped selections.'
+      };
+    }
+    if (path.startsWith('/calendar')) {
+      return {
+        title: t('common.calendar') || 'Calendar',
+        subtitle: t('calendar.subtitle') || 'Plan and view menus for the current and upcoming weeks.'
+      };
+    }
+    if (path.startsWith('/statistics')) {
+      return {
+        title: t('common.statistics') || 'Statistics',
+        subtitle: t('statistics.subtitle') || 'Analytics on recipe usage, categories, and skip rates.'
+      };
+    }
+    if (path.startsWith('/payment')) {
+      return {
+        title: t('common.payment') || 'Payments',
+        subtitle: language === 'ta' ? 'மதிய உணவு சந்தா கணக்கு மற்றும் கட்டண விவரங்கள்.' : 'Active meal subscription account and payment details.'
+      };
+    }
+    if (path.startsWith('/profile')) {
+      return {
+        title: language === 'ta' ? 'சுயவிவரம்' : 'Profile',
+        subtitle: language === 'ta' ? 'உங்கள் கணக்கு விவரங்களை நிர்வகிக்கவும்.' : 'Manage your personal profile and account settings.'
+      };
+    }
+
+    return {
+      title: userGreeting,
+      subtitle: t('topSection.subtitle')
+    };
+  };
+
+  const headerDetails = getHeaderDetails();
+
   return (
     <header className="header-container mb-4 w-full relative">
       {/* Left Section */}
       <div className="left-section">
         <h2 className="greeting-title text-title tracking-tight font-extrabold">
-          {(() => {
-            let name = currentUser?.displayName || chefName || '';
-            // If the name is essentially a phone number (digits and optional + or dashes), treat it as empty
-            if (/^\+?[\d\s-]+$/.test(name)) name = '';
-            name = name ? name.trim().split(' ')[0] : '';
-
-            if (name && !['undefined', 'null', 'user'].includes(name.toLowerCase())) {
-              return `${getGreeting()}, ${name}`;
-            }
-            return getGreeting();
-          })()}
+          {headerDetails.title}
         </h2>
         <p className="subtitle-text text-body-muted">
-          {t('topSection.subtitle')}
+          {headerDetails.subtitle}
         </p>
       </div>
 
@@ -137,9 +202,9 @@ const TopSection = () => {
         </div>
 
         {/* 4. Generation Mode Badge */}
-        <div className="glass-panel autogen-card flex items-center gap-2 border border-[var(--glass-border-gold)] shadow-sm">
-          <span className="h-2 w-2 rounded-full bg-[var(--accent-orange)] animate-pulse" />
-          <span className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--accent-orange)] flex items-center gap-1.5">
+        <div className="glass-panel autogen-card flex items-center gap-2.5 border border-[var(--glass-border-gold)] text-xs font-semibold shadow-sm px-3.5 py-2 rounded-xl">
+          <span className="h-2 w-2 rounded-full bg-[var(--accent-green)] animate-pulse flex-shrink-0" />
+          <span className="text-[11px] font-extrabold uppercase tracking-wider text-[var(--accent-green)] flex items-center gap-1.5 whitespace-nowrap">
             {t('topSection.autoGeneration')}
             <span className="font-mono text-title text-xs font-bold">08:00 PM</span>
           </span>

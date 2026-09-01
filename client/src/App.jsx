@@ -91,7 +91,7 @@ const MainLayout = () => {
           <TopSection />
 
           {/* Sub-page router */}
-          <div className="mt-2">
+          <div className="mt-0 sm:mt-2">
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Dashboard />} />

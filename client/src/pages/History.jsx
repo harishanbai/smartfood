@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Calendar, ChefHat, Filter, Trash2 } from 'lucide-react';
-import { menuApi } from '../services/api';
+import { menuApi, holidayApi } from '../services/api';
 import { useNotifications } from '../context/NotificationContext';
 import { getImageUrl, getFallbackFoodImage } from '../utils/imageUtils';
 import { useLanguage } from '../context/LanguageContext';
@@ -61,22 +61,29 @@ const History = () => {
     }
   };
 
-  const handleDeleteHistory = async (id) => {
+  const handleDeleteHistory = async (id, item) => {
+    const isHoliday = item?.isHoliday;
     const isConfirmed = await confirm({
       title: t('common.delete'),
-      message: t('foods.confirmDelete'),
+      message: isHoliday ? (t('holiday.removeHolidayPromptMsg') || 'Are you sure you want to remove this holiday?') : t('foods.confirmDelete'),
       confirmText: t('common.delete'),
       cancelText: t('common.cancel'),
       type: 'danger'
     });
     if (!isConfirmed) return;
     try {
-      await menuApi.deleteHistory(id);
-      addNotification('History log deleted successfully!', 'success');
+      if (isHoliday && item?.date) {
+        await holidayApi.removeHoliday(item.date).catch(async () => {
+          await menuApi.deleteHistory(id);
+        });
+      } else {
+        await menuApi.deleteHistory(id);
+      }
+      addNotification(isHoliday ? (t('holiday.removedSuccess') || 'Holiday removed successfully!') : 'History log deleted successfully!', 'success');
       fetchHistory();
     } catch (err) {
       console.error(err);
-      addNotification('Failed to delete history log', 'warning');
+      addNotification(err.response?.data?.message || 'Failed to delete history log', 'warning');
     }
   };
 
@@ -154,6 +161,50 @@ const History = () => {
                 </thead>
                 <tbody className="divide-y divide-white/5 text-sm">
                   {history.map(menu => {
+                    if (menu.isHoliday) {
+                      const holidayName = language === 'ta' && (menu.name_ta || menu.holidayNameTa || menu.holiday?.name_ta)
+                        ? (menu.name_ta || menu.holidayNameTa || menu.holiday?.name_ta)
+                        : (menu.name || menu.holidayName || menu.holiday?.name || 'Holiday');
+                      const holidayNotes = menu.notes || menu.holiday?.notes || (language === 'ta' ? 'அலுவலக விடுமுறை நாள்' : 'Official Non-Working Holiday');
+
+                      return (
+                        <tr key={menu._id || `holiday-${menu.date}`} className="hover:bg-white/5 transition-colors align-middle bg-gold-500/5">
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="h-11 w-11 rounded-xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center flex-shrink-0 text-xl">
+                                🎉
+                              </div>
+                              <div>
+                                <span className="font-bold text-gold-400 block text-xs flex items-center gap-1.5">
+                                  <span>{holidayName}</span>
+                                </span>
+                                <span className="text-[10px] text-gray-400 max-w-xs truncate block mt-0.5">{holidayNotes}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <span className="inline-flex items-center gap-1 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider whitespace-nowrap bg-gold-500/15 border border-gold-500/30 text-gold-400">
+                              <span className="h-1.5 w-1.5 rounded-full bg-gold-400 animate-pulse" />
+                              {t('holiday.badge') || 'HOLIDAY'}
+                            </span>
+                          </td>
+                          <td className="p-4 font-semibold text-gray-200">{formatDateLabel(menu.date)}</td>
+                          <td className="p-4 font-mono text-gray-300">
+                            {new Date(menu.generatedAt).toLocaleTimeString(locales[language] || 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                          </td>
+                          <td className="p-4 text-right">
+                            <button
+                              onClick={() => handleDeleteHistory(menu._id, menu)}
+                              className="p-2 text-red-500 hover:text-red-400 hover:bg-white/5 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center"
+                              title={t('common.delete')}
+                            >
+                              <Trash2 className="h-4.5 w-4.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    }
+
                     const food = menu.foodId || menu.vegFoodId || menu.nonVegFoodId;
                     if (!food) return null;
                     const isNonVeg = food.foodType === 'non-veg' || (food.category || '').toLowerCase().includes('non');
@@ -198,7 +249,7 @@ const History = () => {
                         </td>
                         <td className="p-4 text-right">
                           <button
-                            onClick={() => handleDeleteHistory(menu._id)}
+                            onClick={() => handleDeleteHistory(menu._id, menu)}
                             className="p-2 text-red-500 hover:text-red-400 hover:bg-white/5 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center"
                             title={t('common.delete')}
                           >
@@ -216,6 +267,62 @@ const History = () => {
           {/* Mobile Card List View */}
           <div className="space-y-4 md:hidden">
             {history.map(menu => {
+              if (menu.isHoliday) {
+                const holidayName = language === 'ta' && (menu.name_ta || menu.holidayNameTa || menu.holiday?.name_ta)
+                  ? (menu.name_ta || menu.holidayNameTa || menu.holiday?.name_ta)
+                  : (menu.name || menu.holidayName || menu.holiday?.name || 'Holiday');
+                const holidayNotes = menu.notes || menu.holiday?.notes || (language === 'ta' ? 'அலுவலக விடுமுறை நாள்' : 'Official Non-Working Holiday');
+
+                return (
+                  <div
+                    key={menu._id || `holiday-${menu.date}`}
+                    className="glass-panel rounded-2xl p-4 border border-gold-500/20 bg-gold-500/5 flex flex-col items-stretch gap-4 hover:border-gold-500/40 hover:shadow-[0_4px_20px_rgba(212,175,55,0.15)] transition-all"
+                  >
+                    <div className="flex flex-row items-center gap-4">
+                      <div className="h-14 w-14 rounded-xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center flex-shrink-0 text-2xl">
+                        🎉
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-gold-500/15 border border-gold-500/30 text-gold-400">
+                          <span className="h-1.5 w-1.5 rounded-full bg-gold-400 animate-pulse" />
+                          {t('holiday.badge') || 'HOLIDAY'}
+                        </span>
+                        <h4 className="text-sm font-bold text-gold-400 mt-1 truncate">{holidayName}</h4>
+                        <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">{holidayNotes}</p>
+                      </div>
+                    </div>
+
+                    {/* Right section: Generation metadata */}
+                    <div className="flex items-center justify-between text-xs text-gray-400 pt-3 border-t border-white/5">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-accentPurple flex-shrink-0" />
+                        <div>
+                          <div className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">{t('history.servedOn')}</div>
+                          <span className="text-gray-200 font-semibold">{formatDateLabel(menu.date)}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <div className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">{t('history.generatedAt')}</div>
+                          <span className="text-gray-300 font-mono font-medium">
+                            {new Date(menu.generatedAt).toLocaleTimeString(locales[language] || 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={() => handleDeleteHistory(menu._id, menu)}
+                          className="p-1.5 text-red-500 hover:text-red-400 hover:bg-white/5 rounded-lg transition-all cursor-pointer"
+                          title={t('common.delete')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
               const food = menu.foodId || menu.vegFoodId || menu.nonVegFoodId;
               if (!food) return null;
               const isNonVeg = food.foodType === 'non-veg' || (food.category || '').toLowerCase().includes('non');
@@ -270,7 +377,7 @@ const History = () => {
                       </div>
 
                       <button
-                        onClick={() => handleDeleteHistory(menu._id)}
+                        onClick={() => handleDeleteHistory(menu._id, menu)}
                         className="p-1.5 text-red-500 hover:text-red-400 hover:bg-white/5 rounded-lg transition-all cursor-pointer"
                         title={t('common.delete')}
                       >

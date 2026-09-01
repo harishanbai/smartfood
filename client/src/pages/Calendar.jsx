@@ -285,9 +285,12 @@ const renderDays = () => {
             {day}
           </span>
           {holiday && (
-            <span className="text-[9px] bg-gold-500/20 border border-gold-500/40 text-gold-400 font-extrabold px-1 sm:px-1.5 py-0.5 rounded uppercase">
-              {language === 'ta' ? 'விடுமுறை' : 'Holiday'}
-            </span>
+            <>
+              <span className="hidden sm:inline-flex text-[9px] bg-gold-500/20 border border-gold-500/40 text-gold-400 font-extrabold px-1 sm:px-1.5 py-0.5 rounded uppercase">
+                {language === 'ta' ? 'விடுமுறை' : 'Holiday'}
+              </span>
+              <span className="sm:hidden h-2 w-2 rounded-full bg-gold-400 animate-pulse flex-shrink-0" />
+            </>
           )}
           {!holiday && isToday && (
             <span className="hidden xs:inline text-[9px] bg-accentGreen/20 text-accentGreen font-bold px-1 sm:px-1.5 py-0.5 rounded uppercase">{t('calendar.today')}</span>
