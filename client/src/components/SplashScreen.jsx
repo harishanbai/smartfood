@@ -45,7 +45,7 @@ const SplashScreen = ({ onFinish }) => {
         >
           {/* Background Visual Effects (Ambient Aura & Non-Overflowing Concentric Ripples) */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
-            
+
             {/* Ambient Radial Glowing Aura */}
             <motion.div
               initial={{ scale: 0.75, opacity: 0 }}

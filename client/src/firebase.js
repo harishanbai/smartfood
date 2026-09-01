@@ -2,7 +2,6 @@ import { initializeApp } from 'firebase/app';
 import {
   getAuth,
   GoogleAuthProvider,
-  OAuthProvider,
   signInWithPopup,
   signOut,
   onAuthStateChanged,
@@ -35,10 +34,6 @@ export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
-
-export const appleProvider = new OAuthProvider('apple.com');
-appleProvider.addScope('email');
-appleProvider.addScope('name');
 
 export {
   signInWithPopup,

@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema(
     },
     provider: {
       type: String,
-      enum: ['email', 'google', 'whatsapp', 'apple'],
+      enum: ['email', 'google', 'whatsapp'],
       default: 'email'
     },
     whatsappVerified: {

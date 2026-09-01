@@ -80,7 +80,6 @@ export const authApi = {
   register: (userData) => api.post('/auth/register', userData),
   login: (credentials) => api.post('/auth/login', credentials),
   google: (googleData) => api.post('/auth/google', googleData),
-  apple: (appleData) => api.post('/auth/apple', appleData),
   logout: () => api.post('/auth/logout'),
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   verifyResetToken: (token, email) => {

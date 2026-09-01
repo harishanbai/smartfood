@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   auth,
   googleProvider,
-  appleProvider,
   signInWithPopup,
   signOut,
   onAuthStateChanged,
@@ -58,22 +57,20 @@ export const AuthProvider = ({ children }) => {
         const result = await getRedirectResult(auth);
         if (result?.user) {
           const user = result.user;
-          const isApple = result.providerId === 'apple.com' || user.providerData?.some(p => p.providerId === 'apple.com');
-
           const payload = {
             uid: user.uid,
-            displayName: user.displayName || (user.email ? user.email.split('@')[0] : (isApple ? 'Apple User' : 'User')),
-            email: user.email || (isApple ? `${user.uid}@privaterelay.appleid.com` : ''),
+            displayName: user.displayName || (user.email ? user.email.split('@')[0] : 'User'),
+            email: user.email || '',
             photoURL: user.photoURL || '',
             language: localStorage.getItem('language') || 'en'
           };
 
           let dbUser = null;
           try {
-            const res = isApple ? await authApi.apple(payload) : await authApi.google(payload);
+            const res = await authApi.google(payload);
             dbUser = res?.data?.user || null;
           } catch (e) {
-            console.warn(`${isApple ? 'Apple' : 'Google'} redirect backend sync notice:`, e);
+            console.warn(`Google redirect backend sync notice:`, e);
           }
 
           const userData = {
@@ -149,9 +146,6 @@ export const AuthProvider = ({ children }) => {
     } else if (code === 'auth/wrong-password') {
       return 'Incorrect password.';
     } else if (code === 'auth/operation-not-allowed') {
-      if (provider === 'Apple' || provider === 'apple') {
-        return 'Apple Sign-In is not enabled in Firebase Console. Please enable the Apple provider in Firebase Console under Authentication -> Sign-in method.';
-      }
       if (provider === 'Google' || provider === 'google') {
         return 'Google Sign-In is not enabled in Firebase Console. Please enable the Google provider in Firebase Console under Authentication -> Sign-in method.';
       }
@@ -333,73 +327,6 @@ export const AuthProvider = ({ children }) => {
       }
 
       return { success: false, error: getFriendlyError(error, 'Google') };
-    }
-  };
-
-  // 3a. Apple Sign-In Flow (Works on both desktop and mobile)
-  const loginWithApple = async () => {
-    console.log("[Apple Sign-In] Initiating authentication...");
-    try {
-      const result = await signInWithPopup(auth, appleProvider);
-      const user = result.user;
-
-      console.log("[Apple Sign-In] Success! Authenticated user:", user.email || user.uid);
-
-      let idToken = '';
-      try {
-        idToken = await user.getIdToken();
-      } catch (tokenErr) {
-        console.warn("[Apple Sign-In] Could not fetch ID Token:", tokenErr.message);
-      }
-
-      const applePayload = {
-        idToken,
-        uid: user.uid,
-        displayName: user.displayName || (user.email ? user.email.split('@')[0] : 'Apple User'),
-        email: user.email || `${user.uid}@privaterelay.appleid.com`,
-        photoURL: user.photoURL || '',
-        language: localStorage.getItem('language') || 'en'
-      };
-
-      let dbUser = null;
-      try {
-        const res = await authApi.apple(applePayload);
-        dbUser = res?.data?.user || null;
-        console.log("[Apple Sign-In] Backend Sync Success.");
-      } catch (e) {
-        console.warn("[Apple Sign-In] Backend Sync Notice:", e.message || e);
-      }
-
-      const userData = {
-        uid: user.uid,
-        displayName: user.displayName || applePayload.displayName,
-        email: user.email || applePayload.email,
-        photoURL: user.photoURL || '',
-        emailVerified: true
-      };
-
-      setCurrentUser(userData);
-      if (dbUser) setMongoUser(dbUser);
-      localStorage.setItem('smart_lunch_user', JSON.stringify(userData));
-      if (dbUser) localStorage.setItem('smart_lunch_mongo_user', JSON.stringify(dbUser));
-
-      return { success: true, user: userData, dbUser };
-    } catch (error) {
-      console.error("[Apple Sign-In] Error:", error.code, error.message);
-
-      // If popup is blocked by browser popup blocker, fall back to redirect
-      if (error.code === 'auth/popup-blocked') {
-        console.warn("[Apple Sign-In] Popup blocked, falling back to Redirect...");
-        try {
-          await signInWithRedirect(auth, appleProvider);
-          return { success: true, redirecting: true };
-        } catch (redirectErr) {
-          console.error("[Apple Sign-In] Redirect Error:", redirectErr.code, redirectErr.message);
-          return { success: false, error: getFriendlyError(redirectErr, 'Apple') };
-        }
-      }
-
-      return { success: false, error: getFriendlyError(error, 'Apple') };
     }
   };
 
@@ -597,7 +524,6 @@ export const AuthProvider = ({ children }) => {
         loginWithEmailPassword,
         registerWithEmailPassword,
         loginWithGoogle,
-        loginWithApple,
         requestWhatsappOtp,
         verifyWhatsappOtp,
         sendPasswordReset,

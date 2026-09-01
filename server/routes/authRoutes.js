@@ -3,7 +3,6 @@ import {
   registerUser,
   loginUser,
   googleAuth,
-  appleAuth,
   getUserProfile,
   updateUserProfile,
   logoutUser,
@@ -26,9 +25,6 @@ router.post('/login', loginUser);
 
 router.post('/auth/google', googleAuth);
 router.post('/google', googleAuth);
-
-router.post('/auth/apple', appleAuth);
-router.post('/apple', appleAuth);
 
 router.post('/auth/logout', logoutUser);
 router.post('/logout', logoutUser);
