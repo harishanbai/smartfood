@@ -12,7 +12,6 @@ import {
   CreditCard,
   User,
   Package,
-  CalendarDays,
   ChefHat,
   X,
   Sparkles
@@ -70,14 +69,6 @@ const BottomNav = () => {
       state: { activeTab: 'storage' },
       icon: Package,
       description: language === 'ta' ? 'கையிருப்பு இருப்பு மேலாண்மை' : 'Storage inventory management',
-      badge: null
-    },
-    {
-      name: language === 'ta' ? 'மாதாந்திர திட்டமிடல்' : 'Monthly Planning',
-      path: '/ingredients',
-      state: { activeTab: 'monthly' },
-      icon: CalendarDays,
-      description: language === 'ta' ? 'மாதாந்திர மளிகைத் திட்டமிடல்' : 'Monthly grocery requirements',
       badge: null
     },
     {

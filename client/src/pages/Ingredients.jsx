@@ -404,7 +404,7 @@ const Ingredients = () => {
   const { currentUser, mongoUser } = useAuth();
   const isAdmin = mongoUser?.role === 'admin' || (currentUser && !mongoUser?.role);
 
-  // Active Tab: 'daily' | 'storage' | 'monthly' | 'recipes'
+  // Active Tab: 'daily' | 'storage' | 'recipes'
   const [activeTab, setActiveTab] = useState(() => location.state?.activeTab || 'daily');
 
   useEffect(() => {

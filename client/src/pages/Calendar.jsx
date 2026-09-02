@@ -260,17 +260,17 @@ const renderDays = () => {
     let bgClass = 'hover:bg-white/5';
 
     if (holiday) {
-      borderClass = 'border-gold-500/50';
-      bgClass = 'bg-gold-500/10 hover:bg-gold-500/20';
+      borderClass = 'border-yellow-400/50';
+      bgClass = 'bg-yellow-400/10 hover:bg-yellow-400/20';
     } else if (isToday) {
-      borderClass = 'border-accentGreen/50';
-      bgClass = 'bg-accentGreen/5 hover:bg-accentGreen/10';
+      borderClass = 'border-emerald-500/50';
+      bgClass = 'bg-emerald-500/10 hover:bg-emerald-500/20';
     } else if (isTomorrow) {
-      borderClass = 'border-accentOrange/50';
-      bgClass = 'bg-accentOrange/5 hover:bg-accentOrange/10';
+      borderClass = 'border-orange-500/50';
+      bgClass = 'bg-orange-500/10 hover:bg-orange-500/20';
     } else if (menu) {
-      borderClass = 'border-accentPurple/30';
-      bgClass = 'bg-accentPurple/5 hover:bg-accentPurple/10';
+      borderClass = 'border-teal-500/30';
+      bgClass = 'bg-teal-500/10 hover:bg-teal-500/20';
     }
 
     gridItems.push(
@@ -281,35 +281,35 @@ const renderDays = () => {
       >
         {/* Day number */}
         <div className="flex justify-between items-center">
-          <span className={`text-[10px] sm:text-xs font-semibold ${holiday ? 'text-gold-400 font-bold' : isToday ? 'text-accentGreen' : isTomorrow ? 'text-accentOrange' : 'text-gray-400'}`}>
+          <span className={`text-[10px] sm:text-xs font-semibold ${holiday ? 'text-yellow-400 font-bold' : isToday ? 'text-emerald-400 font-bold' : isTomorrow ? 'text-orange-400 font-bold' : menu ? 'text-teal-400' : 'text-gray-400'}`}>
             {day}
           </span>
           {holiday && (
             <>
-              <span className="hidden sm:inline-flex text-[9px] bg-gold-500/20 border border-gold-500/40 text-gold-400 font-extrabold px-1 sm:px-1.5 py-0.5 rounded uppercase">
+              <span className="hidden sm:inline-flex text-[9px] bg-yellow-400/20 border border-yellow-400/40 text-yellow-300 font-extrabold px-1 sm:px-1.5 py-0.5 rounded uppercase">
                 {language === 'ta' ? 'விடுமுறை' : 'Holiday'}
               </span>
-              <span className="sm:hidden h-2 w-2 rounded-full bg-gold-400 animate-pulse flex-shrink-0" />
+              <span className="sm:hidden h-2 w-2 rounded-full bg-yellow-400 animate-pulse flex-shrink-0" />
             </>
           )}
           {!holiday && isToday && (
-            <span className="hidden xs:inline text-[9px] bg-accentGreen/20 text-accentGreen font-bold px-1 sm:px-1.5 py-0.5 rounded uppercase">{t('calendar.today')}</span>
-          )}
-          {!holiday && isToday && (
-            <span className="xs:hidden h-2 w-2 rounded-full bg-accentGreen flex-shrink-0" />
-          )}
-          {!holiday && isTomorrow && (
-            <span className="hidden xs:inline text-[9px] bg-accentOrange/20 text-accentOrange font-bold px-1 sm:px-1.5 py-0.5 rounded uppercase">{tmrwLabel}</span>
+            <>
+              <span className="hidden xs:inline text-[9px] bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-bold px-1 sm:px-1.5 py-0.5 rounded uppercase">{t('calendar.today')}</span>
+              <span className="xs:hidden h-2 w-2 rounded-full bg-emerald-400 flex-shrink-0" />
+            </>
           )}
           {!holiday && isTomorrow && (
-            <span className="xs:hidden h-2 w-2 rounded-full bg-accentOrange flex-shrink-0" />
+            <>
+              <span className="hidden xs:inline text-[9px] bg-orange-500/20 border border-orange-500/40 text-orange-400 font-bold px-1 sm:px-1.5 py-0.5 rounded uppercase">{tmrwLabel}</span>
+              <span className="xs:hidden h-2 w-2 rounded-full bg-orange-400 flex-shrink-0" />
+            </>
           )}
         </div>
 
         {/* Dish / Holiday preview — visible only on sm+ */}
         {holiday ? (
           <div className="text-left mt-auto hidden sm:block w-full overflow-hidden">
-            <p className="text-[9px] font-bold truncate max-w-full text-gold-400">
+            <p className="text-[9px] font-bold truncate max-w-full text-yellow-400">
               🎉 {holiday.name_ta && language === 'ta' ? holiday.name_ta : (holiday.name || 'Holiday')}
             </p>
           </div>
@@ -328,11 +328,11 @@ const renderDays = () => {
         {/* Dot indicator on tiny screens */}
         {holiday ? (
           <div className="sm:hidden mt-auto">
-            <span className="h-1.5 w-1.5 rounded-full block bg-gold-400" />
+            <span className="h-1.5 w-1.5 rounded-full block bg-yellow-400" />
           </div>
         ) : menu && (
           <div className="sm:hidden mt-auto">
-            <span className={`h-1.5 w-1.5 rounded-full block ${isToday ? 'bg-accentGreen' : isTomorrow ? 'bg-accentOrange' : 'bg-accentPurple'}`} />
+            <span className={`h-1.5 w-1.5 rounded-full block ${isToday ? 'bg-emerald-400' : isTomorrow ? 'bg-orange-400' : 'bg-teal-400'}`} />
           </div>
         )}
       </div>
@@ -540,13 +540,13 @@ return (
           )}
         </div>
 
-        <div className="mt-6 p-3 bg-black/20 border border-white/5 rounded-xl text-[10px] text-gray-500 leading-relaxed">
+        <div className="mt-6 p-3 bg-black/20 border border-white/5 rounded-xl text-[10px] text-gray-400 leading-relaxed">
           <span className="text-white font-semibold">{legendLabel}:</span>
           <div className="flex flex-wrap gap-3 mt-1.5">
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-gold-400" /> {t('holiday.calendarTag') || 'Holiday'}</span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-accentGreen" /> {t('calendar.today')}</span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-accentOrange" /> {legendTmrw}</span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-accentPurple" /> {t('common.history')}</span>
+            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-yellow-400 shadow-sm" /> <span className="text-gray-300">{t('holiday.calendarTag') || 'Holiday'}</span></span>
+            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500 shadow-sm" /> <span className="text-gray-300">{t('calendar.today')}</span></span>
+            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-orange-500 shadow-sm" /> <span className="text-gray-300">{legendTmrw}</span></span>
+            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-teal-400 shadow-sm" /> <span className="text-gray-300">{t('common.history')}</span></span>
           </div>
         </div>
       </div>

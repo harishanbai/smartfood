@@ -208,10 +208,9 @@ const translations = {
     },
     ingredients: {
       title: "Ingredients & Grocery Planning",
-      subtitle: "Calculate daily meal requirements, manage storage stock, and plan monthly grocery purchases.",
+      subtitle: "Calculate daily meal requirements, manage storage stock, and review dish recipes.",
       tabDaily: "Daily Requirements",
       tabStorage: "Grocery Storage",
-      tabMonthly: "Monthly Planning",
       tabRecipes: "28 Dish Recipes",
       todayLunch: "Today's Lunch Menu",
       selectDate: "Select Date",
@@ -502,10 +501,9 @@ const translations = {
     },
     ingredients: {
       title: "மூலப்பொருட்கள் & மளிகைத் திட்டம்",
-      subtitle: "தினசரி மதிய உணவுத் தேவைகளைக் கணக்கிட்டு, மளிகை இருப்பை நிர்வகித்து, மாதாந்திரக் கொள்முதலைத் திட்டமிடுங்கள்.",
+      subtitle: "தினசரி மதிய உணவுத் தேவைகளைக் கணக்கிட்டு, மளிகை இருப்பை நிர்வகித்து, உணவு செய்முறைகளைப் பார்வையிடுங்கள்.",
       tabDaily: "தினசரி தேவைகள்",
       tabStorage: "மளிகை இருப்பு",
-      tabMonthly: "மாதாந்திரத் திட்டம்",
       tabRecipes: "28 உணவு வகைகள்",
       todayLunch: "இன்றைய மதிய உணவு மெனு",
       selectDate: "தேதியைத் தேர்ந்தெடுக்கவும்",

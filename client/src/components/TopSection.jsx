@@ -117,7 +117,7 @@ const TopSection = () => {
     if (path.startsWith('/ingredients')) {
       return {
         title: t('common.ingredients') || 'Ingredients & Grocery',
-        subtitle: t('ingredients.subtitle') || 'Calculate daily meal requirements, manage storage stock, and plan monthly grocery purchases.'
+        subtitle: t('ingredients.subtitle') || 'Calculate daily meal requirements, manage storage stock, and review dish recipes.'
       };
     }
     if (path.startsWith('/settings')) {
