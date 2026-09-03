@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Search, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  ToggleLeft, 
-  ToggleRight, 
-  X, 
+import {
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  ToggleLeft,
+  ToggleRight,
+  X,
   Image as ImageIcon,
   ChefHat
 } from 'lucide-react';
@@ -367,11 +367,11 @@ const Foods = () => {
           {/* Mobile Grid/Cards View */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
             {filteredFoods.map(food => (
-              <div 
+              <div
                 key={food._id}
                 className={`glass-panel rounded-[24px] p-4 border border-white/5 flex flex-col justify-between group transition-all duration-300 relative
-                  ${food.available 
-                    ? 'hover:shadow-[0_0_20px_rgba(168,85,247,0.1)] hover:border-accentPurple/20' 
+                  ${food.available
+                    ? 'hover:shadow-[0_0_20px_rgba(168,85,247,0.1)] hover:border-accentPurple/20'
                     : 'opacity-65 hover:opacity-100 hover:shadow-[0_0_20px_rgba(249,115,22,0.05)]'
                   }
                 `}
@@ -396,8 +396,8 @@ const Foods = () => {
 
                   {/* Availability status tag */}
                   <span className={`absolute top-3 right-3 text-[10px] px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider backdrop-blur-md border
-                    ${food.available 
-                      ? 'bg-accentGreen/20 border-accentGreen/30 text-accentGreen' 
+                    ${food.available
+                      ? 'bg-accentGreen/20 border-accentGreen/30 text-accentGreen'
                       : 'bg-accentOrange/20 border-accentOrange/30 text-accentOrange'
                     }
                   `}>
@@ -499,15 +499,13 @@ const Foods = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div
                     onClick={() => setFoodType('veg')}
-                    className={`glass-panel p-3.5 rounded-xl border flex items-center gap-3 cursor-pointer transition-all ${
-                      foodType === 'veg'
+                    className={`glass-panel p-3.5 rounded-xl border flex items-center gap-3 cursor-pointer transition-all ${foodType === 'veg'
                         ? 'bg-accentGreen/10 border-accentGreen/50 text-white shadow-[0_0_15px_rgba(34,197,94,0.15)]'
                         : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
-                    }`}
+                      }`}
                   >
-                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                      foodType === 'veg' ? 'border-accentGreen bg-accentGreen' : 'border-gray-500'
-                    }`}>
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${foodType === 'veg' ? 'border-accentGreen bg-accentGreen' : 'border-gray-500'
+                      }`}>
                       {foodType === 'veg' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                     </div>
                     <span className="text-sm font-semibold flex items-center gap-1.5">
@@ -517,15 +515,13 @@ const Foods = () => {
 
                   <div
                     onClick={() => setFoodType('non-veg')}
-                    className={`glass-panel p-3.5 rounded-xl border flex items-center gap-3 cursor-pointer transition-all ${
-                      foodType === 'non-veg'
+                    className={`glass-panel p-3.5 rounded-xl border flex items-center gap-3 cursor-pointer transition-all ${foodType === 'non-veg'
                         ? 'bg-accentOrange/10 border-accentOrange/50 text-white shadow-[0_0_15px_rgba(249,115,22,0.15)]'
                         : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
-                    }`}
+                      }`}
                   >
-                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                      foodType === 'non-veg' ? 'border-accentOrange bg-accentOrange' : 'border-gray-500'
-                    }`}>
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${foodType === 'non-veg' ? 'border-accentOrange bg-accentOrange' : 'border-gray-500'
+                      }`}>
                       {foodType === 'non-veg' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                     </div>
                     <span className="text-sm font-semibold flex items-center gap-1.5">

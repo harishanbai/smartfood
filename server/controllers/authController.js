@@ -559,7 +559,7 @@ export const resetPassword = async (req, res) => {
         const { getAuth } = await import('firebase-admin/auth');
         const firebaseAuth = getAuth();
         const hasAdminCredentials = !!process.env.FIREBASE_CLIENT_EMAIL && !!process.env.FIREBASE_PRIVATE_KEY;
-        
+
         if (hasAdminCredentials) {
           let updated = false;
 

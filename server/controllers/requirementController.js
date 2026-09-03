@@ -264,7 +264,7 @@ export const confirmStockDeduction = async (req, res) => {
     }
 
     const currentEmployees = actualEmployees != null ? Math.max(0, Number(actualEmployees)) : (dailyDoc?.actualEmployees || 10);
-    
+
     // Check if previously deducted for this date and same dish
     const prevDeducted = Boolean(dailyDoc && dailyDoc.isStockDeducted && (dailyDoc.deductedMealNumber == null || dailyDoc.deductedMealNumber === recipe.mealNumber));
     const prevDeductedCount = prevDeducted ? (dailyDoc.deductedEmployees || dailyDoc.actualEmployees || 0) : 0;

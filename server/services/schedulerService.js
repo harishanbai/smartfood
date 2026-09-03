@@ -19,14 +19,14 @@ import { getKolkataDateStr, getCurrentISTHour } from '../utils/dateUtils.js';
 // ─── State ────────────────────────────────────────────────────────────────────
 
 const SCHEDULER_TIMEZONE = 'Asia/Kolkata';
-const SCHEDULED_CRON    = '0 20 * * *';  // 8:00 PM daily
-const SCHEDULED_TIME    = '20:00';
+const SCHEDULED_CRON = '0 20 * * *';  // 8:00 PM daily
+const SCHEDULED_TIME = '20:00';
 
-let schedulerRunning    = false;
-let lastRun             = null;   // ISO string of last successful auto-generation run
-let schedulerTask       = null;   // node-cron task reference
-let backupTask          = null;   // backup periodic check task
-let isCheckingMissed    = false;  // Mutex flag to prevent overlapping catchup runs
+let schedulerRunning = false;
+let lastRun = null;   // ISO string of last successful auto-generation run
+let schedulerTask = null;   // node-cron task reference
+let backupTask = null;   // backup periodic check task
+let isCheckingMissed = false;  // Mutex flag to prevent overlapping catchup runs
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -51,7 +51,7 @@ const getNextRunIST = () => {
  */
 export const runAutoGeneration = async (overrideDateStr = null) => {
   const tomorrowStr = overrideDateStr || getKolkataDateStr(1);
-  const todayStr    = getKolkataDateStr(0);
+  const todayStr = getKolkataDateStr(0);
 
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('🕗 Auto Generation Triggered');

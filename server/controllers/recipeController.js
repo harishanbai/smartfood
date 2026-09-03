@@ -109,10 +109,6 @@ export const updateRecipe = async (req, res) => {
     }
 
     if (Array.isArray(ingredients)) {
-      if (ingredients.length === 0) {
-        return res.status(400).json({ message: 'Recipe must have at least one ingredient' });
-      }
-
       const sanitizedIngredients = [];
       for (let i = 0; i < ingredients.length; i++) {
         const ing = ingredients[i];

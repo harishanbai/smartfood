@@ -232,64 +232,64 @@ const TopSection = () => {
                 </div>
               )}
             </div>
-            
+
             {/* Online Status Indicator */}
             <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-accentGreen border-2 border-slate-900 rounded-full shadow-md" />
           </button>
 
-            {/* Profile Dropdown Popover */}
-            {profileDropdownOpen && (
-              <div className="absolute right-0 mt-3 w-64 glass-panel rounded-2xl border border-[var(--glass-border-gold)] bg-bgCard/95 p-4 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="flex items-center gap-3 pb-3 mb-3 border-b border-white/10">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center flex-shrink-0 shadow-md">
-                    {userPhoto && !imgError ? (
-                      <img
-                        src={userPhoto}
-                        alt={currentUser.displayName || 'User'}
-                        onError={() => setImgError(true)}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-sm font-bold text-emerald-400">
-                        {getUserInitials(currentUser?.displayName || mongoUser?.displayName)}
+          {/* Profile Dropdown Popover */}
+          {profileDropdownOpen && (
+            <div className="absolute right-0 mt-3 w-64 glass-panel rounded-2xl border border-[var(--glass-border-gold)] bg-bgCard/95 p-4 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center gap-3 pb-3 mb-3 border-b border-white/10">
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center flex-shrink-0 shadow-md">
+                  {userPhoto && !imgError ? (
+                    <img
+                      src={userPhoto}
+                      alt={currentUser.displayName || 'User'}
+                      onError={() => setImgError(true)}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-sm font-bold text-emerald-400">
+                      {getUserInitials(currentUser?.displayName || mongoUser?.displayName)}
+                    </span>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm font-bold text-white truncate">
+                    {currentUser?.displayName || mongoUser?.displayName || 'SmartFood User'}
+                  </h4>
+                  <p className="text-xs text-gray-400 truncate">
+                    {currentUser?.email || mongoUser?.email || currentUser?.phone || mongoUser?.phone || 'Connected'}
+                  </p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {(mongoUser?.provider === 'google' || currentUser?.email) && (
+                      <span className="inline-block text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                        ✓ Google Connected
+                      </span>
+                    )}
+                    {(mongoUser?.provider === 'whatsapp' || mongoUser?.phone || mongoUser?.whatsappVerified) && (
+                      <span className="inline-block text-[9px] font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full">
+                        ✓ WhatsApp Connected
                       </span>
                     )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-sm font-bold text-white truncate">
-                      {currentUser?.displayName || mongoUser?.displayName || 'SmartFood User'}
-                    </h4>
-                    <p className="text-xs text-gray-400 truncate">
-                      {currentUser?.email || mongoUser?.email || currentUser?.phone || mongoUser?.phone || 'Connected'}
-                    </p>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {(mongoUser?.provider === 'google' || currentUser?.email) && (
-                        <span className="inline-block text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                          ✓ Google Connected
-                        </span>
-                      )}
-                      {(mongoUser?.provider === 'whatsapp' || mongoUser?.phone || mongoUser?.whatsappVerified) && (
-                        <span className="inline-block text-[9px] font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full">
-                          ✓ WhatsApp Connected
-                        </span>
-                      )}
-                    </div>
-                  </div>
                 </div>
-
-                <button
-                  onClick={() => {
-                    setProfileDropdownOpen(false);
-                    logout();
-                  }}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold transition-all cursor-pointer"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Sign Out</span>
-                </button>
               </div>
-            )}
-          </div>
+
+              <button
+                onClick={() => {
+                  setProfileDropdownOpen(false);
+                  logout();
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold transition-all cursor-pointer"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

@@ -997,6 +997,42 @@ export const seedIngredientMasterData = async () => {
       );
     }
 
+    // 6. Ensure all custom/existing Food documents in DB have a linked Recipe
+    const allFoods = await Food.find({});
+    for (const food of allFoods) {
+      const existingRecipe = await Recipe.findOne({
+        $or: [{ foodId: food._id }, { name: food.name }]
+      });
+      if (!existingRecipe) {
+        const lastRecipe = await Recipe.findOne().sort({ mealNumber: -1 });
+        const nextMealNumber = (lastRecipe && typeof lastRecipe.mealNumber === 'number') ? lastRecipe.mealNumber + 1 : 1;
+        await Recipe.create({
+          mealNumber: nextMealNumber,
+          name: food.name,
+          name_ta: food.name_ta || food.name,
+          foodType: food.foodType || 'veg',
+          category: food.category || 'Main Course',
+          description: food.description || '',
+          basePersons: 10,
+          foodId: food._id,
+          ingredients: [],
+          isActive: true
+        });
+      } else if (!existingRecipe.foodId) {
+        existingRecipe.foodId = food._id;
+        await existingRecipe.save();
+      }
+    }
+
+    // 7. Clean up orphaned custom recipes (mealNumber > 28) whose food items no longer exist
+    const foodIdSet = new Set(allFoods.map(f => f._id.toString()));
+    const customRecipes = await Recipe.find({ mealNumber: { $gt: 28 } });
+    for (const cr of customRecipes) {
+      if (!cr.foodId || !foodIdSet.has(cr.foodId.toString())) {
+        await Recipe.findByIdAndDelete(cr._id);
+      }
+    }
+
     console.log('[Seed] ✅ Master Ingredients (31 Storage Items) & 28 Authentic Recipes synchronized without duplicates.');
   } catch (error) {
     console.error('[Seed] Error seeding ingredient/recipe master data:', error.message);

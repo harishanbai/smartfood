@@ -41,8 +41,7 @@ const recipeSchema = new mongoose.Schema(
       type: Number,
       required: true,
       unique: true,
-      min: 1,
-      max: 28
+      min: 1
     },
     name: {
       type: String,
@@ -51,8 +50,8 @@ const recipeSchema = new mongoose.Schema(
     },
     name_ta: {
       type: String,
-      required: true,
-      trim: true
+      trim: true,
+      default: ''
     },
     foodType: {
       type: String,

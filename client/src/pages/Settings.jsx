@@ -81,8 +81,8 @@ const Settings = () => {
                 key={lang.code}
                 onClick={() => setLanguage(lang.code)}
                 className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all cursor-pointer ${language === lang.code
-                    ? 'bg-accentPurple/10 border-accentPurple/50 text-white shadow-lg shadow-purple-500/10 scale-103'
-                    : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                  ? 'bg-accentPurple/10 border-accentPurple/50 text-white shadow-lg shadow-purple-500/10 scale-103'
+                  : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'
                   }`}
               >
                 <span className="text-2xl mb-2">{lang.flag}</span>

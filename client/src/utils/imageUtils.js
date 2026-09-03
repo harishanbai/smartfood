@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.PROD 
+const API_URL = import.meta.env.PROD
   ? (import.meta.env.VITE_API_URL_PROD || 'https://smartfood-1424.onrender.com')
   : (import.meta.env.VITE_API_URL || 'http://localhost:5001');
 let envApiUrl = API_URL.trim().replace(/\/+$/, '');

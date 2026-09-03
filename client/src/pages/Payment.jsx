@@ -20,7 +20,7 @@ const Payment = () => {
   const [bankName, setBankName] = useState('State Bank of India');
   const [bankAcc, setBankAcc] = useState('43868513959');
   const [bankIfsc, setBankIfsc] = useState('92038944816');
-  
+
   const [customAmount, setCustomAmount] = useState('120');
   const [currentSessionRef, setCurrentSessionRef] = useState(generateNewRef);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
@@ -341,19 +341,19 @@ const Payment = () => {
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 max-w-5xl mx-auto">
-        
+
         {/* Left Side: Payments & QR details */}
         <div className="col-span-1 lg:col-span-7 space-y-6">
           <div className="glass-panel rounded-[24px] p-6 border border-white/5 relative overflow-hidden">
             <div className="absolute -right-20 -top-20 w-48 h-48 bg-accentPurple/10 rounded-full blur-[80px] pointer-events-none" />
-            
+
             <h2 className="text-xl font-bold text-white mb-1 flex items-center gap-2">
               <CreditCard className="h-6 w-6 text-accentPurple" />
               {language === 'ta' ? 'பணம் செலுத்துதல்' : 'Payments & Billing'}
             </h2>
             <p className="text-xs text-gray-400 mb-6">
-              {language === 'ta' 
-                ? 'உங்கள் மதிய உணவுத் தொகையைச் செலுத்த UPI QR குறியீட்டை ஸ்கேன் செய்யவும் அல்லது வங்கி விவரங்களைப் பயன்படுத்தவும்.' 
+              {language === 'ta'
+                ? 'உங்கள் மதிய உணவுத் தொகையைச் செலுத்த UPI QR குறியீட்டை ஸ்கேன் செய்யவும் அல்லது வங்கி விவரங்களைப் பயன்படுத்தவும்.'
                 : 'Scan the UPI QR code or utilize the bank transfer details below to settle your meal invoices.'}
             </p>
 
@@ -361,18 +361,16 @@ const Payment = () => {
             <div className="flex border-b border-white/10 mb-6">
               <button
                 onClick={() => setActiveTab('upi')}
-                className={`flex-1 pb-3 text-sm font-semibold transition-all border-b-2 cursor-pointer flex items-center justify-center gap-2 ${
-                  activeTab === 'upi' ? 'border-accentPurple text-white' : 'border-transparent text-gray-400 hover:text-gray-200'
-                }`}
+                className={`flex-1 pb-3 text-sm font-semibold transition-all border-b-2 cursor-pointer flex items-center justify-center gap-2 ${activeTab === 'upi' ? 'border-accentPurple text-white' : 'border-transparent text-gray-400 hover:text-gray-200'
+                  }`}
               >
                 <QrCode className="h-4 w-4" />
                 {language === 'ta' ? 'UPI QR குறியீடு' : 'UPI QR Code'}
               </button>
               <button
                 onClick={() => setActiveTab('bank')}
-                className={`flex-1 pb-3 text-sm font-semibold transition-all border-b-2 cursor-pointer flex items-center justify-center gap-2 ${
-                  activeTab === 'bank' ? 'border-accentPurple text-white' : 'border-transparent text-gray-400 hover:text-gray-200'
-                }`}
+                className={`flex-1 pb-3 text-sm font-semibold transition-all border-b-2 cursor-pointer flex items-center justify-center gap-2 ${activeTab === 'bank' ? 'border-accentPurple text-white' : 'border-transparent text-gray-400 hover:text-gray-200'
+                  }`}
               >
                 <Landmark className="h-4 w-4" />
                 {language === 'ta' ? 'வங்கி பரிமாற்றம்' : 'Bank Transfer'}
@@ -546,7 +544,7 @@ const Payment = () => {
             {/* Reference Number Input */}
             <div className="mt-4 pt-4 border-t border-white/5">
               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
-                {activeTab === 'upi' 
+                {activeTab === 'upi'
                   ? (language === 'ta' ? 'பரிவர்த்தனை குறிப்பு எண் (Transaction ID)' : 'Transaction ID / Reference Number')
                   : (language === 'ta' ? 'வங்கி பரிமாற்ற குறிப்பு எண் (UTR / Ref)' : 'Bank Transfer Reference / UTR Number')
                 }
@@ -684,7 +682,7 @@ const Payment = () => {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
           <div className="glass-panel w-full max-w-sm rounded-[28px] p-6 border border-white/10 relative shadow-2xl overflow-hidden">
             <div className="absolute -right-20 -top-20 w-40 h-40 bg-accentGreen/10 rounded-full blur-[60px] pointer-events-none" />
-            
+
             <div className="flex flex-col items-center text-center space-y-4">
               {/* Success Badge */}
               <div className="h-12 w-12 rounded-full bg-accentGreen/20 flex items-center justify-center text-accentGreen border border-accentGreen/30">

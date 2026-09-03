@@ -520,7 +520,7 @@ const Dashboard = () => {
                         <span className={`inline-flex items-center gap-1.5 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${isNonVeg
                           ? 'bg-red-500/15 border border-red-500/25 text-red-400'
                           : 'bg-emerald-500/12 border border-emerald-500/25 text-emerald-500'
-                        }`}>
+                          }`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${isNonVeg ? 'bg-red-400' : 'bg-emerald-400 animate-pulse'}`} />
                           {isNonVeg ? 'NON-VEG' : 'VEG'} • {todayFood.category}
                         </span>
@@ -579,7 +579,7 @@ const Dashboard = () => {
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase ${isAuto
                     ? 'bg-emerald-500/10 border border-emerald-500/25 text-emerald-500'
                     : 'bg-blue-500/10 border border-blue-500/25 text-blue-400'
-                  }`}>
+                    }`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${isAuto ? 'bg-emerald-400 animate-pulse' : 'bg-blue-400'}`} />
                     {isAuto ? 'Auto Generated' : 'Manually Generated'}
                   </span>
@@ -641,7 +641,7 @@ const Dashboard = () => {
                         <span className={`inline-flex items-center gap-1.5 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${isNonVeg
                           ? 'bg-red-500/15 border border-red-500/25 text-red-400'
                           : 'bg-emerald-500/12 border border-emerald-500/25 text-emerald-500'
-                        }`}>
+                          }`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${isNonVeg ? 'bg-red-400' : 'bg-emerald-400'}`} />
                           {isNonVeg ? 'NON-VEG' : 'VEG'} • {tomorrowFood.category}
                         </span>

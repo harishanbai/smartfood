@@ -332,7 +332,7 @@ const INGREDIENT_DICTIONARY_TA = {
 const translateTextToTamil = async (text) => {
   if (!text || !text.trim()) return '';
   const clean = text.trim().toLowerCase();
-  
+
   // 1. Direct dictionary match
   if (INGREDIENT_DICTIONARY_TA[clean]) {
     return INGREDIENT_DICTIONARY_TA[clean];
@@ -507,7 +507,7 @@ const Ingredients = () => {
   // Load recipes list on mount for dropdowns & recipe tab
   useEffect(() => {
     fetchRecipesList();
-  }, [language]);
+  }, [language, activeTab]);
 
   // Load daily requirement whenever selectedDate or selectedMealNumber changes
   useEffect(() => {
@@ -1125,7 +1125,7 @@ const Ingredients = () => {
             {[
               { id: 'daily', label: t('ingredients.tabDaily'), icon: Clock },
               { id: 'storage', label: t('ingredients.tabStorage'), icon: Package },
-              { id: 'recipes', label: t('ingredients.tabRecipes'), icon: Layers }
+              { id: 'recipes', label: recipesList.length > 0 ? `${recipesList.length} ${t('ingredients.tabRecipes')}` : t('ingredients.tabRecipes'), icon: Layers }
             ].map(tab => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -1134,8 +1134,8 @@ const Ingredients = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer ${active
-                      ? 'bg-gradient-to-r from-gold-500 to-gold-600 text-black shadow-glowGold font-extrabold scale-102'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-gold-500 to-gold-600 text-black shadow-glowGold font-extrabold scale-102'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
                     }`}
                 >
                   <Icon className={`h-4 w-4 ${active ? 'text-black' : 'text-gray-400'}`} />
@@ -1164,8 +1164,8 @@ const Ingredients = () => {
                 <button
                   onClick={() => handleDateSelect(getTodayDateStr())}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedDate === getTodayDateStr()
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-sm'
-                      : 'bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 border border-white/10'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-sm'
+                    : 'bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 border border-white/10'
                     }`}
                 >
                   {t('dashboard.todayTitle').split(' ')[0] || 'Today'}
@@ -1173,8 +1173,8 @@ const Ingredients = () => {
                 <button
                   onClick={() => handleDateSelect(getTomorrowDateStr())}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedDate === getTomorrowDateStr()
-                      ? 'bg-accentOrange/20 text-accentOrange border border-accentOrange/50 shadow-sm'
-                      : 'bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 border border-white/10'
+                    ? 'bg-accentOrange/20 text-accentOrange border border-accentOrange/50 shadow-sm'
+                    : 'bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 border border-white/10'
                     }`}
                 >
                   {t('dashboard.tomorrowTitle').split(' ')[0] || 'Tomorrow'}
@@ -1299,8 +1299,8 @@ const Ingredients = () => {
                       <div>
                         <div className="flex items-center gap-2 mb-1.5">
                           <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${dailyData?.dish?.foodType === 'non-veg'
-                              ? 'bg-red-500/15 border border-red-500/40 text-red-400'
-                              : 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-400'
+                            ? 'bg-red-500/15 border border-red-500/40 text-red-400'
+                            : 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-400'
                             }`}>
                             {dailyData?.dish?.foodType === 'non-veg' ? '🍗 NON-VEG' : '🌿 VEG'} • {dailyData?.dish?.category || 'Main Course'}
                           </span>
@@ -1405,8 +1405,8 @@ const Ingredients = () => {
                             onClick={handleConfirmDeductStock}
                             disabled={deductingStock || isDeductionConfirmed}
                             className={`flex-1 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${isDeductionConfirmed
-                                ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 cursor-not-allowed opacity-80'
-                                : 'bg-[#D4AF37] hover:bg-[#E5C158] text-black shadow-glowGold'
+                              ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 cursor-not-allowed opacity-80'
+                              : 'bg-[#D4AF37] hover:bg-[#E5C158] text-black shadow-glowGold'
                               }`}
                             style={isDeductionConfirmed ? {} : { backgroundColor: '#D4AF37', color: '#000000', fontWeight: 800 }}
                           >
@@ -1784,8 +1784,8 @@ const Ingredients = () => {
                     <div
                       key={item._id}
                       className={`glass-panel p-5 rounded-[22px] border transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${isLow
-                          ? 'border-amber-500/40 bg-amber-500/5'
-                          : 'border-white/10 bg-bgCard hover:border-gold-500/40 shadow-sm'
+                        ? 'border-amber-500/40 bg-amber-500/5'
+                        : 'border-white/10 bg-bgCard hover:border-gold-500/40 shadow-sm'
                         }`}
                     >
                       <div>
@@ -1795,8 +1795,8 @@ const Ingredients = () => {
                             {item.name_ta && <p className="text-xs text-gold-400 font-semibold">{item.name_ta}</p>}
                           </div>
                           <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${isLow
-                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                              : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                            : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                             }`}>
                             {isLow ? t('ingredients.lowStock') : t('ingredients.inStock')}
                           </span>
@@ -1958,7 +1958,7 @@ const Ingredients = () => {
             <div>
               <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                 <Layers className="h-5 w-5 text-gold-400" />
-                {t('ingredients.dishRecipeCount')}
+                {recipesList.length > 28 ? `${recipesList.length} ${language === 'ta' ? 'உணவு ரெசிபிகள்' : 'Dish Recipes'}` : t('ingredients.dishRecipeCount')}
               </h3>
               <p className="text-xs text-gray-400">Standardized recipes with 10-person base quantities</p>
             </div>
@@ -2028,7 +2028,7 @@ const Ingredients = () => {
 
                     <div className="flex items-center gap-3">
                       <span className="text-xs text-gray-400 hidden sm:inline-block">
-                        {recipe.ingredients.length} Ingredients (Base 10p)
+                        {(recipe.ingredients || []).length} Ingredients (Base 10p)
                       </span>
                       {isAdmin && (
                         <button
@@ -2052,7 +2052,7 @@ const Ingredients = () => {
                   {isExpanded && (
                     <div className="p-5 border-t border-white/10 bg-black/20 space-y-4">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <p className="text-xs text-gray-400 max-w-xl">{recipe.description}</p>
+                        <p className="text-xs text-gray-400 max-w-xl">{recipe.description || 'No description provided.'}</p>
 
                         <div className="flex flex-wrap items-center gap-3">
                           {isAdmin && (
@@ -2078,48 +2078,63 @@ const Ingredients = () => {
                         </div>
                       </div>
 
-
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                          <thead>
-                            <tr className="border-b border-white/10 text-gray-400 uppercase tracking-wider font-semibold">
-                              <th className="pb-2.5 pl-2">Ingredient</th>
-                              <th className="pb-2.5">Category</th>
-                              <th className="pb-2.5 text-right">Base Qty (10 Persons)</th>
-                              <th className="pb-2.5 text-right font-bold text-gold-300">
-                                Scaled for {recipeCalcEmployees} Persons
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-white/5">
-                            {recipe.ingredients.map((ing, idx) => {
-                              const scaled = Math.round((ing.baseQuantity / 10) * recipeCalcEmployees * 100) / 100;
-                              return (
-                                <tr key={idx} className="hover:bg-white/3">
-                                  <td className="py-2.5 pl-2">
-                                    <span className="font-bold text-white">{ing.name}</span>
-                                    {ing.name_ta && <span className="text-gray-400 ml-2">({ing.name_ta})</span>}
-                                  </td>
-                                  <td className="py-2.5">
-                                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${ing.category === 'grocery'
+                      {recipe.ingredients && recipe.ingredients.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs">
+                            <thead>
+                              <tr className="border-b border-white/10 text-gray-400 uppercase tracking-wider font-semibold">
+                                <th className="pb-2.5 pl-2">Ingredient</th>
+                                <th className="pb-2.5">Category</th>
+                                <th className="pb-2.5 text-right">Base Qty (10 Persons)</th>
+                                <th className="pb-2.5 text-right font-bold text-gold-300">
+                                  Scaled for {recipeCalcEmployees} Persons
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                              {recipe.ingredients.map((ing, idx) => {
+                                const scaled = Math.round((ing.baseQuantity / 10) * recipeCalcEmployees * 100) / 100;
+                                return (
+                                  <tr key={idx} className="hover:bg-white/3">
+                                    <td className="py-2.5 pl-2">
+                                      <span className="font-bold text-white">{ing.name}</span>
+                                      {ing.name_ta && <span className="text-gray-400 ml-2">({ing.name_ta})</span>}
+                                    </td>
+                                    <td className="py-2.5">
+                                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${ing.category === 'grocery'
                                         ? 'bg-gold-500/10 text-gold-400 border border-gold-500/20'
                                         : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                      }`}>
-                                      {ing.category}
-                                    </span>
-                                  </td>
-                                  <td className="py-2.5 text-right text-gray-400">
-                                    {ing.baseQuantity} {ing.unit}
-                                  </td>
-                                  <td className="py-2.5 text-right font-black text-gold-300">
-                                    {scaled} {ing.unit}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
+                                        }`}>
+                                        {ing.category}
+                                      </span>
+                                    </td>
+                                    <td className="py-2.5 text-right text-gray-400">
+                                      {ing.baseQuantity} {ing.unit}
+                                    </td>
+                                    <td className="py-2.5 text-right font-black text-gold-300">
+                                      {scaled} {ing.unit}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="p-6 rounded-2xl bg-white/5 border border-dashed border-white/15 text-center space-y-2">
+                          <p className="text-xs text-gray-400">No ingredients added yet</p>
+                          {isAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditRecipe(recipe)}
+                              className="px-3.5 py-1.5 rounded-xl bg-gold-500/20 border border-gold-500/40 text-gold-400 font-bold text-xs hover:bg-gold-500/30 transition-all cursor-pointer inline-flex items-center gap-1.5"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                              <span>Add Ingredients</span>
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -2418,10 +2433,10 @@ const Ingredients = () => {
                       <td className="py-2.5 font-bold text-white">{tx.ingredientName}</td>
                       <td className="py-2.5">
                         <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${tx.type === 'usage_deduction'
-                            ? 'bg-red-500/15 text-red-400'
-                            : tx.type === 'stock_addition'
-                              ? 'bg-emerald-500/15 text-emerald-400'
-                              : 'bg-gold-500/15 text-gold-400'
+                          ? 'bg-red-500/15 text-red-400'
+                          : tx.type === 'stock_addition'
+                            ? 'bg-emerald-500/15 text-emerald-400'
+                            : 'bg-gold-500/15 text-gold-400'
                           }`}>
                           {tx.type.replace('_', ' ')}
                         </span>
@@ -2484,7 +2499,7 @@ const Ingredients = () => {
 
             {/* Modal Scrollable Content Form */}
             <form onSubmit={handleSaveRecipe} className="flex-1 overflow-y-auto pr-1 space-y-5">
-              
+
               {/* Dish Meta Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
                 <div>
@@ -2522,22 +2537,20 @@ const Ingredients = () => {
                     <button
                       type="button"
                       onClick={() => handleRecipeFieldChange('foodType', 'veg')}
-                      className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                        editingRecipe.foodType === 'veg'
+                      className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${editingRecipe.foodType === 'veg'
                           ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-sm font-extrabold'
                           : 'bg-white/5 text-gray-400 hover:text-white border border-white/10'
-                      }`}
+                        }`}
                     >
                       <span>🌿 VEG</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleRecipeFieldChange('foodType', 'non-veg')}
-                      className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                        editingRecipe.foodType === 'non-veg'
+                      className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${editingRecipe.foodType === 'non-veg'
                           ? 'bg-red-500/20 text-red-300 border border-red-500/50 shadow-sm font-extrabold'
                           : 'bg-white/5 text-gray-400 hover:text-white border border-white/10'
-                      }`}
+                        }`}
                     >
                       <span>🍗 NON-VEG</span>
                     </button>
@@ -2637,11 +2650,10 @@ const Ingredients = () => {
                             <select
                               value={ing.category}
                               onChange={(e) => handleIngredientFieldChange(idx, 'category', e.target.value)}
-                              className={`w-full glass-panel px-2.5 py-1.5 rounded-lg bg-black/40 border text-xs font-bold focus:outline-none cursor-pointer [&>option]:bg-bgCard ${
-                                ing.category === 'grocery'
+                              className={`w-full glass-panel px-2.5 py-1.5 rounded-lg bg-black/40 border text-xs font-bold focus:outline-none cursor-pointer [&>option]:bg-bgCard ${ing.category === 'grocery'
                                   ? 'border-gold-500/40 text-gold-400'
                                   : 'border-emerald-500/40 text-emerald-400'
-                              }`}
+                                }`}
                             >
                               <option value="grocery">🏪 Grocery</option>
                               <option value="fresh">🥬 Fresh</option>

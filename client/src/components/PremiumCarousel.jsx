@@ -49,7 +49,7 @@ const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpi
     if (foods.length === 0 || isSpinning) return;
 
     setIsSpinning(true);
-    
+
     // Find target index in foods list
     const foundTargetIndex = foods.findIndex(f => f._id === targetFoodId);
     const finalTargetIdx = foundTargetIndex !== -1 ? foundTargetIndex : Math.floor(Math.random() * foods.length);
@@ -155,7 +155,7 @@ const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpi
 
             // Set transformations based on 3D placement and screen width
             const isCenter = position === 0;
-            
+
             let xOffset = '0%';
             let scale = 1;
             let rotateY = 0;
@@ -199,17 +199,17 @@ const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpi
                   damping: 30
                 }}
                 className={`carousel-card w-[205px] xs:w-[245px] sm:w-[285px] md:w-[320px] h-[300px] sm:h-[340px] rounded-[24px] overflow-hidden glass-panel p-3.5 sm:p-4 flex flex-col justify-between cursor-pointer border
-                  ${isCenter 
-                    ? 'border-accentOrange/35 bg-gradient-to-b from-bgElevated to-bgCard shadow-[0_0_25px_rgba(34,197,94,0.15)] glow-active-green' 
+                  ${isCenter
+                    ? 'border-accentOrange/35 bg-gradient-to-b from-bgElevated to-bgCard shadow-[0_0_25px_rgba(34,197,94,0.15)] glow-active-green'
                     : 'border-white/5 bg-bgCard/50'
                   }
                 `}
               >
                 {/* Image Section */}
                 <div className="relative w-full h-[180px] rounded-2xl overflow-hidden mb-3 group bg-black/20">
-                  <motion.img 
-                    src={getImageUrl(item)} 
-                    alt={item.name} 
+                  <motion.img
+                    src={getImageUrl(item)}
+                    alt={item.name}
                     className="w-full h-full object-cover"
                     animate={isCenter && !isSpinning ? { scale: [1, 1.03, 1] } : {}}
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -237,7 +237,7 @@ const PremiumCarousel = ({ foods = [], onSelectionComplete, isSpinning, setIsSpi
                     <h4 className="text-lg font-bold text-white tracking-tight line-clamp-1 mb-1">{item.name}</h4>
                     <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">{item.description}</p>
                   </div>
-                  
+
                   {isCenter && (
                     <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-gray-400">
                       <span className="flex items-center gap-1">
