@@ -62,6 +62,7 @@ const ProtectedRoute = ({ children }) => {
 // Main Layout Wrapper
 const MainLayout = () => {
   const [isCollapsed, setIsCollapsed] = React.useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
+  const [isSidebarHovered, setIsSidebarHovered] = React.useState(false);
   const location = useLocation();
 
   const toggleSidebar = React.useCallback(() => {
@@ -78,7 +79,12 @@ const MainLayout = () => {
     <div className="flex flex-col min-h-screen bg-bgMain text-gray-200 antialiased font-sans overflow-x-hidden w-full">
       <div className="flex flex-1 w-full">
         {/* Sidebar */}
-        <Sidebar isCollapsed={isCollapsed} onToggle={toggleSidebar} />
+        <Sidebar
+          isCollapsed={isCollapsed}
+          onToggle={toggleSidebar}
+          isHovered={isSidebarHovered}
+          onHoverChange={setIsSidebarHovered}
+        />
         
         {/* Floating mobile bottom navigation */}
         <BottomNav />
@@ -86,7 +92,7 @@ const MainLayout = () => {
         {isDashboard && <PWAInstallPrompt />}
 
         {/* Main Content Area */}
-        <main className={`flex-1 ml-0 ${isCollapsed ? 'lg:ml-24' : 'lg:ml-72'} p-3 sm:p-5 lg:p-6 pb-24 lg:pb-8 transition-[margin-left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[margin-left] w-full overflow-x-hidden`}>
+        <main className={`flex-1 ml-0 ${isSidebarHovered ? 'lg:ml-[280px]' : 'lg:ml-[110px]'} p-3 sm:p-5 lg:p-6 pb-24 lg:pb-8 transition-[margin-left] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[margin-left] w-full min-w-0 overflow-x-hidden`}>
           {/* Top digital date/clock, and greet bar */}
           <TopSection />
 

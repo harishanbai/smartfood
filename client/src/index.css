@@ -156,6 +156,10 @@
   color: #0F172A !important;
 }
 
+:root.light aside h1 {
+  color: #C08B2A !important;
+}
+
 /* Any text-white used across the app (excluding inside filled action buttons or gradient badges) */
 :root.light .text-white:not(button.bg-gradient-to-r *):not(button.bg-gold-500 *):not(button.bg-emerald-600 *):not(button.bg-accentOrange *):not(button.bg-accentPurple *):not(button[class*="bg-red-"] *):not(span[class*="bg-gradient-to-r"] *):not([class*="bg-gradient-to-tr"] *) {
   color: #0F172A !important;
