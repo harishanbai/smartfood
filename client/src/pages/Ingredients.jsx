@@ -1061,29 +1061,173 @@ const Ingredients = () => {
     window.open(url, '_blank');
   };
 
-  // Filtered storage inventory
-  const filteredStorageItems = useMemo(() => {
+  // Base searched storage inventory
+  const searchedStorageItems = useMemo(() => {
     const list = storageInventory.items || [];
+    if (!storageSearch.trim()) return list;
+    const query = storageSearch.toLowerCase().trim();
     return list.filter(item => {
-      const matchesSearch = !storageSearch.trim() ||
-        item.name.toLowerCase().includes(storageSearch.toLowerCase()) ||
-        (item.name_ta && item.name_ta.includes(storageSearch));
-      const matchesStatus =
-        storageFilter === 'all' ||
-        (storageFilter === 'low_stock' && item.status === 'low_stock') ||
-        (storageFilter === 'out_of_stock' && item.status === 'out_of_stock');
-      return matchesSearch && matchesStatus;
+      const matchName = item.name && item.name.toLowerCase().includes(query);
+      const matchNameTa = item.name_ta && item.name_ta.includes(storageSearch.trim());
+      return matchName || matchNameTa;
     });
-  }, [storageInventory, storageSearch, storageFilter]);
+  }, [storageInventory, storageSearch]);
 
-  // Separate into Storage Stock (currentStock > 0) and Out of Stock (currentStock <= 0)
+  // Separate into Storage Stock (currentStock > 0), Out of Stock (currentStock <= 0), and Low Stock
   const inStockStorageItems = useMemo(() => {
-    return filteredStorageItems.filter(item => Number(item.currentStock) > 0);
-  }, [filteredStorageItems]);
+    return searchedStorageItems.filter(item => Number(item.currentStock) > 0);
+  }, [searchedStorageItems]);
 
   const outOfStockStorageItems = useMemo(() => {
-    return filteredStorageItems.filter(item => Number(item.currentStock) <= 0);
-  }, [filteredStorageItems]);
+    return searchedStorageItems.filter(item => Number(item.currentStock) <= 0);
+  }, [searchedStorageItems]);
+
+  const lowStockStorageItems = useMemo(() => {
+    return searchedStorageItems.filter(item => {
+      const stock = Number(item.currentStock) || 0;
+      const min = Number(item.minStock) || 0;
+      return (item.status === 'low_stock' || (min > 0 && stock <= min)) && stock > 0;
+    });
+  }, [searchedStorageItems]);
+
+  // Render card for items with stock > 0 (normal and low-stock)
+  const renderInStockCard = (item) => {
+    const pct = item.suggestedStorageStock > 0
+      ? Math.min(100, Math.round((item.currentStock / item.suggestedStorageStock) * 100))
+      : 100;
+    const isLow = item.currentStock <= item.minStock;
+
+    return (
+      <div
+        key={item._id}
+        className={`glass-panel p-5 rounded-[22px] border transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${isLow
+          ? 'border-amber-500/40 bg-amber-500/5'
+          : 'border-white/10 bg-bgCard hover:border-gold-500/40 shadow-sm'
+          }`}
+      >
+        <div>
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div>
+              <h4 className="font-bold text-white text-base">{item.name}</h4>
+              {item.name_ta && <p className="text-xs text-gold-400 font-semibold">{item.name_ta}</p>}
+            </div>
+            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${isLow
+              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+              : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+              }`}>
+              {isLow ? t('ingredients.lowStock') : t('ingredients.inStock')}
+            </span>
+          </div>
+
+          <div className="mt-4 flex items-baseline justify-between">
+            <span className="text-2xl font-black text-white">
+              {item.currentStock} <span className="text-sm font-bold text-gray-400">{item.defaultUnit}</span>
+            </span>
+            <span className="text-xs text-gray-400 font-medium">
+              Suggested: {item.suggestedStorageStock} {item.defaultUnit}
+            </span>
+          </div>
+
+          {/* Stock level progress bar */}
+          <div className="w-full h-2 rounded-full bg-white/10 mt-3 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${isLow ? 'bg-amber-500' : 'bg-emerald-500'
+                }`}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between gap-2">
+          <span className="text-[10px] text-gray-400 font-semibold truncate">Min: {item.minStock} {item.defaultUnit}</span>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <button
+              onClick={() => {
+                setEditStockModal(item);
+                setStockAction('add');
+                setStockAmountInput('');
+                setMinStockInput(String(item.minStock || ''));
+                setSuggestedStockInput(String(item.suggestedStorageStock || ''));
+              }}
+              className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-xs font-bold text-white transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+              title={t('ingredients.addStockTitle')}
+            >
+              <Edit2 className="h-3 w-3 text-gold-400" />
+              <span>{t('ingredients.addStockTitle')}</span>
+            </button>
+            <button
+              onClick={() => handleDeleteStorageItem(item)}
+              className="p-1.5 rounded-xl bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 border border-white/10 hover:border-red-500/30 transition-all flex items-center justify-center cursor-pointer shadow-sm"
+              title={t('ingredients.deleteStorageTitle') || 'Delete from Storage'}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Render card for items with stock <= 0 (out of stock)
+  const renderOutOfStockCard = (item) => (
+    <div
+      key={item._id}
+      className="glass-panel p-5 rounded-[22px] border border-red-500/40 bg-red-500/5 transition-all duration-300 relative overflow-hidden flex flex-col justify-between"
+    >
+      <div>
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div>
+            <h4 className="font-bold text-white text-base">{item.name}</h4>
+            {item.name_ta && <p className="text-xs text-gold-400 font-semibold">{item.name_ta}</p>}
+          </div>
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-red-500/20 text-red-300 border border-red-500/40">
+            {t('ingredients.outOfStock')}
+          </span>
+        </div>
+
+        <div className="mt-4 flex items-baseline justify-between">
+          <span className="text-2xl font-black text-red-400">
+            0 <span className="text-sm font-bold text-gray-400">{item.defaultUnit}</span>
+          </span>
+          <span className="text-xs text-gray-400">
+            Suggested: {item.suggestedStorageStock} {item.defaultUnit}
+          </span>
+        </div>
+
+        {/* Stock level progress bar: Empty */}
+        <div className="w-full h-2 rounded-full bg-white/10 mt-3 overflow-hidden">
+          <div className="h-full rounded-full bg-red-500 w-0" />
+        </div>
+      </div>
+
+      <div className="mt-5 pt-3 border-t border-white/5 flex items-center justify-between gap-2">
+        <span className="text-[10px] text-gray-400 font-semibold truncate">Min: {item.minStock} {item.defaultUnit}</span>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            onClick={() => {
+              setEditStockModal(item);
+              setStockAction('add');
+              setStockAmountInput('');
+              setMinStockInput(String(item.minStock || ''));
+              setSuggestedStockInput(String(item.suggestedStorageStock || ''));
+            }}
+            className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-xs font-bold text-white transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+            title={t('ingredients.addStockTitle')}
+          >
+            <Edit2 className="h-3 w-3 text-gold-400" />
+            <span>{t('ingredients.addStockTitle')}</span>
+          </button>
+          <button
+            onClick={() => handleDeleteStorageItem(item)}
+            className="p-1.5 rounded-xl bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 border border-white/10 hover:border-red-500/30 transition-all flex items-center justify-center cursor-pointer shadow-sm"
+            title={t('ingredients.deleteStorageTitle') || 'Delete from Storage'}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   // Filtered recipes catalog
   const filteredRecipes = useMemo(() => {
@@ -1723,14 +1867,18 @@ const Ingredients = () => {
               </div>
 
               <div className="flex items-center gap-1.5 p-1 glass-panel rounded-xl bg-white/5 border border-white/10 text-xs">
-                {['all', 'low_stock', 'out_of_stock'].map(f => (
+                {[
+                  { id: 'all', label: t('ingredients.filterAllStock') || 'All' },
+                  { id: 'low_stock', label: t('ingredients.lowStock') || 'Low Stock' },
+                  { id: 'out_of_stock', label: t('ingredients.outOfStock') || 'Out of Stock' }
+                ].map(tab => (
                   <button
-                    key={f}
-                    onClick={() => setStorageFilter(f)}
-                    className={`px-3 py-1 rounded-lg font-bold capitalize transition-all cursor-pointer ${storageFilter === f ? 'bg-gold-500 text-black shadow-sm font-extrabold' : 'text-gray-400 hover:text-white'
+                    key={tab.id}
+                    onClick={() => setStorageFilter(tab.id)}
+                    className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${storageFilter === tab.id ? 'bg-gold-500 text-black shadow-sm font-extrabold' : 'text-gray-400 hover:text-white'
                       }`}
                   >
-                    {f.replace('_', ' ')}
+                    {tab.label}
                   </button>
                 ))}
               </div>
@@ -1755,194 +1903,124 @@ const Ingredients = () => {
             </div>
           </div>
 
-          {/* ── Section 1: STORAGE STOCK (currentStock > 0) ── */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
-              <div className="flex items-center gap-2.5">
-                <div className="h-3 w-3 rounded-full bg-emerald-400 shadow-glowEmerald" />
-                <h3 className="text-base sm:text-lg font-extrabold text-white tracking-wide">
-                  {t('ingredients.storageStockSection')}
-                </h3>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                  {inStockStorageItems.length}
-                </span>
-              </div>
-              <span className="text-xs text-gray-400 hidden sm:inline-block">
-                {t('ingredients.storageStockSub')}
-              </span>
-            </div>
-
-            {inStockStorageItems.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {inStockStorageItems.map((item) => {
-                  const pct = item.suggestedStorageStock > 0
-                    ? Math.min(100, Math.round((item.currentStock / item.suggestedStorageStock) * 100))
-                    : 100;
-                  const isLow = item.currentStock <= item.minStock;
-
-                  return (
-                    <div
-                      key={item._id}
-                      className={`glass-panel p-5 rounded-[22px] border transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${isLow
-                        ? 'border-amber-500/40 bg-amber-500/5'
-                        : 'border-white/10 bg-bgCard hover:border-gold-500/40 shadow-sm'
-                        }`}
-                    >
-                      <div>
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <div>
-                            <h4 className="font-bold text-white text-base">{item.name}</h4>
-                            {item.name_ta && <p className="text-xs text-gold-400 font-semibold">{item.name_ta}</p>}
-                          </div>
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${isLow
-                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                            : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                            }`}>
-                            {isLow ? t('ingredients.lowStock') : t('ingredients.inStock')}
-                          </span>
-                        </div>
-
-                        <div className="mt-4 flex items-baseline justify-between">
-                          <span className="text-2xl font-black text-white">
-                            {item.currentStock} <span className="text-sm font-bold text-gray-400">{item.defaultUnit}</span>
-                          </span>
-                          <span className="text-xs text-gray-400 font-medium">
-                            Suggested: {item.suggestedStorageStock} {item.defaultUnit}
-                          </span>
-                        </div>
-
-                        {/* Stock level progress bar */}
-                        <div className="w-full h-2 rounded-full bg-white/10 mt-3 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-500 ${isLow ? 'bg-amber-500' : 'bg-emerald-500'
-                              }`}
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between gap-2">
-                        <span className="text-[10px] text-gray-400 font-semibold truncate">Min: {item.minStock} {item.defaultUnit}</span>
-                        <div className="flex items-center gap-1.5 flex-shrink-0">
-                          <button
-                            onClick={() => {
-                              setEditStockModal(item);
-                              setStockAction('add');
-                              setStockAmountInput('');
-                              setMinStockInput(String(item.minStock || ''));
-                              setSuggestedStockInput(String(item.suggestedStorageStock || ''));
-                            }}
-                            className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-xs font-bold text-white transition-all flex items-center gap-1 cursor-pointer shadow-sm"
-                            title={t('ingredients.addStockTitle')}
-                          >
-                            <Edit2 className="h-3 w-3 text-gold-400" />
-                            <span>{t('ingredients.addStockTitle')}</span>
-                          </button>
-                          <button
-                            onClick={() => handleDeleteStorageItem(item)}
-                            className="p-1.5 rounded-xl bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 border border-white/10 hover:border-red-500/30 transition-all flex items-center justify-center cursor-pointer shadow-sm"
-                            title={t('ingredients.deleteStorageTitle') || 'Delete from Storage'}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="p-8 rounded-2xl glass-panel border border-white/10 text-center text-xs text-gray-400">
-                {t('ingredients.noInStockItems')}
-              </div>
-            )}
-          </div>
-
-          {/* ── Section 2: OUT OF STOCK (currentStock <= 0) ── */}
-          <div className="space-y-4 pt-4">
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
-              <div className="flex items-center gap-2.5">
-                <div className="h-3 w-3 rounded-full bg-red-500 shadow-glowRed" />
-                <h3 className="text-base sm:text-lg font-extrabold text-white tracking-wide">
-                  {t('ingredients.outOfStockSection')}
-                </h3>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-red-500/20 text-red-300 border border-red-500/40">
-                  {outOfStockStorageItems.length}
-                </span>
-              </div>
-              <span className="text-xs text-gray-400 hidden sm:inline-block">
-                {t('ingredients.outOfStockSub')}
-              </span>
-            </div>
-
-            {outOfStockStorageItems.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {outOfStockStorageItems.map((item) => (
-                  <div
-                    key={item._id}
-                    className="glass-panel p-5 rounded-[22px] border border-red-500/40 bg-red-500/5 transition-all duration-300 relative overflow-hidden flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div>
-                          <h4 className="font-bold text-white text-base">{item.name}</h4>
-                          {item.name_ta && <p className="text-xs text-gold-400 font-semibold">{item.name_ta}</p>}
-                        </div>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-red-500/20 text-red-300 border border-red-500/40">
-                          {t('ingredients.outOfStock')}
-                        </span>
-                      </div>
-
-                      <div className="mt-4 flex items-baseline justify-between">
-                        <span className="text-2xl font-black text-red-400">
-                          0 <span className="text-sm font-bold text-gray-400">{item.defaultUnit}</span>
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          Suggested: {item.suggestedStorageStock} {item.defaultUnit}
-                        </span>
-                      </div>
-
-                      {/* Stock level progress bar: Empty */}
-                      <div className="w-full h-2 rounded-full bg-white/10 mt-3 overflow-hidden">
-                        <div className="h-full rounded-full bg-red-500 w-0" />
-                      </div>
-                    </div>
-
-                    <div className="mt-5 pt-3 border-t border-white/5 flex items-center justify-between gap-2">
-                      <span className="text-[10px] text-gray-400 font-semibold truncate">Min: {item.minStock} {item.defaultUnit}</span>
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <button
-                          onClick={() => {
-                            setEditStockModal(item);
-                            setStockAction('add');
-                            setStockAmountInput('');
-                            setMinStockInput(String(item.minStock || ''));
-                            setSuggestedStockInput(String(item.suggestedStorageStock || ''));
-                          }}
-                          className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-xs font-bold text-white transition-all flex items-center gap-1 cursor-pointer shadow-sm"
-                          title={t('ingredients.addStockTitle')}
-                        >
-                          <Edit2 className="h-3 w-3 text-gold-400" />
-                          <span>{t('ingredients.addStockTitle')}</span>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteStorageItem(item)}
-                          className="p-1.5 rounded-xl bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 border border-white/10 hover:border-red-500/30 transition-all flex items-center justify-center cursor-pointer shadow-sm"
-                          title={t('ingredients.deleteStorageTitle') || 'Delete from Storage'}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
+          {/* ── Conditional Section Rendering based on storageFilter ── */}
+          {storageFilter === 'all' && (
+            <div className="space-y-8">
+              {/* ── Section 1: STORAGE STOCK (currentStock > 0) ── */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-3 w-3 rounded-full bg-emerald-400 shadow-glowEmerald" />
+                    <h3 className="text-base sm:text-lg font-extrabold text-white tracking-wide">
+                      {t('ingredients.storageStockSection')}
+                    </h3>
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                      {inStockStorageItems.length}
+                    </span>
                   </div>
-                ))}
+                  <span className="text-xs text-gray-400 hidden sm:inline-block">
+                    {t('ingredients.storageStockSub')}
+                  </span>
+                </div>
+
+                {inStockStorageItems.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {inStockStorageItems.map(renderInStockCard)}
+                  </div>
+                ) : (
+                  <div className="p-8 rounded-2xl glass-panel border border-white/10 text-center text-xs text-gray-400">
+                    {t('ingredients.noInStockItems')}
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="p-8 rounded-2xl glass-panel border border-emerald-500/20 bg-emerald-500/5 text-center text-xs text-emerald-300 font-semibold">
-                {t('ingredients.noOutOfStockItems')}
+
+              {/* ── Section 2: OUT OF STOCK (currentStock <= 0) ── */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-3 w-3 rounded-full bg-red-500 shadow-glowRed" />
+                    <h3 className="text-base sm:text-lg font-extrabold text-white tracking-wide">
+                      {t('ingredients.outOfStockSection')}
+                    </h3>
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-red-500/20 text-red-300 border border-red-500/40">
+                      {outOfStockStorageItems.length}
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-400 hidden sm:inline-block">
+                    {t('ingredients.outOfStockSub')}
+                  </span>
+                </div>
+
+                {outOfStockStorageItems.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {outOfStockStorageItems.map(renderOutOfStockCard)}
+                  </div>
+                ) : (
+                  <div className="p-8 rounded-2xl glass-panel border border-emerald-500/20 bg-emerald-500/5 text-center text-xs text-emerald-300 font-semibold">
+                    {t('ingredients.noOutOfStockItems')}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {storageFilter === 'low_stock' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-3 w-3 rounded-full bg-emerald-400 shadow-glowEmerald" />
+                  <h3 className="text-base sm:text-lg font-extrabold text-white tracking-wide">
+                    {t('ingredients.lowStockSection') || 'LOW STOCK'}
+                  </h3>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                    {lowStockStorageItems.length}
+                  </span>
+                </div>
+                <span className="text-xs text-gray-400 hidden sm:inline-block">
+                  {t('ingredients.lowStockSub') || 'Items below minimum threshold requiring attention'}
+                </span>
+              </div>
+
+              {lowStockStorageItems.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {lowStockStorageItems.map(renderInStockCard)}
+                </div>
+              ) : (
+                <div className="p-8 rounded-2xl glass-panel border border-white/10 text-center text-xs text-gray-400">
+                  {t('ingredients.noLowStockItems') || 'No items currently low on stock.'}
+                </div>
+              )}
+            </div>
+          )}
+
+          {storageFilter === 'out_of_stock' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-3 w-3 rounded-full bg-red-500 shadow-glowRed" />
+                  <h3 className="text-base sm:text-lg font-extrabold text-white tracking-wide">
+                    {t('ingredients.outOfStockSection')}
+                  </h3>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-red-500/20 text-red-300 border border-red-500/40">
+                    {outOfStockStorageItems.length}
+                  </span>
+                </div>
+                <span className="text-xs text-gray-400 hidden sm:inline-block">
+                  {t('ingredients.outOfStockSub')}
+                </span>
+              </div>
+
+              {outOfStockStorageItems.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {outOfStockStorageItems.map(renderOutOfStockCard)}
+                </div>
+              ) : (
+                <div className="p-8 rounded-2xl glass-panel border border-emerald-500/20 bg-emerald-500/5 text-center text-xs text-emerald-300 font-semibold">
+                  {t('ingredients.noOutOfStockItems')}
+                </div>
+              )}
+            </div>
+          )}
 
         </div>
       )}

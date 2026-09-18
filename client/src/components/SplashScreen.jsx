@@ -152,8 +152,14 @@ const SplashScreen = ({ onFinish }) => {
               }}
               className="relative overflow-hidden mt-4"
             >
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-wider sm:tracking-widest whitespace-nowrap bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-yellow-400 to-emerald-400 drop-shadow-[0_4px_18px_rgba(212,175,55,0.4)] leading-tight">
-                SMARTLUNCH
+              <h1
+                className="splash-title text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-wider sm:tracking-widest whitespace-nowrap bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-yellow-400 to-emerald-400 drop-shadow-[0_4px_18px_rgba(212,175,55,0.4)] leading-tight"
+                style={{
+                  color: 'transparent',
+                  WebkitTextFillColor: 'transparent'
+                }}
+              >
+                SMART LUNCH
               </h1>
 
               {/* Golden Sheen Reflection Sweep over Title */}

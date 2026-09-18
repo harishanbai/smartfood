@@ -144,7 +144,7 @@
 ───────────────────────────────────────────────────────────────────────────── */
 
 /* Headings in Light Mode */
-:root.light h1,
+:root.light h1:not(.splash-title),
 :root.light h2,
 :root.light h3,
 :root.light h4,
@@ -325,6 +325,13 @@
    never included in per-frame style diffing or recalculated by the compositor. */
 .splash-ring {
   box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+}
+
+.splash-title,
+:root.light .splash-title,
+:root.light h1.splash-title {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
 }
 
 body {
